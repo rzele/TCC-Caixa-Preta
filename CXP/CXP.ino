@@ -104,7 +104,7 @@ byte modo_9(void){
   while(sw_tira(&who)==FALSE);
   mpu_inicializa();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
-  delay(2000);
+  delay(1000);
   lcd_apaga();
   while(TRUE){
     mpu_rd_ac_tp_gi(vetor);
@@ -123,13 +123,13 @@ byte modo_9(void){
     ser_dec16(vetor[6]);   ser_crlf(1);           //gz
     if (sw_tira(&who))     break;
   }
-  ser_crlf(1);           ser_dec16(1);
-  ser_crlf(1);           ser_dec16(2);
-  ser_crlf(1);           ser_dec16(3);
-  ser_crlf(1);           ser_dec16(99);
-  ser_crlf(1);           ser_dec16(99);
-  ser_crlf(1);           ser_dec16(99);
-  ser_crlf(1);           ser_dec16(99);
+  ser_dec16(1);   ser_crlf(1);           
+  ser_dec16(2);   ser_crlf(1);           
+  ser_dec16(3);   ser_crlf(1);
+  ser_dec16(99);  ser_crlf(1);
+  ser_dec16(99);  ser_crlf(1);
+  ser_dec16(99);  ser_crlf(1);
+  ser_dec16(99);  ser_crlf(1);
   return;
 }
 
