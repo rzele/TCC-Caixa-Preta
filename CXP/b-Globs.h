@@ -16,7 +16,8 @@ char *modo_msg[]={"0: Testar TWI",
                   "5: GPS U-Center",
                   "6: Testar Flash",
                   "7: Testar SRAM",
-                  "8: Expedito"};
+                  "8: Expedito",
+                  "9: MPU-->MATLAB"};
 
 // MPU
 int axi,ayi,azi,tpi,gxi,gyi,gzi;      //Receber leituras instantâneas do MPU

@@ -139,8 +139,8 @@ void str_hex32(long c, char *msg){
 // dec16 - Decinal 16 bits com sinal e zeros à esquerda
 // msg = +12345\0 - 7 posições
 void str_dec16(int c, char *msg){
-  byte i;
-  int x,aux,dv=10000;
+  byte i,x;
+  word aux,dv=10000;
   if (c<0)  msg[0]='-';
   else      msg[0]='+';
   x=abs(c);

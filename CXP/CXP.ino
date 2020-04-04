@@ -6,6 +6,7 @@
 
 
 void setup() {
+  word x; //teste
   long i;
   long z;
   float f;
@@ -25,13 +26,12 @@ void setup() {
   timer1_config();
   twi_config_100k();       //Configurar TWI
   spi_config(SPI_500K);    //Configurar SPI
-
 }
 
 void loop() {
   while(TRUE){
-    modo=modo_sel();
-    //modo=MODO_6;
+    //modo=modo_sel();
+    modo=MODO_9;
     if      (modo==MODO_0) modo_0();
     else if (modo==MODO_1) modo_1();
     else if (modo==MODO_2) modo_2();
@@ -40,7 +40,8 @@ void loop() {
     else if (modo==MODO_5) modo_5();
     else if (modo==MODO_6) modo_6();
     else if (modo==MODO_7) modo_7();
-    else                   modo_8();
+    else if (modo==MODO_8) modo_8();
+    else                   modo_9();
     
     /*
     // Por que este switch/case não funciona? Seleciona opção anterior!
@@ -80,6 +81,56 @@ byte modo_sel(void){
     if (prov==255)        prov=MODO_TOTAL-1;
     //ser_str("prov = "); ser_dec8unz(prov);  ser_crlf(1);
   }
+}
+
+// Modo 9 - MPU ==> Matlab
+byte modo_9(void){
+  byte who;
+  word vetor[7];
+  lcd_apaga();
+  lcd_cursor_lc(0,0);
+  lcd_str("[9] MPU==>MATLAB");
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  if (who != 0x73){
+    lcd_cursor_lc(2,1);
+    lcd_str("MPU nao responde!");  //MPU respondendo
+    sw_qq_tecla();
+    return  FALSE;
+  }
+
+  lcd_cursor_lc(1,0);
+  lcd_str("Qq tecla inicia TX");
+  while(sw_tira(&who)==FALSE);
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  delay(2000);
+  lcd_apaga();
+  while(TRUE){
+    mpu_rd_ac_tp_gi(vetor);
+    lcd_cursor_lc(0,0);    lcd_hex16(vetor[0]);
+    lcd_cursor_lc(0,6);    lcd_hex16(vetor[1]);
+    lcd_cursor_lc(0,12);   lcd_hex16(vetor[2]);
+    lcd_cursor_lc(1,0);    lcd_hex16(vetor[4]);
+    lcd_cursor_lc(1,6);    lcd_hex16(vetor[5]);
+    lcd_cursor_lc(1,12);   lcd_hex16(vetor[6]);
+    ser_dec16(vetor[0]);   ser_crlf(1);           //ax
+    ser_dec16(vetor[1]);   ser_crlf(1);           //ay
+    ser_dec16(vetor[2]);   ser_crlf(1);           //az
+    ser_dec16(vetor[3]);   ser_crlf(1);           //temperatura
+    ser_dec16(vetor[4]);   ser_crlf(1);           //gx
+    ser_dec16(vetor[5]);   ser_crlf(1);           //gy
+    ser_dec16(vetor[6]);   ser_crlf(1);           //gz
+    if (sw_tira(&who))     break;
+  }
+  ser_crlf(1);           ser_dec16(1);
+  ser_crlf(1);           ser_dec16(2);
+  ser_crlf(1);           ser_dec16(3);
+  ser_crlf(1);           ser_dec16(99);
+  ser_crlf(1);           ser_dec16(99);
+  ser_crlf(1);           ser_dec16(99);
+  ser_crlf(1);           ser_dec16(99);
+  return;
 }
 
 // Modo 8 - Expedito

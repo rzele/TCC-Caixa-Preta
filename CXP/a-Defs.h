@@ -16,8 +16,9 @@
 #define MODO_6  6     //
 #define MODO_7  7     //
 #define MODO_8  8     //
+#define MODO_9  9     //
 
-#define MODO_TOTAL 9
+#define MODO_TOTAL 10
 
 // SRAM 23LC1024
 
