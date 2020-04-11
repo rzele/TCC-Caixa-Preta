@@ -10,11 +10,8 @@
 //PC3 = Back Light
 
 ////////////////////////////////////////////////////
-/////////// LCD com buffer /////////////////////////
-////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////
 /////////// float (double) com buffer //////////////
+///////////     LCDBX      /////////////////////////
 ////////////////////////////////////////////////////
 
 // Imprimir float = + xxx xxx xxx , ddd ddd ddd ddd (24 posições)
@@ -22,398 +19,235 @@
 // 12 posições = limite da parte fracionária
 // Caso ultrapasse os limites imprime ### , ###
 // No Arduino, double e float têm a mesma precisão
-void lcdb_float(byte lin, byte col, float fx, byte prec){
+void lcd_float(byte lin, byte col, float fx, byte prec){
   char msg[24];
   str_float(fx,prec,msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
+
+////////////////////////////////////////////////////
+/////////// LCD com buffer /////////////////////////
+///////////     LCDBX      /////////////////////////
+////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //////////// 32 bits com buffer ////////////////////
+////////////      LCDBX         ////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 32 bits em Decimal, com sinal e com zeros à esq
-void lcdb_dec32(byte lin, byte col, long dt){
+void lcd_dec32(byte lin, byte col, long dt){
   char msg[12];
   str_dec32(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 32 bits em Decimal, sem sinal e com zeros à esq
-void lcdb_dec32u(byte lin, byte col, long dt){
+void lcd_dec32u(byte lin, byte col, long dt){
   char msg[12];
   str_dec32u(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 32 bits em Decimal, com sinal e sem zeros à esq
-void lcdb_dec32nz(byte lin, byte col, long dt){
+void lcd_dec32nz(byte lin, byte col, long dt){
   char msg[12];
   byte i;
   str_dec32(dt, msg);
   str_rmvz_s(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 32 bits em Decimal, sem sinal e sem zeros à esq
-void lcdb_dec32unz(byte lin, byte col, long dt){
+void lcd_dec32unz(byte lin, byte col, long dt){
   char msg[12];
   str_dec32u(dt, msg);
   str_rmvz_u(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever word (32 bits) em Hexa na posição atual
-void lcdb_hex32(byte lin, byte col, long dt){
+void lcd_hex32(byte lin, byte col, long dt){
   char msg[9];
   str_hex32(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
+
 
 ////////////////////////////////////////////////////
 //////////// 16 bits com buffer ////////////////////
+////////////      LCDBX         ////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 16 bits em Decimal, com sinal e com zeros à esq
-void lcdb_dec16(byte lin, byte col, int dt){
+void lcd_dec16(byte lin, byte col, int dt){
   char msg[7];
   str_dec16(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 16 bits em Decimal, sem sinal e com zeros à esq
-void lcdb_dec16u(byte lin, byte col, word dt){
+void lcd_dec16u(byte lin, byte col, word dt){
   char msg[7];
   str_dec16u(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 16 bits em Decimal, com sinal e sem zeros à esq
-void lcdb_dec16nz(byte lin, byte col, int dt){
+void lcd_dec16nz(byte lin, byte col, int dt){
   char msg[7];
   byte i;
-  str_dec8(dt, msg);
+  str_dec16(dt, msg);
   str_rmvz_s(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 16 bits em Decimal, sem sinal e sem zeros à esq
-void lcdb_dec16unz(byte lin, byte col, word dt){
+void lcd_dec16unz(byte lin, byte col, word dt){
   char msg[7];
   str_dec16u(dt, msg);
   str_rmvz_u(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever word (16 bits) em Hexa na posição atual
-void lcdb_hex16(byte lin, byte col, word dt){
+void lcd_hex16(byte lin, byte col, word dt){
   char msg[5];
   str_hex16(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 ////////////////////////////////////////////////////
 //////////// 8 bits com buffer /////////////////////
+////////////      LCDBX        /////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 8 bits em Decimal, com sinal e com zeros à esq
-void lcdb_dec8(byte lin, byte col, byte dt){
+void lcd_dec8(byte lin, byte col, byte dt){
   char msg[5];
   str_dec8(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 8 bits em Decimal, sem sinal e com zeros à esq
-void lcdb_dec8u(byte lin, byte col, byte dt){
+void lcd_dec8u(byte lin, byte col, byte dt){
   char msg[5];
   str_dec8u(dt, msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 8 bits em Decimal, com sinal e sem zeros à esq
-void lcdb_dec8nz(byte lin, byte col, byte dt){
+void lcd_dec8nz(byte lin, byte col, byte dt){
   char msg[5];
   byte i;
   str_dec8(dt, msg);
   str_rmvz_s(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever 8 bits em Decimal, sem sinal e sem zeros à esq
-void lcdb_dec8unz(byte lin, byte col, byte dt){
+void lcd_dec8unz(byte lin, byte col, byte dt){
   char msg[5];
   str_dec8u(dt, msg);
   str_rmvz_u(msg);
-  lcdb_str(lin,col,msg);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever byte em Hexa a partir da posição (lin,col)
-void lcdb_hex8(byte lin, byte col, byte dt){
+void lcd_hex8(byte lin, byte col, byte dt){
   char msg[3];
   str_hex8(dt, msg);
-  lcdb_str(lin,col,msg);
-}
-
-// Escrever brancos em todo o LCD
-void lcdb_apaga(void){
-  lcdb_spc(0,0,20);
-  lcdb_spc(1,0,20);
-  lcdb_spc(2,0,20);
-  lcdb_spc(3,0,20);
+  lcd_str(lin,col,msg);
 }
 
 // Escrever uma qtd de espaços a partir da posição (lin,col)
-void lcdb_spc(byte lin, byte col, byte qtd){
-  byte i,j;
-  j=lin*NRC+col;
-  i=0;
-  while ( (i<qtd) && (j<(lin+1)*NRC) ){
-    lcdb_buf[j++]=' ';
-    i++;  
+void lcd_spc(byte lin, byte col, byte qtd){
+  byte i=0;
+  if (lin<NRL){   //lin é válida? (0,1,2 ou 3)
+    for (i=0; (i<qtd)&&(col<NRC); i++){
+      lcd_buf[lin][col+1]=' ';
+      col++;
+    }
+    lcd_mudou |= (1<<lin);
   }
-  lcdb_flags[lin]=TRUE;
 }
 
-// Escrever uma string a partir da posição (lin,col)
-void lcdb_str(byte lin, byte col, char *msg){
-  byte i,j;
-  j=lin*NRC+col;
-  i=0;
-  while ( (msg[i]!='\0') && (j<(lin+1)*NRC) ){
-    lcdb_buf[j++]=msg[i++];  
+// Escrever uma string no buffer a partir da posição (lin,col)
+// lin = 0,1,2,3 e col=0,1,2,...,NRC
+void lcd_str(byte lin, byte col, char *msg){
+  byte i=0;
+  if (lin<NRL){   //lin é válida? (0,1,2 ou 3)
+    while ( (msg[i]!='\0') && (col<NRC) ){
+      lcd_buf[lin][col+1]=msg[i];
+      i++;
+      col++;
+    }
+    lcd_mudou |= (1<<lin);
   }
-  lcdb_flags[lin]=TRUE;
 }
 
 // Escrever um char, na posição (lin,col)
-void lcdb_char(byte lin, byte col, byte dt){
-  if ( (lin*NRC+col) < (NRL*NRC) ){
-    lcdb_buf[lin*NRC+col]=dt;  
-    lcdb_flags[lin]=TRUE;
+void lcd_char(byte lin, byte col, byte dt){
+  if ( (lin<NRL) && (col<NRC) ){ //lin e col válidos?
+    lcd_buf[lin][col+1]=dt;  
+    lcd_mudou |= (1<<lin);
   }
 }
 
-
-// Atualizar LCD com os dados do buffer
-void lcdb_atualiza(void){
-  byte i;
-  for (i=0; i<NRL; i++){
-    if (lcdb_flags[i] == TRUE){
-      lcdb_flags[i]=FALSE;
-      lcdb_copia(i); }  
-  }
+// Apagar uma linha do LCD - Escreve brancos
+void lcd_apaga_lin(byte lin){
+  byte col=0;
+  for (col=1; col<NRC+1; col++)
+    lcd_buf[lin][col]=' ';
+  lcd_mudou |= (1<<lin);
 }
 
-// Copiar uma linha do buffer para o LCD
-void lcdb_copia(byte linha){
-  byte i;
-  lcd_cursor_lc(linha,0);
-  i=NRC*linha;
-  for (i; i<NRC*(linha+1); i++)
-    lcd_char(lcdb_buf[i]);
+// Apagar todo o LCD - Escreve brancos
+// Acerta os caractes para posicionar cursor
+void lcd_apaga(void){
+  byte lin=0,col=0;
+  for (lin=0; lin<NRL; lin++){
+    for (col=1; col<NRC+1; col++){
+      lcd_buf[lin][col]=' ';
+    }
+  }
+  lcd_buf[0][0]=0x80 | 0x00;  //Cmdo para posicionar cursor
+  lcd_buf[1][0]=0x80 | 0x40;  //Cmdo para posicionar cursor
+  lcd_buf[2][0]=0x80 | 0x14;  //Cmdo para posicionar cursor
+  lcd_buf[3][0]=0x80 | 0x54;  //Cmdo para posicionar cursor
+  lcd_mudou = 0xF;    //Atualizar todas as linhas
 }
 
 // Configurar o buffer para o LCD
-void lcdb_config(void){
-  byte i;
-  for (i=0; i<NRL*NRC; i++) lcdb_buf[i]=' ';
-  for (i=0; i<NRL; i++)     lcdb_flags[i]=TRUE;
-}
+void lcd_config(void){
+  byte lin=0,col=0;
+  lcd_pinos();  //Configurar pinos para usar com LCD
+  lcd_inic();   //Inicializar LCD
+  lcd_BL();
 
-////////////////////////////////////////////////////
-/////////// float (double) /////////////////////////
-////////////////////////////////////////////////////
-
-// Imprimir float = + xxx xxx xxx , ddd ddd ddd ddd (24 posições)
-//  9 posições = limite da parte inteira
-// 12 posições = limite da parte fracionária
-// Caso ultrapasse os limites imprime ### , ###
-// No Arduino, double e float têm a mesma precisão
-void lcd_float(float fx, byte prec){
-  char msg[24];
-  str_float(fx,prec,msg);
-  lcd_str(msg);
-}
-
-////////////////////////////////////////////////////
-//////////////// 32 bits ///////////////////////////
-////////////////////////////////////////////////////
-
-// Escrever 32 bits em Decimal, com sinal e com zeros à esq
-void lcd_dec32(long dt){
-  char msg[12];
-  str_dec32(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 32 bits em Decimal, sem sinal e com zeros à esq
-void lcd_dec32u(long dt){
-  char msg[12];
-  str_dec32u(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 32 bits em Decimal, com sinal e sem zeros à esq
-void lcd_dec32nz(long dt){
-  char msg[12];
-  byte i;
-  str_dec32(dt, msg);
-  str_rmvz_s(msg);
-  lcd_str(msg);
-}
-
-// Escrever 32 bits em Decimal, sem sinal e sem zeros à esq
-void lcd_dec32unz(long dt){
-  char msg[12];
-  str_dec32u(dt, msg);
-  str_rmvz_u(msg);
-  lcd_str(msg);
-}
-
-// Escrever word (32 bits) em Hexa na posição atual
-void lcd_hex32(long dt){
-  char msg[9];
-  str_hex32(dt, msg);
-  lcd_str(msg);
-}
-
-////////////////////////////////////////////////////
-//////////////// 16 bits ///////////////////////////
-////////////////////////////////////////////////////
-
-// Escrever 16 bits em Decimal, com sinal e com zeros à esq
-void lcd_dec16(int dt){
-  char msg[7];
-  str_dec16(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 16 bits em Decimal, sem sinal e com zeros à esq
-void lcd_dec16u(word dt){
-  char msg[7];
-  str_dec16u(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 16 bits em Decimal, com sinal e sem zeros à esq
-void lcd_dec16nz(int dt){
-  char msg[7];
-  byte i;
-  str_dec8(dt, msg);
-  str_rmvz_s(msg);
-  lcd_str(msg);
-}
-
-// Escrever 16 bits em Decimal, sem sinal e sem zeros à esq
-void lcd_dec16unz(word dt){
-  char msg[7];
-  str_dec16u(dt, msg);
-  str_rmvz_u(msg);
-  lcd_str(msg);
-}
-
-// Escrever word (16 bits) em Hexa na posição atual
-void lcd_hex16(word dt){
-  char msg[5];
-  str_hex16(dt, msg);
-  lcd_str(msg);
-}
-
-////////////////////////////////////////////////////
-///////////////// 8 bits ///////////////////////////
-////////////////////////////////////////////////////
-
-// Escrever 8 bits em Decimal, com sinal e com zeros à esq
-void lcd_dec8(byte dt){
-  char msg[5];
-  str_dec8(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 8 bits em Decimal, sem sinal e com zeros à esq
-void lcd_dec8u(byte dt){
-  char msg[5];
-  str_dec8u(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever 8 bits em Decimal, com sinal e sem zeros à esq
-void lcd_dec8nz(byte dt){
-  char msg[5];
-  byte i;
-  str_dec8(dt, msg);
-  str_rmvz_s(msg);
-  lcd_str(msg);
-}
-
-// Escrever 8 bits em Decimal, sem sinal e sem zeros à esq
-void lcd_dec8unz(byte dt){
-  char msg[5];
-  str_dec8u(dt, msg);
-  str_rmvz_u(msg);
-  lcd_str(msg);
-}
-
-// Escrever byte em Hexa na posição atual
-void lcd_hex8(byte dt){
-  char msg[3];
-  str_hex8(dt, msg);
-  lcd_str(msg);
-}
-
-// Escrever brancos em todo o LCD
-void lcd_apaga(void){
-  lcd_cursor_lc(0,0);   lcd_spc(20);
-  lcd_cursor_lc(1,0);   lcd_spc(20);
-  lcd_cursor_lc(2,0);   lcd_spc(20);
-  lcd_cursor_lc(3,0);   lcd_spc(20);
-  lcd_cursor(0);
-}
-
-// Escrever string na posição "lin" e "col"
-void lcd_str_lc(byte lin, byte col, char *pt){
-  lcd_cursor_lc(lin,col);
-  lcd_str(pt);
-}
-
-// Escrever string
-void lcd_str(char *pt){
-  while ( *pt != '\0'){
-    lcd_char(*pt);
-    pt++;
+  for (lin=0; lin<NRL; lin++){
+    for (col=1; col<NRC+1; col++){
+      lcd_buf[lin][col]=' ';
+    }
   }
+  lcd_buf[0][0]=0x80 | 0x00;  //Cmdo para posicionar cursor
+  lcd_buf[1][0]=0x80 | 0x40;  //Cmdo para posicionar cursor
+  lcd_buf[2][0]=0x80 | 0x14;  //Cmdo para posicionar cursor
+  lcd_buf[3][0]=0x80 | 0x54;  //Cmdo para posicionar cursor
+  lcd_busy=FALSE; //LCD livre
+  lcd_mudou=0;    //Nada mudou
 }
 
-// Escrever qtd de espaços
-// Máximo de 20 espaços
-void lcd_spc(byte qtd){
-  char msg[21];
-  if (qtd>20) qtd=20;
-  str_spc(qtd,msg);
-  lcd_str(msg);
-}
-
-// Posicionar cursor. lin=0,1, ... e col=0,1,2...
-// Usar NRL (linhas) e NRC (colunas)
-void lcd_cursor_lc(byte lin, byte col){
-  byte aux;
-  switch(lin){
-    case 0:  aux=col;           break;
-    case 1:  aux=0x40+col;      break;
-    case 2:  aux=NRC+col;       break;
-    case 3:  aux=0x40+NRC+col;  break;
-    default: aux=0;
-  }
-  lcd_cmdo(0x80|aux);
-}
-
-// Posicionar cursor usando endereço da DDRAM
-void lcd_cursor(byte dt){
-  lcd_cmdo(0x80|dt);
-}
+//********************************************************
+/////////////////////////////////////////////////////////
+//////// Rotinas para LCD modo terminal /////////////////
+////////            INÍCIO              /////////////////
+/////////////////////////////////////////////////////////
+//********************************************************
 
 // Escrever um char, espera Busy = 0
-void lcd_char(byte dt){
+void lcdt_char(byte dt){
+  while(lcd_busy==TRUE);    //Esperar Interrup Timer 2 atualizar LCD
   lcd_busy_hold();
   PORTC &= ~((1<<DDC2)|(1<<DDC1)|(1<<DDC0));  //R/W=RS=E = LOW
   lcd_RS();
@@ -428,17 +262,29 @@ void lcd_char(byte dt){
 }
 
 // Escrever um char
-// Não testa o Busy, por isso usa lcd_nib_wr() com delays
-void lcd_char_nbusy(byte dt){
+// Não testa o Busy, por isso usa lcdt_nib_wr() com delays
+void lcdt_char_nbusy(byte dt){
   PORTC &= ~((1<<DDC2)|(1<<DDC1)|(1<<DDC0));  //R/W=RS=E = LOW
   lcd_RS();
   lcd_nib_wr(dt>>4);
   lcd_nib_wr(dt&0xF);
 }
 
+//********************************************************
+/////////////////////////////////////////////////////////
+//////// Rotinas para LCD modo terminal /////////////////
+////////              FIM               /////////////////
+/////////////////////////////////////////////////////////
+//********************************************************
+
+/////////////////////////////////////////////////////////
+////////// Rotinas básicas para LCD  ////////////////////
+/////////////////////////////////////////////////////////
+
 // Escrever um comando
 // Espera Busy = 0
 void lcd_cmdo(byte dt){
+  while(lcd_busy==TRUE);    //Esperar Interrup Timer 2 atualizar LCD
   lcd_busy_hold();
   PORTC &= ~((1<<DDC2)|(1<<DDC1)|(1<<DDC0));  //R/W=RS=E = LOW
   lcd_rs();
@@ -497,13 +343,6 @@ byte lcd_status(void){
   return x;
 }
 
-// Configurar LCD
-void lcd_config(void){
-  lcd_pinos();  //Configurar pinos para usar com LCD
-  lcd_inic();   //Inicializar LCD
-  lcd_BL();
-}
-
 // LCD - Configurar pinos
 void lcd_pinos(void){
   DDRC  |=   (1<<DDC3)|(1<<DDC2)|(1<<DDC1)|(1<<DDC0);   //BL=R/W=RS=E = Saídas
@@ -532,11 +371,12 @@ void lcd_inic(void){
   lcd_nib_wr(0);  lcd_nib_wr(0xF);  delay(1); //0x0F 
   */
   
-  lcd_cmdo(0x28); delay(1);
-  lcd_cmdo(0x08); delay(1);
-  lcd_cmdo(0x01); delay(1);
-  lcd_cmdo(0x06); delay(1);
-  lcd_cmdo(0x0F); delay(1);
+  lcd_cmdo(0x28); delay(1);   //Bus de 4 bits
+  lcd_cmdo(0x08); delay(1);   //Display ativado
+  lcd_cmdo(0x01); delay(1);   //Limpar display
+  lcd_cmdo(0x06); delay(1);   //Incrementa cursor
+  //lcd_cmdo(0x0F); delay(1);   //Cursor hab e piscante
+  lcd_cmdo(0x0C); delay(1);   //Cursor desabilitado
 }
 
 // Escrever um nibble no LCD

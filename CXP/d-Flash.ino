@@ -80,9 +80,9 @@ byte flash_rd(long adr) {
 
   // Selecionar endereço do escravo
   er=flash_qual(adr);
-  ser_str("er=");
-  ser_hex8(er);
-  ser_crlf(1);
+  //ser_str("er=");
+  //ser_hex8(er);
+  //ser_crlf(1);
   er=er<<1;   //Escravo receptor
   et=er+1;    //Escravo transmissor
   
@@ -103,9 +103,9 @@ void flash_wr(long adr, byte dado) {
 
   // Selecionar endereço do escravo
   er=flash_qual(adr);
-  ser_str("er=");
-  ser_hex8(er);
-  ser_crlf(1);
+  //ser_str("er=");
+  //ser_hex8(er);
+  //ser_crlf(1);
   er=er<<1;   //Escravo receptor
   et=er+1;    //Escravo transmissor
   

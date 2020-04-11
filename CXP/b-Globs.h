@@ -2,6 +2,74 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+
+// LCD - variáveis globais
+volatile byte lcd_buf[NRL][NRC+1];   //Buffer para as 4 linhas do LCD
+volatile byte lcd_busy;              //TRUE indica que a interrupção está atualizando LCD
+volatile byte lcd_mudou;             //Indicar qual linha deve ser atualizada
+volatile byte *lcd_lin;              //Ponteiro para a linha a ser atualizada
+volatile byte lcd_fase;              //Timer2 - Fase da atualização, 0, 1, 2, 3, 2, 3, ...
+volatile byte lcd_ix;                //Timer2 - Indexador das colunas de uma linha, 0, 1, ..., 20
+volatile byte lcd_rr;                //Timer1 - Round Robin para descobrir qual linha atualizar
+
+
+// Teclas - Nome das teclas com apenas 3 letras
+//                  0     1      2     3     4      5      6      7      8      9      10
+char *sw_nome[]={"SEL","?1?", "ESQ","SUP","DIR", "?5?", "INF", "NAD", "SQ1", "SQ2", "???"};
+volatile char sw_fila[SER_TX_FILA_TAM]; //Espaço para a fila teclado
+volatile byte sw_pin, sw_pout;          //Ponteiros para usar a fila
+volatile byte sw_1,sw_2,sw_n,sw_v;      //Variáveis para detectar teclas acionadas
+volatile byte sw_st_seq1,sw_st_seq2;    //Maq Estados para buscar sequências
+
+
+// TESTE - Mensagens do modo de teste
+char *teste_msg[]={ "ERRO",             //0
+                    "1-LEDs",           //1
+                    "2-LCD",            //2
+                    "3-Teclado",        //3
+                    "4-TWI (I2C)",      //4
+                    "5-Acel e giro",    //5
+                    "6-Magnetometro",   //6
+                    "7-SRAM",           //7
+                    "8-FLASH",          //8
+                    "9-GPS: Tudo",      //9
+                    "10-GPS: RMC GSA",  //10
+                    "11-GPS:U-Center",  //11
+                    "12-MPU-->MatLab",  //12
+                    "13-Blue Tooth",    //13
+                    "14-Vazio",         //14
+                    "15-Vazio",         //15
+                    "16-Vazio",         //16
+                    "17-Vazio"};        //17
+                    
+// OPERA - Mensagens do modo de Operação
+char *opera_msg[]={ "ERRO",     //0
+                    "1-Vazio",  //1
+                    "2-Vazio",  //2
+                    "3-vazio",  //3
+                    "4-Vazio",  //4
+                    "5-Vazio",  //5
+                    "6-Vazio",  //6
+                    "7-Vazio"}; //7
+                    
+
+// Aleat - Gerador pseudo-aleatório
+volatile word rrand_m ;  //multiplicador
+volatile word rrand_d;   //divisor
+volatile word rrand_u;   //semente
+
+//GPS
+volatile byte gps_st;   //Mudar para estática
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/////////////////////// 06/04/2020 ///////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 // GPS - Não funcionou
 char msg_gll_off[]={0xB5,0x62,0x06,0x01,0x08,0x00,0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x2B,'\0'};
  
@@ -47,12 +115,6 @@ volatile byte gps_msg_1[200];               //(fase=1) Buffer 1 usado pela inter
 volatile byte gps_msg_ix;                   //Indexador para escrever nos buffers;
 volatile byte gps_msg_fase;                 //Fase para receber GPRMC (0=gps_rmc_0 e 1=gps_rmc_1);
 volatile byte gps_msg_ok;                   //Indica que completou o recebimento de uma mensagem;
-
-// Teclas
-volatile char sw_fila[SER_TX_FILA_TAM]; //Espaço para a fila teclado
-volatile byte sw_pin, sw_pout;          //Ponteiros para usar a fila
-volatile byte sw_1,sw_2,sw_n,sw_v;      //Variáveis para detectar teclas acionadas
-volatile byte sw_st_seq1,sw_st_seq2;    //Maq Estados para buscar sequências
 
 //ADC
 volatile word adc_val;    //Valor lido pelo ADC (em 16 bits porque tem contas)

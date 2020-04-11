@@ -1,0 +1,10 @@
+; Exemplo - força reset do Arduino
+
+; enable dtr
+setdtr 1
+
+; clear rts
+;setrts 0
+
+; now clear dtr, so that the system will reset and see rts clear
+setdtr 0

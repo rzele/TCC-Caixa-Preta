@@ -57,6 +57,7 @@ void str_float(float f, byte prec, char *msg){
       dv*=10;
     }
     dv/=10;
+    
     //Imprimir parte inteira
     while(fx>=1){
       aux=fx/dv;
@@ -69,7 +70,10 @@ void str_float(float f, byte prec, char *msg){
       msg[ix++]='0';
       dv = dv/10;
     }
+    //Caso +.123 (falta um zero)
+    if (ix==1)  msg[ix++]='0';
     msg[ix++]=',';
+    
     //Parte fracionária
     for(i=0; i<prec; i++){
       fx*=10;
@@ -89,7 +93,8 @@ void str_float(float f, byte prec, char *msg){
 // msg = +4 294 967 295 \0 - 12 posições
 void str_dec32(long c, char *msg){
   byte i,aux;
-  long x,dv=1000000000L;
+  long dv=1000000000L;
+  unsigned long x;
   if (c<0)  msg[0]='-';
   else      msg[0]='+';
   x=abs(c);

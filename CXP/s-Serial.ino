@@ -377,7 +377,7 @@ void serb_str(byte *msg){
 // Gera alerta se fila serial encher
 void serb_char(byte dt){
   if ( (ser_tx_poe(dt) == FALSE))
-    lcdb_str(0,0,"Fila Serial TX Cheia"); //Mensagem de erro no LCD
+    lcd_str(0,0,"Fila Serial TX Cheia"); //Mensagem de erro no LCD
 }
 
 // Fica preso até esvaziar toda a fila serial
@@ -495,11 +495,11 @@ char ser_rx_tira(char *cha){
 void ser_config(long br){
   word dv;
   dv=(2000000L/br)-1;
-  lcd_cursor(0);
-  lcd_dec32unz(br);
-  lcd_spc(1);
-  lcd_dec8unz(dv);
-  lcd_spc(1);
+  //lcd_cursor(0);
+  //lcd_dec32unz(br);
+  //lcd_spc(1);
+  //lcd_dec8unz(dv);
+  //lcd_spc(1);
 
   UBRR0H = dv>>8;     //MSB
   UBRR0L = dv&0xFF;   //LSB
