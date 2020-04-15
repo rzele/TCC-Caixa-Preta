@@ -3,9 +3,47 @@
 // 10/01/2019
 
 
-////////////////////////////////////////////////////
-/////////// Não usam Fila: ser_xxx /////////////////
-////////////////////////////////////////////////////
+// Imprimir GPS, dados no pacote gps_dados
+void ser_gps_dados(char *gps_vt){
+    ser_str("gps_dados: Status=");  ser_str(&gps_vt[GPS_STATUS]);
+    ser_str(" Hora=");      ser_str(&gps_vt[GPS_HORA]);
+    ser_str(" Data=");    ser_str(&gps_vt[GPS_DATA]);
+    ser_str(" Lat=");     ser_str(&gps_vt[GPS_LAT]);
+    ser_str(" N/S=");     ser_str(&gps_vt[GPS_NS]);
+    ser_str(" Long=");    ser_str(&gps_vt[GPS_LONG]);
+    ser_str(" E/W=");     ser_str(&gps_vt[GPS_EW]);
+    ser_str(" Vel Nos="); ser_str(&gps_vt[GPS_VEL_NOS]);
+    ser_str(" Curso=");   ser_str(&gps_vt[GPS_CURSO]);
+    ser_str(" PDOP=");   ser_str(&gps_vt[GPS_PDOP]);
+    ser_str(" HDOP=");   ser_str(&gps_vt[GPS_HDOP]);
+    ser_str(" VDOP=");   ser_str(&gps_vt[GPS_VDOP]);
+    ser_str(" Vel_kph=");   ser_str(&gps_vt[GPS_VEL_KPH]);
+    ser_str(" Vel_uni=");   ser_str(&gps_vt[GPS_VEL_UN]);
+    //ser_str(" Fix=");   ser_str(&gps_vt[GPS_FIX);        //Sem uso
+    ser_str(" Qtd_Sat=");   ser_str(&gps_vt[GPS_QTD_SAT]);
+    ser_str(" Alt=");   ser_str(&gps_vt[GPS_ALT]);
+    ser_str(" Alt_uni=");   ser_str(&gps_vt[GPS_ALT_UN]);
+    ser_str(" Adr_MPU=");   ser_str(&gps_vt[GPS_ADR_SRAM]);
+}
+
+// Compor e imprimir uma linha com cel, giro e mag
+void ser_lin_ac_gi_mg(byte *vet){
+  byte i;
+  for (i=0; i<18; i+=2){
+    ser_dec16u( ( (word)vet[i]<<8) | vet[i+1]);
+    ser_spc(1);
+  }
+  ser_crlf(1);
+}
+
+// Compor acel, giro e mag e imprimir 1 por linha 
+void ser_ac_gi_mg(byte *vet){
+  byte i;
+  for (i=0; i<18; i+=2){
+    ser_dec16u( ( (word)vet[i]<<8) | vet[i+1]);
+    ser_crlf(1);
+  }
+}
 
 ////////////////////////////////////////////////////
 /////////// float (double) /////////////////////////

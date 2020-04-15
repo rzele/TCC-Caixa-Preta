@@ -77,7 +77,8 @@ void sram_modo_wr(byte qual, byte dado){
   if (qual==0)  spi_cs0();   //Selecionar SRAM0
   else          spi_CS1();   //Selecionar SRAM1
   spi_transf(SRAM_WRMR);  //Indicar escrita no Reg de Modo
-  spi_transf(modo);        //Escrever o Modo
+  //spi_transf(modo);        //Escrever o Modo
+  spi_transf(dado);        //Escrever o Modo
   spi_CS0();  //Mais fácil desabilitar as duas
   spi_CS1();  //Mais fácil desabilitar as duas
 }

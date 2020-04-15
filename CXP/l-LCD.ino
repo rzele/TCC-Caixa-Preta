@@ -9,9 +9,63 @@
 // PA4..7 = D4..7
 //PC3 = Back Light
 
+// Imprimir data do GPS no LCD
+void lcd_gps_data(byte lin, byte col){
+  lcd_char(lin,col+0,gps_dados[GPS_DATA+0]);
+  lcd_char(lin,col+1,gps_dados[GPS_DATA+1]);
+  lcd_char(lin,col+2,'/');
+  lcd_char(lin,col+3,gps_dados[GPS_DATA+2]);
+  lcd_char(lin,col+4,gps_dados[GPS_DATA+3]);
+  lcd_char(lin,col+5,'/');
+  lcd_char(lin,col+6,gps_dados[GPS_DATA+4]);
+  lcd_char(lin,col+7,gps_dados[GPS_DATA+5]);
+}
+
+// Imprimir HH:MM:SS no LCD
+void lcd_gps_hora(byte lin, byte col){
+  lcd_char(lin,col+0,gps_dados[GPS_HORA+0]);
+  lcd_char(lin,col+1,gps_dados[GPS_HORA+1]);
+  lcd_char(lin,col+2,':');
+  lcd_char(lin,col+3,gps_dados[GPS_HORA+2]);
+  lcd_char(lin,col+4,gps_dados[GPS_HORA+3]);
+  lcd_char(lin,col+5,':');
+  lcd_char(lin,col+6,gps_dados[GPS_HORA+4]);
+  lcd_char(lin,col+7,gps_dados[GPS_HORA+5]);
+}
+
+// Imprimir Latitude DD MM SS.SS N/S no LCD
+void lcd_gps_lat(byte lin, byte col){
+  lcd_char(lin,col+0,gps_dados[GPS_LAT+0]);
+  lcd_char(lin,col+1,gps_dados[GPS_LAT+1]);
+  lcd_char(lin,col+2,' ');
+  lcd_str(lin,col+3,&gps_dados[GPS_LAT+2]);
+  lcd_char(lin,col+11,gps_dados[GPS_NS]);
+}
+
+// Imprimir Longitude DDD MM SS.SS E/W no LCD
+void lcd_gps_long(byte lin, byte col){
+  lcd_char(lin,col+0,gps_dados[GPS_LONG+0]);
+  lcd_char(lin,col+1,gps_dados[GPS_LONG+1]);
+  lcd_char(lin,col+2,gps_dados[GPS_LONG+2]);
+  lcd_char(lin,col+3,' ');
+  lcd_str(lin,col+4,&gps_dados[GPS_LONG+3]);
+  lcd_char(lin,col+12,gps_dados[GPS_EW]);
+}
+
+// Imprimir velocidade kph
+void lcd_gps_vel_kph(byte lin, byte col){
+  lcd_str(lin,col,"         ");
+  lcd_str(lin,col,&gps_dados[GPS_VEL_KPH]);
+  lcd_str(lin,col+str_tam(&gps_dados[GPS_VEL_KPH]),"kph");
+}
+
+// Imprimir determinado dado do GPS
+void lcd_gps_dado(byte lin, byte col, byte qual){
+  lcd_str(lin,col,&gps_dados[qual]);
+}
+
 ////////////////////////////////////////////////////
 /////////// float (double) com buffer //////////////
-///////////     LCDBX      /////////////////////////
 ////////////////////////////////////////////////////
 
 // Imprimir float = + xxx xxx xxx , ddd ddd ddd ddd (24 posições)
@@ -26,13 +80,7 @@ void lcd_float(byte lin, byte col, float fx, byte prec){
 }
 
 ////////////////////////////////////////////////////
-/////////// LCD com buffer /////////////////////////
-///////////     LCDBX      /////////////////////////
-////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////
 //////////// 32 bits com buffer ////////////////////
-////////////      LCDBX         ////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 32 bits em Decimal, com sinal e com zeros à esq
@@ -76,7 +124,6 @@ void lcd_hex32(byte lin, byte col, long dt){
 
 ////////////////////////////////////////////////////
 //////////// 16 bits com buffer ////////////////////
-////////////      LCDBX         ////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 16 bits em Decimal, com sinal e com zeros à esq
@@ -119,7 +166,6 @@ void lcd_hex16(byte lin, byte col, word dt){
 
 ////////////////////////////////////////////////////
 //////////// 8 bits com buffer /////////////////////
-////////////      LCDBX        /////////////////////
 ////////////////////////////////////////////////////
 
 // Escrever 8 bits em Decimal, com sinal e com zeros à esq

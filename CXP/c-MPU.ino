@@ -2,6 +2,39 @@
 // CXP - Caixa Preta
 // 22/01/2019
 
+
+// Ler Aceleração, Giro e Mag
+// Retorna vetor de 18 bytes
+// [axh axl ayh ayl azh azl gxh gxl gyh gyl gzh gzl hxh hxl hyh hyl hzh hzl]
+void mpu_rd_ac_gi_mg(byte *vetor){
+  byte i,vet[14];
+  // Acel e Giro
+  mpu_rd_blk(ACCEL_XOUT_H, vet, 14);
+  vetor[ 0] = vet[ 0];  //axh
+  vetor[ 1] = vet[ 1];  //axl
+  vetor[ 2] = vet[ 2];  //ayh
+  vetor[ 3] = vet[ 3];  //ayl
+  vetor[ 4] = vet[ 4];  //azh
+  vetor[ 5] = vet[ 5];  //azl
+  // Pular temperatura vet[6] e vet[7]
+  vetor[ 6] = vet[ 8];  //gxh
+  vetor[ 7] = vet[ 9];  //gxl
+  vetor[ 8] = vet[10];  //gyh
+  vetor[ 9] = vet[11];  //gyl
+  vetor[10] = vet[12];  //gzh
+  vetor[11] = vet[13];  //gzl
+  // Mag
+  mpu_rd_blk(MAG_XOUT_L, vet, 6);
+  vetor[12] = vet[ 0];  //hxh
+  vetor[13] = vet[ 1];  //hxl
+  vetor[14] = vet[ 2];  //hyh
+  vetor[15] = vet[ 3];  //hyl
+  vetor[16] = vet[ 4];  //hzh
+  vetor[17] = vet[ 5];  //hzl
+}
+
+
+
 ////////////////////////////////////////////////////
 /////////////// Magnetômetro   /////////////////////
 ////////////////////////////////////////////////////
@@ -11,9 +44,9 @@
 void mpu_rd_mg(word *vetor){
   byte i,vet[6];
   mpu_rd_blk(MAG_XOUT_L, vet, 6);
-  vetor[0] = (int)((vet [1] << 8) | vet[0]);    //Montar Mag X
-  vetor[1] = (int)((vet [3] << 8) | vet[2]);    //Montar Mag Y
-  vetor[2] = (int)((vet [5] << 8) | vet[4]);    //Montar Mag Z
+  vetor[0] = (int)((vet [0] << 8) | vet[1]);    //Montar Mag X
+  vetor[1] = (int)((vet [2] << 8) | vet[3]);    //Montar Mag Y
+  vetor[2] = (int)((vet [4] << 8) | vet[5]);    //Montar Mag Z
 }
 
 // Inicializar Magnetômetro
@@ -43,19 +76,20 @@ void mpu_rd_ac_tp_gi(word *vetor){
   vetor[6] = (int)((vet[12] << 8) | vet[13]);   //Montar Giro z
 }
 
-// Ler Aceleração e temperatura
-void mpu_rd_ac_tp(void){
-  byte vet[8];
-  mpu_rd_blk(ACCEL_XOUT_H, vet, 8);
-  axi = (int)((vet[0] << 8) | vet[1]);    //Montar Acel X
-  ayi = (int)((vet[2] << 8) | vet[3]);    //Montar Acel Y
-  azi = (int)((vet[4] << 8) | vet[5]);    //Montar Acel Z
-  tpi = (int)((vet[6] << 8) | vet[7]);    //Montar Temp
-  //serial_str("MPU = ");
-  //serial_xyzt(ax,ay,az,tp);
-  //serial_crlf();
+// Ler Aceleração, giro
+// Retorna vetor de 6 words [ax ay az gx gy gz]
+void mpu_rd_ac_gi(word *vetor){
+  byte i,vet[14];
+  mpu_rd_blk(ACCEL_XOUT_H, vet, 14);
+  vetor[0] = (int)((vet [0] << 8) | vet[1]);    //Montar Acel X
+  vetor[1] = (int)((vet [2] << 8) | vet[3]);    //Montar Acel Y
+  vetor[2] = (int)((vet [4] << 8) | vet[5]);    //Montar Acel Z
+  vetor[4] = (int)((vet [6] << 8) | vet[7]);    //Montar Temp - É sobrescrita
+  vetor[4] = (int)((vet [8] << 8) | vet[9]);    //Montar Giro x
+  vetor[5] = (int)((vet[10] << 8) | vet[11]);   //Montar Giro y
+  vetor[6] = (int)((vet[12] << 8) | vet[13]);   //Montar Giro z
 }
-  
+
 // Acordar o MPU e programar para usar relógio Giro X
 void mpu_acorda(void) {
   mpu_wr(PWR_MGMT_1, 1);

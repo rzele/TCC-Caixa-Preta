@@ -2,6 +2,24 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+// Faz cópia de uma string e retorna tamanho string copiada, não conta o zero
+// Nome criado para não confundir com strcpy()
+byte str_copia(byte *ft, byte *dest){
+  byte i=0;
+  while(ft[i] != '\0'){
+    dest[i]=ft[i];
+    i++;
+  }
+  return i;
+}
+
+// Retorna tamanho string, não conta o zero
+byte str_tam(byte *ft){
+  byte iy=0;
+  while(ft[iy] != '\0') iy++;
+  return iy;
+}
+
 // Remove zeros à esquerda, sem sinal
 void str_rmvz_u(char *msg){
   int i,j;

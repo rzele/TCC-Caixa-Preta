@@ -18,8 +18,7 @@ void teste(void){
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=teste_sel();
-    //modo=12;
+    //modo=10;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -494,6 +493,7 @@ char teste_9(char md){
   word tipos[7];    //Contar tipos de mensagens
   byte dado;
   byte tp;
+  byte cont=0,cmax=0;
   gps_st=0;
   for (dado=0; dado<7; dado++)  tipos[dado]=0;
   lcd_apaga();
@@ -508,7 +508,20 @@ char teste_9(char md){
   while(TRUE){
     while( (UCSR3A&(1<<RXC3)) == 0);   //Esperar chegar
     dado=UDR3;
-    ser_char(dado);
+    if (dado == '$'){
+      if (cont>cmax)  cmax=cont;
+      ser_crlf(1);
+      ser_dec8u(cont);
+      ser_spc(1);
+      ser_dec8u(cmax);
+      cont=0;
+      ser_crlf(1);
+    }
+    cont++;
+    ser_hex8(dado);
+    ser_spc(1);
+    
+    //ser_char(dado);
     tp=teste_9_gps_msg(dado);
     tipos[tp]++;
     lcd_dec16u(1,0,tipos[1]);
@@ -580,14 +593,62 @@ byte teste_9_gps_msg(char letra){
   }
 }
 
-
-
+// Extrair e interpretar as mensagens do GPS
 char teste_10(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
+  char *msg="[10] GPS Interpreta";
+  byte i,dado;
+  byte msg_tipo;
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+  delay(2000);
+  lcd_apaga_lin(0);
+
+  //Zerar todo o vetor com os dados do extraídos do GPS
+  for (i=0; i<GPS_DADOS_TAM; i++)  gps_dados[i]=0;
+  
+  // RX3: Habilitar recepção e sua interrupção
+  UCSR3B = (1<<RXCIE3) | (1<<RXEN3);  //RXIE=1, RXEN=1
+
+  gps_msg_ok=FALSE;
+  while(TRUE){
+    while(gps_msg_ok == FALSE);
+    gps_msg_ok=FALSE;
+    if (gps_msg_fase==0){
+      ser_str(gps_msg_1);
+      ser_crlf(1);
+      gps_extrai(gps_msg_1);
+    }
+    else{
+      ser_str(gps_msg_0);
+      ser_crlf(1);
+      gps_extrai(gps_msg_0);
+    }
+    ser_gps_dados(gps_dados);
+    ser_crlf(2);
+    lcd_gps_data(0,0);
+    lcd_gps_hora(0,9);
+    lcd_gps_lat(1,1);
+    lcd_gps_long(2,0);
+    lcd_gps_vel_kph(3,0);
+    lcd_gps_dado(0,18,GPS_QTD_SAT);
+    lcd_gps_dado(1,14,GPS_PDOP);
+    lcd_gps_dado(2,14,GPS_ALT);
+    lcd_gps_dado(2,19,GPS_ALT_UN);
+    lcd_gps_dado(3,11,GPS_CURSO);
+    lcd_gps_dado(3,19,GPS_STATUS);
+
+    if (sw_tira(&dado))     break;    
+
+  }
+  // RX3: Desabilitar recepção e sua interrupção
+  UCSR3B &= ~((1<<RXCIE3) | (1<<RXEN3));  //RXIE=0, RXEN=0
+
   sw_qq_tecla();
   return md;
 }
+
 
 // 11 - GPS ==> u-Center
 char teste_11(char md){

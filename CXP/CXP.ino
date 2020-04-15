@@ -10,11 +10,10 @@ void setup() {
   leds_config();
   scope_config();
   lcd_config();
-  ser_config(115200L);
+  ser_config(500000L);    //RX0 e TX0 bps
   gps_config(9600);
   ser_tx_fila_config();   //TX fila serial
   ser_rx_fila_config();   //RX fila serial
-  gps_rx_fila_config();   //GPS RX fila serial
   timer2_config();
   timer1_config();
   twi_config_100k();       //Configurar TWI

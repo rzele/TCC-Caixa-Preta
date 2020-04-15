@@ -77,10 +77,10 @@ void timer1_config(void){
 
 // ISR Timer 1: FREQ_T1 (100 Hz)
 ISR(TIMER1_COMPA_vect){
-  Scp1();
   byte i;
+  Scp1();
+  flag_10ms=TRUE;
   // Verificar se LCD precisa de atualização
-
   if (lcd_mudou){
     if (lcd_busy==FALSE){
       for (i=0; i<NRL; i++){
@@ -146,57 +146,7 @@ ISR(TIMER1_COMPA_vect){
         sw_ler(sw_val>>5);
       }
       break;
-
-    /*
-    // Teclado
-    case 0: case 8: case 12: case 16: case 24: case 28:
-      ADMUX = (1<<REFS0)|(1<<ADLAR);  //Canal 0, Ref=AVCC
-      break;
-    case 1: case 9: case 13: case 17: case 25: case 29:
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-    case 2: case 10: case 14: case 18: case 26: case 30:
-      adc_val=ADCH;          //Só o ADCH
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-      break;
-    case 3: case 11: case 15: case 19: case 27: case 31:
-      adc_val = adc_val+ADCH;
-      sw_val = adc_val/2;
-      sw_ler(sw_val);
-      break;
-
-    // VCAR = Canal 1
-    case 4:
-      ADMUX = (1<<REFS1)|(1<<REFS0)|(1<<ADLAR)|(1<<MUX0);  //Canal 1, Ref = 2,56
-      break;
-    case 5:
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-    case 6:
-      adc_val=ADCH;          //Só o ADCH
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-      break;
-    case 7:
-      adc_val = adc_val+ADCH;
-      vcar_val = adc_val/2; //VCAR = tensão
-      break;
-
-    // VCAP = Canal 2
-    case 20:
-      ADMUX = (1<<REFS1)|(1<<REFS0)|(1<<ADLAR)|(1<<MUX1);  //Canal 2, Ref = 2,56
-      break;
-    case 21:
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-    case 22:
-      adc_val=ADCH;          //Só o ADCH
-      ADCSRA |= 1<<ADSC;     //Disparar ADC;
-      break;
-    case 23:
-      adc_val = adc_val+ADCH;
-      vcap_val = adc_val/2; //VCAP = tensão
-      break;
-    default:  break;
-    */
   }
-  
   timer1_cont++;
   timer1_cont &= 0x1F;
 }
