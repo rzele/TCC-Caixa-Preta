@@ -15,6 +15,16 @@
 #define BIT6  0x40
 #define BIT7  0x80
 
+// Endereços da SRAM
+#define MPU_ADR_INI 0x00000L  //Início área MPU (12.720 msg x 18 = 228.960 Bytes) = 12,7 seg
+#define MPU_ADR_FIM 0x37E60L  //Fim    área MPU
+#define CXP_ADR_INI 0x37E60L  //Início área de conficuração da Caixa Preta (sobra 416 bytes)
+#define CXP_ADR_FIM 0x38000L  //Fim    área de conficuração da Caixa Preta
+#define GPS_ADR_INI 0x38000L  //Início área GPS (256 msg x 128 = 32.768) = 25,6 seg
+#define GPS_ADR_FIM 0x40000L  //Fim    área GPS
+#define MPU_PASSO   18        //Tamanho de uma mensagem do MPU (Acel, Giro, Mag)
+#define GPS_PASSO   128       //Tamanho da mensagem do GPS (gps_dados[])
+
 // LCD - Constantes para os bits de controle
 #define LCD_BL  8 //Back Light
 #define LCD_RW  4 //R/#W
@@ -96,6 +106,30 @@
 #define GPS_GSA   4
 #define GPS_GSV   5
 #define GPS_GLL   6
+#define GPS_MSG_TAM 200   //Tamanho max de uma msg do GPS
+#define GPS_DADOS_TAM 128   //Tamanho do vetor para os dados extraídos do GPS
+
+// Marcar posição de cada um dos parâmetros guardados em gps_dados[GPS_DADOS_TAM]
+#define GPS_STATUS     0                 //2 bytes
+#define GPS_HORA      (GPS_STATUS+2)    //11 bytes
+#define GPS_DATA      (GPS_HORA+11)     //7 bytes
+#define GPS_LAT       (GPS_DATA+7)      //11 bytes
+#define GPS_NS        (GPS_LAT+11)      //2 bytes
+#define GPS_LONG      (GPS_NS+2)        //12 bytes
+#define GPS_EW        (GPS_LONG+12)     //2 bytes
+#define GPS_VEL_NOS   (GPS_EW+2)        //8 bytes
+#define GPS_CURSO     (GPS_VEL_NOS+8)   //8 bytes
+#define GPS_PDOP      (GPS_CURSO+8)     //6 bytes
+#define GPS_HDOP      (GPS_PDOP+6)      //6 bytes
+#define GPS_VDOP      (GPS_HDOP+6)      //6 bytes
+#define GPS_VEL_KPH   (GPS_VDOP+6)      //7 bytes
+#define GPS_VEL_UN    (GPS_VEL_KPH+7)   //2 bytes
+#define GPS_FIX       (GPS_VEL_UN+2)    //2 bytes ?sem uso? - não me lembro por que
+#define GPS_QTD_SAT   (GPS_FIX+2)       //3 bytes
+#define GPS_ALT       (GPS_QTD_SAT+3)   //7 bytes
+#define GPS_ALT_UN    (GPS_ALT+7)       //2 bytes
+#define GPS_ADR_SRAM  (GPS_ALT_UN+2)    //5 bytes
+
 
 //////////////////////////////////////////////////////////////////////////////////
 /////////////////////// 06/04/2020 ///////////////////////////////////////////////

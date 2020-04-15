@@ -23,24 +23,24 @@ volatile byte sw_st_seq1,sw_st_seq2;    //Maq Estados para buscar sequências
 
 
 // TESTE - Mensagens do modo de teste
-char *teste_msg[]={ "ERRO",             //0
-                    "1-LEDs",           //1
-                    "2-LCD",            //2
-                    "3-Teclado",        //3
-                    "4-TWI (I2C)",      //4
-                    "5-Acel e giro",    //5
-                    "6-Magnetometro",   //6
-                    "7-SRAM",           //7
-                    "8-FLASH",          //8
-                    "9-GPS: Tudo",      //9
-                    "10-GPS: RMC GSA",  //10
-                    "11-GPS:U-Center",  //11
-                    "12-MPU-->MatLab",  //12
-                    "13-Blue Tooth",    //13
-                    "14-Vazio",         //14
-                    "15-Vazio",         //15
-                    "16-Vazio",         //16
-                    "17-Vazio"};        //17
+char *teste_msg[]={ "ERRO",               //0
+                    "1-LEDs",             //1
+                    "2-LCD",              //2
+                    "3-Teclado",          //3
+                    "4-TWI (I2C)",        //4
+                    "5-Acel e giro",      //5
+                    "6-Magnetometro",     //6
+                    "7-SRAM",             //7
+                    "8-FLASH",            //8
+                    "9-GPS: Tudo",        //9
+                    "10-GPS: Interpreta", //10
+                    "11-GPS:U-Center",    //11
+                    "12-MPU-->MatLab",    //12
+                    "13-Blue Tooth",      //13
+                    "14-Vazio",           //14
+                    "15-Vazio",           //15
+                    "16-Vazio",           //16
+                    "17-Vazio"};          //17
                     
 // OPERA - Mensagens do modo de Operação
 char *opera_msg[]={ "ERRO",     //0
@@ -48,7 +48,7 @@ char *opera_msg[]={ "ERRO",     //0
                     "2-Vazio",  //2
                     "3-vazio",  //3
                     "4-Vazio",  //4
-                    "5-Vazio",  //5
+                    "5-Ensaio", //5
                     "6-Vazio",  //6
                     "7-Vazio"}; //7
                     
@@ -59,41 +59,32 @@ volatile word rrand_d;   //divisor
 volatile word rrand_u;   //semente
 
 //GPS
-volatile byte gps_st;   //Mudar para estática
+volatile byte gps_dados[GPS_DADOS_TAM];     //Vetor para guardar dados extraídos das msg do GPS
+volatile byte gps_st;   //Estado do identificador de mensagens, usado em teste_9_gps_msg(char letra)
+volatile byte gps_rx_ok;                    //Indica que terminou recepção
+volatile byte gps_tx_ok;                    //Indica que terminou transmissão
+volatile byte gps_msg_0[GPS_MSG_TAM];       //(fase=0) Buffer 0 usado pela interrupção para receber GPS
+volatile byte gps_msg_1[GPS_MSG_TAM];       //(fase=1) Buffer 1 usado pela interrupção para receber GPS
+volatile byte gps_msg_ix;                   //Indexador para escrever nos buffers;
+volatile byte gps_msg_fase;                 //Fase para receber GPRMC (0=gps_rmc_0 e 1=gps_rmc_1);
+volatile byte gps_msg_ok;                   //Indica que completou o recebimento de uma mensagem;
+volatile byte gps_tipo;                     //Tipo de msg GPS que foi analisada
 
 
+// RMC só para testar
+byte *gps_t="$GPRMC,083559.00,A,4717.11437,N,00833.91522,E,0.004,77.52,091202,,,A*57";
+
+//Timer 1
+volatile byte timer1_cont;       //(0, ..., 49) Contar estados do Timer 1 para ativar ADC
+volatile byte flag_10ms;         //Marca 10 mseg
 
 //////////////////////////////////////////////////////////////////////////////////
 /////////////////////// 06/04/2020 ///////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-// GPS - Não funcionou
+// GPS - Tentei esta mensagem mas parece que não funcionou
 char msg_gll_off[]={0xB5,0x62,0x06,0x01,0x08,0x00,0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x2B,'\0'};
- 
-// Programa principal
-volatile byte modo;        //Modo de operação
 
-char *modo_msg[]={"0: Testar TWI",
-                  "1: Testar MPU",
-                  "2: Testar Mag",
-                  "3: GPS Tudo",
-                  "4: GPS RMC",
-                  "5: GPS U-Center",
-                  "6: Testar Flash",
-                  "7: Testar SRAM",
-                  "8: Expedito",
-                  "9: MPU-->MATLAB"};
-
-// MPU
-int axi,ayi,azi,tpi,gxi,gyi,gzi;      //Receber leituras instantâneas do MPU
-int refx,refy,refz;                   //Referência de 1.000
-
-// LCD
-volatile char lcdb_buf[NRL*NRC];   //buffer para o LCD
-volatile byte lcdb_flags[NRL];     //Flags para indicar linha a atualizar
 
 // Serial 0
 volatile char ser_tx_fila[SER_TX_FILA_TAM]; //Espaço para a fila serial de TX
@@ -103,25 +94,9 @@ volatile char ser_rx_fila[SER_RX_FILA_TAM]; //Espaço para a fila serial de RX
 volatile byte ser_rx_pin, ser_rx_pout;      //Ponteiros para usar a fila
 volatile byte ser_rx_ok;                    //Indica que terminou recepção
 
-// GPS = Serial 3
-volatile char gps_tx_fila[GPS_TX_FILA_TAM]; //Espaço para a fila serial de TX
-volatile byte gps_tx_pin, gps_tx_pout;      //Ponteiros para usar a fila
-volatile byte gps_tx_ok;                    //Indica que terminou transmissão
-volatile char gps_rx_fila[GPS_RX_FILA_TAM]; //Espaço para a fila serial de RX
-volatile byte gps_rx_pin, gps_rx_pout;      //Ponteiros para usar a fila
-volatile byte gps_rx_ok;                    //Indica que terminou recepção
-volatile byte gps_msg_0[200];               //(fase=0) Buffer 0 usado pela interrupção para receber GPRMC
-volatile byte gps_msg_1[200];               //(fase=1) Buffer 1 usado pela interrupção para receber GPRMC
-volatile byte gps_msg_ix;                   //Indexador para escrever nos buffers;
-volatile byte gps_msg_fase;                 //Fase para receber GPRMC (0=gps_rmc_0 e 1=gps_rmc_1);
-volatile byte gps_msg_ok;                   //Indica que completou o recebimento de uma mensagem;
-
 //ADC
 volatile word adc_val;    //Valor lido pelo ADC (em 16 bits porque tem contas)
 volatile byte adc_ok;     //Flag indica que terminou conversão
 volatile byte sw_val;     //Teclado: valor lido pelo ADC
 volatile byte vcar_val;   //VCAR: valor lido pelo ADC
 volatile byte vcap_val;   //VCAP: valor lido pelo ADC
-
-//Timer 1
-byte timer1_cont;       //(0, ..., 49) Contar estados do Timer 1 para ativar ADC
