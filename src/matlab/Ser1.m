@@ -1,6 +1,7 @@
 % Ler da porta serial
 % Ainda precisa melhorar
 clear all;
+close all;
 %nr_lt=10024;   %Total de leituras ax ay az tp gx gy gz   
 %qtd=7*nr_lt;  %Total de dados (7 dados em cada leitura)
 
@@ -9,15 +10,15 @@ clear all;
 esc_ac=2;
 esc_giro=250;
 
-
-sid=serial('COM5','Baudrate',115200);
+% Abre porta serial
+sid=serial('COM3','Baudrate',500000);
 fopen(sid);
+
 if (sid==-1)
-    fprintf(1,'Nao abriu COM5.\n');
-    break;
+    fprintf(1,'Nao abriu COM3.\n');
+    return
 end
 fprintf(1,'Pronto para receber dados!\n');
-
 
 z=0;
 cont=0;
@@ -27,6 +28,17 @@ t2=0;
 x=[];
 %while z<9999
 %while cont<qtd
+
+% Aguarda o MPU inicializar
+start = 0;
+while start==0
+    temp = fscanf(sid,'%d', 10);
+    if temp == -1
+        start = 1;
+    end
+end
+fprintf('Iniciando leitura.\n')
+
 while tt==0
     z=fscanf(sid,'%d',10);
     x=[x z];
@@ -57,89 +69,98 @@ for ii=1:tot
     gz(1,ii) = x( 1, ((ii-1)*7)+7 );
 end
 
+% Janela da media movel
+mediamovel_k = 10;
 
 % Converter acelerações em "g"
-ax=esc_ac*(ax/32767);
-ay=esc_ac*(ay/32767);
-az=esc_ac*(az/32767);
+ax=mediamovel(esc_ac*(ax/32767), mediamovel_k);
+ay=mediamovel(esc_ac*(ay/32767), mediamovel_k);
+az=mediamovel(esc_ac*(az/32767), mediamovel_k);
 
 % Converter giros em "graus/seg"
-gx=esc_giro*(gx/32767);
-gy=esc_giro*(gy/32767);
-gz=esc_giro*(gz/32767);
+gx=mediamovel(esc_giro*(gx/32767), mediamovel_k);
+gy=mediamovel(esc_giro*(gy/32767), mediamovel_k);
+gz=mediamovel(esc_giro*(gz/32767), mediamovel_k);
 
 % Converter temperatura para Celsius
 tp=(tp/340)+36.53;
 
 % Desenhar gráficos
+% Define a janela p/ acelaração e giro
+f1 = figure('Units', 'normalized', 'Position', [0, 0, 1, 1]);
+
+% variaveis p/ normalizar os eixos de giro e aceleração
+max_acel = max([ax, ay, az]);
+min_acel = min([ax, ay, az]);
+y_lim_acel = [min_acel, max_acel];
+max_giro = max([gx, gy, gz]);
+min_giro = min([gx, gy, gz]);
+y_lim_giro = [min_giro, max_giro];
+
 %ax
-figure(1);
+figure(f1);
+subplot(2,3,1);
 plot(ax);
+ylim(y_lim_acel)
 grid;
 title('Aceleração: eixo X em g');
 xlabel('Amostra');
 ylabel('g');
 
 %ay
-figure(2);
+subplot(2,3,2);
 plot(ay);
+ylim(y_lim_acel)
 grid;
 title('Aceleração: eixo Y em g');
 xlabel('Amostra');
 ylabel('g');
 
 %az
-figure(3);
+subplot(2,3,3);
 plot(az);
+ylim(y_lim_acel)
 grid;
 title('Aceleração: eixo Z em g');
 xlabel('Amostra');
 ylabel('g');
 
 %gx
-figure(4);
+subplot(2,3,4);
 plot(gx);
+ylim(y_lim_giro)
 grid;
 title('Giro: eixo X em graus/seg');
 xlabel('Amostra');
 ylabel('graus/seg');
 
 %gy
-figure(5);
+subplot(2,3,5);
 plot(gy);
+ylim(y_lim_giro)
 grid;
 title('Giro: eixo Y em graus/seg');
 xlabel('Amostra');
 ylabel('graus/seg');
 
 %gz
-figure(6);
+subplot(2,3,6);
 plot(gz);
+ylim(y_lim_giro)
 grid;
 title('Giro: eixo Z em graus/seg');
 xlabel('Amostra');
 ylabel('graus/seg');
 
+%Aqui acaba o script
+return;
+
 %Temperatura
-figure(7);
+figure(2);
 plot(tp);
 grid;
 title('Temperatura em graus Celsius');
 xlabel('Amostra');
 ylabel('graus Celsius');
-
-%Aqui acaba o script
-break
-
-% Como ler arquivo texto
-nome='T1_50K.txt';
-fid=fopen(nome,'r');
-%Verificar se abriu o arquivo
-if (fid==-1)
-    fprintf(1,'Nao abriu arquivo [%s]. Parar!\n',nome);
-    break;
-end
-w=fscanf(fid,'%d ');
-fclose(fid);
 
 

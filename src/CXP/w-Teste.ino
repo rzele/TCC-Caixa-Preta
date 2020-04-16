@@ -740,6 +740,9 @@ char teste_12(char md){
   lcd_str(1,3,"g");
   lcd_str(2,0,"Giro ");
   lcd_str(3,0,"gr/s ");
+  ser_dec16(0xFFFF);
+  ser_crlf(1);
+
   while(TRUE){
     mpu_rd_ac_tp_gi(vt);  //Ler MPU
 
