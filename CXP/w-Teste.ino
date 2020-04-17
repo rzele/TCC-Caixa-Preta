@@ -18,7 +18,7 @@ void teste(void){
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=10;
+    //modo=12;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -207,7 +207,7 @@ char teste_5(char md){
     ser_str("h ==> NOK! ERRO");
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();         //MPU Configurar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   ac_esc=2;
   giro_esc=250;
@@ -730,17 +730,33 @@ char teste_12(char md){
   //lcd_cursor_lc(1,0);
   //lcd_str(2,0,"Qq tecla inicia TX");
   //while(sw_tira(&who)==FALSE);
-  mpu_inicializa();     //Inicializar
+  mpu_config();         //MPU configurar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   ac_esc=2;
   giro_esc=250;
-  delay(500);
+  delay(1000);
+  lcd_str(3,0,"Inicia em 1 seg.");
+  ser_str("Inicia em 1 segundo.\n");
+  
+  // Remover no futuro
+  //lcd_str(3,0,"Qq Tecla.");
+  //while(sw_tira(&who)==FALSE);    
+  
+  
   lcd_apaga();
   lcd_str(0,0,"Acel");
   lcd_str(1,3,"g");
   lcd_str(2,0,"Giro ");
   lcd_str(3,0,"gr/s ");
+  ser_str("#[");      //Avisar Matlab
+
+  // Habilitar interrupção MPU (Dado Pronto)
+  mpu_int();
+
   while(TRUE){
+      while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
+      mpu_dado_ok=FALSE;
+
     mpu_rd_ac_tp_gi(vt);  //Ler MPU
 
     // Calcular acelerações e giros
@@ -776,6 +792,14 @@ char teste_12(char md){
     
     if (sw_tira(&who))     break;    
   }
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
   ser_str("\n--- Fim ---\n");
   return md;
 }

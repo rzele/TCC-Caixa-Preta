@@ -3,6 +3,9 @@
 // 10/01/2019
 
 
+// MPU
+volatile byte mpu_dado_ok;    //Indicar que MPU tem novo dado
+
 // LCD - variáveis globais
 volatile byte lcd_buf[NRL][NRC+1];   //Buffer para as 4 linhas do LCD
 volatile byte lcd_busy;              //TRUE indica que a interrupção está atualizando LCD
