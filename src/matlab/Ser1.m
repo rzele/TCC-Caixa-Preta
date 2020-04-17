@@ -1,7 +1,7 @@
 % Ler da porta serial
 % Ainda precisa melhorar
 
-clear all;
+fclose all;
 close all;
 
 %Vem do Arduino, função que configura escalas
@@ -28,142 +28,114 @@ while true
 end
 fprintf('Iniciando leitura.\n')
 
-z=0;
-cont=0;       % conta dados
-x=[];
 
-while true
-    % Verifica se tem pelo menos 1 dado no buffer (5 caracteres)
-    if sid.BytesAvailable < 5
-        continue
-    end
-    
-    z=fscanf(sid,'%s');
-    
-    if strcmp(z,'fim') == 1
-        break;
-    else
-        z = str2num(z);
-    end
-    
-    x=[x z];
-    cont=cont+1;
-end
+mediamovel_k = 10;          % Janela da media movel
+cont=0;                     % conta quandos dados foram lidos
+fim=0;                      % condição de parada
+max_size=2000;              % quantidade maxima de amostras exibidas na tela
+ax=zeros(1,max_size);
+ay=zeros(1,max_size);
+az=zeros(1,max_size);
+tp=zeros(1,max_size);
+gx=zeros(1,max_size);
+gy=zeros(1,max_size);
+gz=zeros(1,max_size);
 
-fprintf(1,'Recebidos %d dados\nLeituras = %d.\n',cont,cont/7);
-fclose(sid);
 
-%Separar leituras, de 7 em 7
-tot=floor(cont/7);
-ax=zeros(1,tot);
-ay=ax;
-az=ax;
-tp=ax;
-gx=ax;
-gy=ax;
-gz=ax;
-for ii=1:tot
-    ax(1,ii) = x( 1, ((ii-1)*7)+1 );
-    ay(1,ii) = x( 1, ((ii-1)*7)+2 );
-    az(1,ii) = x( 1, ((ii-1)*7)+3 );
-    tp(1,ii) = x( 1, ((ii-1)*7)+4 );
-    gx(1,ii) = x( 1, ((ii-1)*7)+5 );
-    gy(1,ii) = x( 1, ((ii-1)*7)+6 );
-    gz(1,ii) = x( 1, ((ii-1)*7)+7 );
-end
-
-% Janela da media movel
-mediamovel_k = 10;
-
-% Converter acelerações em "g"
-ax=mediamovel(esc_ac*(ax/32767), mediamovel_k);
-ay=mediamovel(esc_ac*(ay/32767), mediamovel_k);
-az=mediamovel(esc_ac*(az/32767), mediamovel_k);
-
-% Converter giros em "graus/seg"
-gx=mediamovel(esc_giro*(gx/32767), mediamovel_k);
-gy=mediamovel(esc_giro*(gy/32767), mediamovel_k);
-gz=mediamovel(esc_giro*(gz/32767), mediamovel_k);
-
-% Converter temperatura para Celsius
-tp=(tp/340)+36.53;
+% Define a janela p/ plot
+f1 = figure('units','normalized','outerposition',[0 0 1 1]);
 
 % Desenhar gráficos
-% Define a janela p/ acelaração e giro
-f1 = figure('Units', 'normalized', 'Position', [0, 0, 1, 1]);
-
-% variaveis p/ normalizar os eixos de giro e aceleração
-max_acel = max([ax, ay, az]);
-min_acel = min([ax, ay, az]);
-y_lim_acel = [min_acel, max_acel];
-max_giro = max([gx, gy, gz]);
-min_giro = min([gx, gy, gz]);
-y_lim_giro = [min_giro, max_giro];
-
-%ax
+%Plota aceleração
 figure(f1);
-subplot(2,3,1);
-plot(ax);
-ylim(y_lim_acel)
+subplot(3,3,1);
+p_ax = plot(ax, 'r');
 grid;
-title('Aceleração: eixo X em g');
+title('Aceleração em g');
 xlabel('Amostra');
 ylabel('g');
 
-%ay
-subplot(2,3,2);
-plot(ay);
-ylim(y_lim_acel)
-grid;
-title('Aceleração: eixo Y em g');
-xlabel('Amostra');
-ylabel('g');
+hold on
+p_ay = plot(ay, 'g');
+p_az = plot(az, 'b');
+legend('aX', 'aY', 'aZ');
+hold off
 
-%az
-subplot(2,3,3);
-plot(az);
-ylim(y_lim_acel)
+%Plota giro/s
+subplot(3,3,4);
+p_gx = plot(gx, 'r');
 grid;
-title('Aceleração: eixo Z em g');
-xlabel('Amostra');
-ylabel('g');
-
-%gx
-subplot(2,3,4);
-plot(gx);
-ylim(y_lim_giro)
-grid;
-title('Giro: eixo X em graus/seg');
+title('Giro em graus/seg');
 xlabel('Amostra');
 ylabel('graus/seg');
 
-%gy
-subplot(2,3,5);
-plot(gy);
-ylim(y_lim_giro)
-grid;
-title('Giro: eixo Y em graus/seg');
-xlabel('Amostra');
-ylabel('graus/seg');
+hold on
+p_gy = plot(gy, 'g');
+p_gz = plot(gz, 'b');
+legend('gX', 'gY', 'gZ');
+hold off
 
-%gz
-subplot(2,3,6);
-plot(gz);
-ylim(y_lim_giro)
-grid;
-title('Giro: eixo Z em graus/seg');
-xlabel('Amostra');
-ylabel('graus/seg');
+p_ax.YDataSource = 'ax';
+p_ay.YDataSource = 'ay';
+p_az.YDataSource = 'az';
+p_gx.YDataSource = 'gx';
+p_gy.YDataSource = 'gy';
+p_gz.YDataSource = 'gz';
+
+% Obtem os dados e plota em tempo real (taxa de atualizaçao 10hz)
+% NOTA: Se o buffer do serial encher (> 512 bytes) o programa explode, caso isso ocorra
+% abaixe o tempo de renderização do grafico
+time = now;
+while fim==0
+    
+    i=1;
+    data=zeros(1,7);   % array de dados lidos (7 por iteração)
+    while i<=7
+        z=fscanf(sid,'%s', 10);
+
+        if strcmp(z,'fim') == 1
+            fim=1;
+            break;
+        else
+            z = str2num(z);
+        end
+
+        data(i)=z;
+        cont=cont+1;
+        i=i+1;
+    end
+    
+    % Converter acelerações em "g"
+    data(1)=esc_ac*(data(1)/32767);
+    data(2)=esc_ac*(data(2)/32767);
+    data(3)=esc_ac*(data(3)/32767);
+
+    % Converter giros em "graus/seg"
+    data(5)=esc_giro*(data(5)/32767);
+    data(6)=esc_giro*(data(6)/32767);
+    data(7)=esc_giro*(data(7)/32767);
+
+    % Converter temperatura para Celsius
+    data(4)=(data(4)/340)+36.53;
+    
+    % Salva valores lidos
+    ax = [ax(2:max_size) data(1)];
+    ay = [ay(2:max_size) data(2)];
+    az = [az(2:max_size) data(3)];
+    tp = [tp(2:max_size) data(4)];
+    gx = [gx(2:max_size) data(5)];
+    gy = [gy(2:max_size) data(6)];
+    gz = [gz(2:max_size) data(7)];
+    
+    if (now-time)*100000 > 0.1
+        refreshdata
+        drawnow
+        time = now;
+    end
+end
 
 %Aqui acaba o script
+fprintf(1,'Recebidos %d dados\nLeituras = %d.\n',cont,cont/7);
+fclose(sid);
 return;
-
-%Temperatura
-figure(2);
-plot(tp);
-grid;
-title('Temperatura em graus Celsius');
-xlabel('Amostra');
-ylabel('graus Celsius');
-
 

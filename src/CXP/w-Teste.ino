@@ -710,6 +710,7 @@ char teste_12(char md){
   char *msg="[12] MPU --> Matlab";
   byte who;
   word vt[7];
+  word count = 0;
   float vtf[7];
   word ac_esc, giro_esc;
   lcd_apaga();
@@ -777,6 +778,8 @@ char teste_12(char md){
     ser_dec16(vt[4]);   ser_crlf(1);           //gx
     ser_dec16(vt[5]);   ser_crlf(1);           //gy
     ser_dec16(vt[6]);   ser_crlf(1);           //gz
+
+    count = count + 1;
     
     if (sw_tira(&who))     break;    
   }
@@ -785,6 +788,13 @@ char teste_12(char md){
   ser_str("fim\n");
 
   ser_str("\n--- Fim ---\n");
+
+  lcd_apaga();
+  lcd_str(0,0,"Total de amostras: ");
+  lcd_dec16u(1,0, count);
+
+  sw_qq_tecla();
+
   return md;
 }
 
