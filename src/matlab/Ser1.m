@@ -1,9 +1,8 @@
 % Ler da porta serial
 % Ainda precisa melhorar
+
 clear all;
 close all;
-%nr_lt=10024;   %Total de leituras ax ay az tp gx gy gz   
-%qtd=7*nr_lt;  %Total de dados (7 dados em cada leitura)
 
 %Vem do Arduino, função que configura escalas
 %mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
@@ -20,33 +19,37 @@ if (sid==-1)
 end
 fprintf(1,'Pronto para receber dados!\n');
 
-z=0;
-cont=0;
-tt=0;   %teste
-t1=0;
-t2=0;
-x=[];
-%while z<9999
-%while cont<qtd
-
-% Aguarda o MPU inicializar
-start = 0;
-while start==0
-    temp = fscanf(sid,'%d', 10);
-    if temp == -1
-        start = 1;
+% Aguarda o MPU inicializar (enviar -1 pela serial)
+while true
+    temp = fscanf(sid,'%s');
+    if strcmp(temp,'start') == 1
+        break;
     end
 end
 fprintf('Iniciando leitura.\n')
 
-while tt==0
-    z=fscanf(sid,'%d',10);
+z=0;
+cont=0;       % conta dados
+x=[];
+
+while true
+    % Verifica se tem pelo menos 1 dado no buffer (5 caracteres)
+    if sid.BytesAvailable < 5
+        continue
+    end
+    
+    z=fscanf(sid,'%s');
+    
+    if strcmp(z,'fim') == 1
+        break;
+    else
+        z = str2num(z);
+    end
+    
     x=[x z];
-    t1=t2;
-    t2=z;
-    tt=(t1==1)&(t2==2);   %t1=1 e t2=2?
     cont=cont+1;
 end
+
 fprintf(1,'Recebidos %d dados\nLeituras = %d.\n',cont,cont/7);
 fclose(sid);
 
