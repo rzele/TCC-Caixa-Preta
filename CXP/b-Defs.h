@@ -46,7 +46,7 @@
 //#define FREQ_T2 25000  //Freq de interrupção do timer 1
 
 // TESTE
-#define TESTE_TOT 17     //Modos de teste: 1, 2 , ..., 17
+#define TESTE_TOT 21     //Modos de teste: 1, 2 , ..., 17
 #define TESTE_0    0     //Não tem
 #define TESTE_1    1     //LEDs
 #define TESTE_2    2     //LCD
@@ -61,10 +61,14 @@
 #define TESTE_11  11     //GPS U-Center
 #define TESTE_12  12     //MPU-->Matlab
 #define TESTE_13  13     //BlueTooth
-#define TESTE_14  14     //Livre
-#define TESTE_15  15     //Livre
-#define TESTE_16  16     //Livre
-#define TESTE_17  17     //Livre
+#define TESTE_14  14     //Q1 contador LED
+#define TESTE_15  15     //Q2 contador com sinal
+#define TESTE_16  16     //Q3 Leitura aceleração
+#define TESTE_17  17     //Q4 Leitura giro
+#define TESTE_18  18     //Q5 aceleraçao ram
+#define TESTE_19  19     //Q6 giro ram
+#define TESTE_20  20     //Q7 aceleração e giro até o final da memoria
+#define TESTE_21  21     //Q8 aceleração e giro com a memória circular
 
 // OPERA
 #define OPERA_TOT  7     //Modos de teste: 1, 2 , ..., 7
@@ -130,61 +134,6 @@
 #define GPS_ALT_UN    (GPS_ALT+7)       //2 bytes
 #define GPS_ADR_SRAM  (GPS_ALT_UN+2)    //5 bytes
 
-/////////////// MPU 6050 - Constantes
-#define MPU_ADR  0x68  //Endereço MPU-6050
-#define MPU_EWR  0xD0  //MPU para escrita (0x68<<1)
-#define MPU_ERD  0xD1  //MPU para leitura (0x68<<1 + 1)
-
-//Escalas para Giroscópio
-#define GIRO_FS_250  0   // +/- 250 graus/seg
-#define GIRO_FS_500  1   // +/- 500 graus/seg
-#define GIRO_FS_1000 2   // +/- 1000 graus/seg
-#define GIRO_FS_2000 3   // +/- 2000 graus/seg
-
-//Escalas para Acelerômetro
-#define ACEL_FS_2G  0   // +/- 2g
-#define ACEL_FS_4G  1   // +/- 4g
-#define ACEL_FS_8G  2   // +/- 8g
-#define ACEL_FS_16G 3   // +/- 16g
-
-// Valores para o Sample Rate, Registrador SMPLRT_DIV
-// Considerando Taxa = 1kHz (Registrador CONFIG)
-#define SAMPLE_RT_1kHz     0   // 1.000/(0+1) = 1000
-#define SAMPLE_RT_500Hz    1   // 1.000/(1+1) = 500
-#define SAMPLE_RT_333Hz    2   // 1.000/(2+1) = 333,33
-#define SAMPLE_RT_250Hz    3   // 1.000/(3+1) = 250
-#define SAMPLE_RT_200Hz    4   // 1.000/(4+1) = 200
-#define SAMPLE_RT_166Hz    5   // 1.000/(5+1) = 166,66
-#define SAMPLE_RT_142Hz    6   // 1.000/(6+1) = 142,85
-#define SAMPLE_RT_125Hz    7   // 1.000/(7+1) = 125
-#define SAMPLE_RT_111Hz    8   //1.000 /(8+1) = 111,11
-#define SAMPLE_RT_100Hz    9   //1.000 /(9+1) = 100
-
-// Registradores do MPU-9250 que foram usados
-#define SELF_TEST_X      0x0D
-#define SELF_TEST_Y      0x0E
-#define SELF_TEST_Z      0x0F
-#define SELF_TEST_A      0x10
-#define SMPLRT_DIV       0x19
-#define CONFIG           0x1A
-#define GYRO_CONFIG      0x1B
-#define ACCEL_CONFIG     0x1C
-#define FIFO_EN          0x23
-#define INT_PIN_CFG      0x37
-#define INT_ENABLE       0x38
-#define INT_STATUS       0x3A
-#define ACCEL_XOUT_H     0x3B
-#define USER_CTRL        0x6A
-#define PWR_MGMT_1       0x6B
-#define FIFO_COUNTH      0x72
-#define FIFO_COUNTL      0x73
-#define FIFO_R_W         0x74
-#define WHO_AM_I         0x75
-
-/////////////// MPU 9250 - Magnetômetro
-#define MAG_CNTL_1      0x0A  //Controle 1
-#define MAG_CNTL_2      0x0B  //Controle 2
-#define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
 
 //////////////////////////////////////////////////////////////////////////////////
 /////////////////////// 06/04/2020 ///////////////////////////////////////////////
@@ -255,6 +204,48 @@
 
 
 
+/////////////// MPU 6050 - Constantes
+#define MPU_ADR  0x68  //Endereço MPU-6050
+#define MPU_EWR  0xD0  //MPU para escrita (0x68<<1)
+#define MPU_ERD  0xD1  //MPU para leitura (0x68<<1 + 1)
+
+//Escalas para Giroscópio
+#define GIRO_FS_250  0   // +/- 250 graus/seg
+#define GIRO_FS_500  1   // +/- 500 graus/seg
+#define GIRO_FS_1000 2   // +/- 1000 graus/seg
+#define GIRO_FS_2000 3   // +/- 2000 graus/seg
+
+//Escalas para Acelerômetro
+#define ACEL_FS_2G  0   // +/- 2g
+#define ACEL_FS_4G  1   // +/- 4g
+#define ACEL_FS_8G  2   // +/- 8g
+#define ACEL_FS_16G 3   // +/- 16g
+
+// Registradores do MPU-9250 que foram usados
+#define SELF_TEST_X      0x0D
+#define SELF_TEST_Y      0x0E
+#define SELF_TEST_Z      0x0F
+#define SELF_TEST_A      0x10
+#define SMPLRT_DIV       0x19
+#define CONFIG           0x1A
+#define GYRO_CONFIG      0x1B
+#define ACCEL_CONFIG     0x1C
+#define FIFO_EN          0x23
+#define INT_PIN_CFG      0x37
+#define INT_ENABLE       0x38
+#define INT_STATUS       0x3A
+#define ACCEL_XOUT_H     0x3B
+#define USER_CTRL        0x6A
+#define PWR_MGMT_1       0x6B
+#define FIFO_COUNTH      0x72
+#define FIFO_COUNTL      0x73
+#define FIFO_R_W         0x74
+#define WHO_AM_I         0x75
+
+/////////////// MPU 9250 - Magnetômetro
+#define MAG_CNTL_1      0x0A  //Controle 1
+#define MAG_CNTL_2      0x0B  //Controle 2
+#define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
 
 // Endereços da FLASH 24LC1025 (128 KB) TWI
 #define FLASH1_ADR     0x50  //FLASH1

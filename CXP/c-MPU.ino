@@ -56,37 +56,11 @@ void mpu_mag_config(void){
   delay(200);       //200ms  
 }
 
+
+
 ////////////////////////////////////////////////////
 /////////// Aceleração e Giro      /////////////////
 ////////////////////////////////////////////////////
-
-// Preparar para MPU usar INT4
-// Pino PE4 entrada com pullup
-// Habilitar INT4 para flanco de descida
-// MPU: interrup em baixo com push-pull, pulso de 50 useg
-// MPU: Habilitar interrup dado pronto
-void mpu_int(void){
-
-  // INT4 = PE4 = Pino 2 --> entrada com pullup 
-  DDRE = DDRE & ~(1 << DDE4); //DDD4=0, entrada          
-  PORTE = PORTE | (1 << PE4); //Pull-up ligado (PORTE4=1)
-  //pinMode(2,INPUT_PULLUP);
-
-  // Preparar interrupção INT4 por flanco de descida
-  EICRB = (EICRB | (1<<ISC41)) & ~(1 << ISC40); //INT4 = flanco descida
-  EIMSK = EIMSK | (1 << INT4);                  //INT4 habilitada  
-
-  mpu_wr(INT_PIN_CFG,0x80);  //push-pull, pulso 50 useg
-  mpu_wr(INT_ENABLE,1);     //DATA_RDY_EN
-}
-
-// Desabilitar MPU que usava INT4
-// Desabilitar INT4 para 
-// MPU: Desabilitar interrup dado pronto
-void mpu_des_int(void){
-  EIMSK &= ~(1 << INT4);    //INT4 Desabilitada  
-  mpu_wr(INT_ENABLE,0);     //DATA_RDY_EN = 0 (desab)
-}
 
 // Ler Aceleração, temperatura e giro
 // Retorna vetor de 7 words [ax ay az tp gx gy gz]
@@ -123,8 +97,7 @@ void mpu_acorda(void) {
 
 // Dormir o MPU e programar para usar relógio Giro X
 void mpu_dorme(void) {
-//  mpu_wr(PWR_MGMT_1, 0x21);  //SLEEP=1 e PLL com Giro X
-  mpu_wr(PWR_MGMT_1, 0x41);  //SLEEP=1 e PLL com Giro X
+  mpu_wr(PWR_MGMT_1, 0x21);  //SLEEP=1 e PLL com Giro X
 }
 
 // Ler o registrador WHO_AM_I
@@ -133,10 +106,9 @@ byte mpu_whoami(void) {
 }
 
 // Colocar o MPU num estado conhecido
-// Taxa = 1 kHz, Banda: Acel=5 Hz e Giro=5 Hz e delay=19 mseg
-// Taxa de amostragem =  taxa/(1+SMPLRT_DIV) = 1k/10 = 100Hz
-//Escalas acel = +/2g e giro = +/-250 gr/s
-void mpu_config(void) {
+// Algumas operações são redundantes dependendo de
+// quando esta função é chamada
+void mpu_inicializa(void) {
 
   // Despertar MPU, Relógio = PLL do Giro-x
   mpu_wr(PWR_MGMT_1, 0x01);
@@ -145,12 +117,9 @@ void mpu_config(void) {
   // 6 ==> Taxa = 1 kHz, Banda: Acel=5 Hz e Giro=5 Hz e delay=19 mseg
   mpu_wr(CONFIG, 6);
 
-  // 9 ==> Taxa de amostragem =  taxa/(1+SMPLRT_DIV) = 1k/10 = 100Hz
-  mpu_wr(SMPLRT_DIV, SAMPLE_RT_100Hz);  //Taxa de amostragem = 100 Hz
-  //mpu_wr(SMPLRT_DIV, SAMPLE_RT_500Hz);  //Taxa de amostragem = 500 Hz
-
-  // Definir escalas
-  mpu_escalas(GIRO_FS_250, ACEL_FS_2G);   //Escalas acel = +/2g e giro = +/-250 gr/s
+  // Taxa de amostragem =  taxa/(1+SMPLRT_DIV) = 1k/10 = 100Hz
+  mpu_wr(SMPLRT_DIV, 9);  //Taxa = 100 Hz
+  //mpu_wr(SMPLRT_DIV, 4);  //Taxa = 1k/5 = 500 Hz
 }
 
 // Selecionar Fundo de Escalas para o MPU
@@ -161,11 +130,6 @@ void mpu_escalas(byte gfs, byte afs) {
   mpu_wr(ACCEL_CONFIG, afs << 3); //FS do Acel
 }
 
-// Selecionar Sample Rate
-// Considerando Taxa = 1kHz (Registrador CONFIG)
-void mpu_sample_rt(byte sample_rate) {
-  mpu_wr(SMPLRT_DIV, sample_rate);  //Taxa de amostragem
-}
 
 ///////////////// Rotinas Básicas para MPU
 
@@ -214,11 +178,4 @@ void mpu_rd_blk(byte reg, byte *dado, byte qtd) {
     dado[i] = twi_dado_et_ack(45);  //Receber dados e gerar ACK
   dado = twi_dado_et_nack(46);  //Receber último dado e gerar NACK
   twi_stop();                   //Gerar STOP para finalizar
-}
-
-
-// MPU: ISR para a interrupção INT4
-ISR(INT4_vect){                                
-  mpu_dado_ok=TRUE;
-  Scp1();
 }

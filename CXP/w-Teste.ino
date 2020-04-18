@@ -17,8 +17,10 @@ void teste(void){
     while(sw_val<0x10);  //Esperar soltar tecla SEL
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
+    
     modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=12;
+    //modo=14;
+    
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -39,6 +41,10 @@ void teste(void){
       case TESTE_15: teste_15(modo); break;
       case TESTE_16: teste_16(modo); break;
       case TESTE_17: teste_17(modo); break;
+      case TESTE_18: teste_18(modo); break;
+      case TESTE_19: teste_19(modo); break;
+      case TESTE_20: teste_20(modo); break;
+      case TESTE_21: teste_21(modo); break;
     }
   }
   while(1);
@@ -207,7 +213,7 @@ char teste_5(char md){
     ser_str("h ==> NOK! ERRO");
   }
 
-  mpu_config();         //MPU Configurar
+  mpu_inicializa();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   ac_esc=2;
   giro_esc=250;
@@ -393,7 +399,7 @@ char teste_8(char md){
 }
 
 
-// Testear acesso byte
+// Testar acesso byte
 // Tipo=0==>SRAM  Tipo=1==>FLASH
 // qual = 0 -> (U7) SRAM0, PAG0 (0 0000 -> 0 FFFF) 
 // qual = 1 -> (U7) SRAM0, PAG1 (1 0000 -> 1 FFFF) 
@@ -730,33 +736,17 @@ char teste_12(char md){
   //lcd_cursor_lc(1,0);
   //lcd_str(2,0,"Qq tecla inicia TX");
   //while(sw_tira(&who)==FALSE);
-  mpu_config();         //MPU configurar
+  mpu_inicializa();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   ac_esc=2;
   giro_esc=250;
-  delay(1000);
-  lcd_str(3,0,"Inicia em 1 seg.");
-  ser_str("Inicia em 1 segundo.\n");
-  
-  // Remover no futuro
-  //lcd_str(3,0,"Qq Tecla.");
-  //while(sw_tira(&who)==FALSE);    
-  
-  
+  delay(500);
   lcd_apaga();
   lcd_str(0,0,"Acel");
   lcd_str(1,3,"g");
   lcd_str(2,0,"Giro ");
   lcd_str(3,0,"gr/s ");
-  ser_str("#[");      //Avisar Matlab
-
-  // Habilitar interrupção MPU (Dado Pronto)
-  mpu_int();
-
   while(TRUE){
-      while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
-      mpu_dado_ok=FALSE;
-
     mpu_rd_ac_tp_gi(vt);  //Ler MPU
 
     // Calcular acelerações e giros
@@ -792,14 +782,6 @@ char teste_12(char md){
     
     if (sw_tira(&who))     break;    
   }
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
   ser_str("\n--- Fim ---\n");
   return md;
 }
@@ -813,36 +795,703 @@ char teste_13(char md){
 }
 
 // 14 - Vazio
+//char teste_14(char md){
+//  lcd_str(0,0,teste_msg[md]);
+//  ser_str(teste_msg[md]);
+//  sw_qq_tecla();
+//  return md;
+//}
+
+// 14 - Questão 1 - Contador com teclas
 char teste_14(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  char *msg="[14] Questao 1";
+  byte finalizar = 0;
+  byte cont=0,tecla;
+  lcd_str(0,0,msg);
+  ser_str(msg); ser_crlf(1);
+
+  while(TRUE){
+
+    //espera usuario apertar a tecla
+    while ( sw_tira(&tecla) == FALSE);
+
+    //operação de cada tecla
+    switch(tecla){
+      case SW_SUP:  cont++;  break;
+      case SW_INF:  cont--;  break;
+      case SW_ESQ:
+      case SW_DIR:  cont = 0;  break;
+      case SW_SEL:  finalizar = 1;
+
+    }
+
+    //flag para sair do loop
+    if (finalizar == 1) break;
+
+    //acender os leds de acordo com o contador
+    leds_cont(cont);
+    
+  }
+
+  //apagar os leds
+  led_amo();
+  led_vd();
+  led_am();
+  led_vm();
+
+  
+  ser_str("\n--- Fim ---\n");
+  
   return md;
 }
 
-// 15 - Vazio
+// 15 - Questão 2 - contador LCD
 char teste_15(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  
+  char *msg="[15] Questao 2";
+  byte finalizar = 0;
+  long cont=0;
+  byte tecla;
+
+  //escrever o titulo
+  lcd_str(0,0,msg);
+
+  //escrever o valor inicial de cont (0) no lcd
+  lcd_dec32nz(1,0,cont);
+  lcd_hex32(2,0, cont);
+
+  ser_str(msg); ser_crlf(1);
+
+  while(TRUE){
+
+    //espera usuario apertar tecla
+    while ( sw_tira(&tecla) == FALSE);
+
+    //operação de acordo com a tecla
+    switch(tecla){
+      case SW_SUP:  cont++;  break;
+      case SW_INF:  cont--;  break;
+      case SW_ESQ:  cont-=10; break;
+      case SW_DIR:  cont+=10;  break;
+      case SW_SEQ1:
+      case SW_SEQ2: cont = 0; break;
+      case SW_SEL:  finalizar = 1;
+
+    }
+
+    //flag para finalizar
+    if (finalizar == 1) break;
+
+    //apaga as linhas dos numeros
+    lcd_apaga_lin(1);
+    lcd_apaga_lin(2);
+
+    //escreve em decimal e em hexadecimal
+    lcd_dec32nz(1,0,cont);
+    lcd_hex32(2,0, cont);
+    
+  }
+
+  //ser_str(msg);
+  ser_str("\n--- Fim ---\n");
   return md;
 }
 
-// 16 - Vazio
+// 16 - Questão 3 leitura aceleração
 char teste_16(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  byte tecla;                   //variavel que armazena tecla pressionada
+  int vt[7];                    //array que armazena dados do mpu
+  float vtf[7];                 //dados do mpu convertidos para decimal
+  char *msg="[16] Questao 3";
+  word ac_esc;                  //indica o intervalo da medida para converter para decimal
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+
+  mpu_inicializa();     //Inicializar MPU
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  ac_esc=2; // indica o intervalo de +-2g para converter para decimal
+  
+  delay(2000);
+  
+  lcd_str(1,0,"Acel");
+  lcd_str(2,3,"g");
+
+  while(TRUE){
+    mpu_rd_ac_gi(vt); //lê dados do mpu populando vt
+
+    //converter os dados para decimal
+    vtf[0]=ac_esc*((float)vt[0]/32767);
+    vtf[1]=ac_esc*((float)vt[1]/32767);
+    vtf[2]=ac_esc*((float)vt[2]/32767);
+
+     //escreve os dados em HEX no lcd
+    lcd_hex16(1,5,vt[0]);  lcd_hex16(1,10,vt[1]);  lcd_hex16(1,15,vt[2]);
+
+    //escreve os dados em decimal no lcd
+    lcd_float(2,5,vtf[0],1);
+    lcd_float(2,10,vtf[1],1);
+    lcd_float(2,15,vtf[2],1);
+
+    //se usuário apertou alguma tecla, termina
+    if (sw_tira(&tecla)){
+      ser_str("\n--- Fim ---\n");
+      return md;
+    }
+    delay(500);
+  }
   return md;
 }
 
-// 17 - Vazio
+// 17 - Questao 4 giro
 char teste_17(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  byte tecla;                    //variavel que armazena tecla pressionada
+  int vt[7];                     //array que armazena dados do mpu
+  float vtf[7];                  //dados do mpu convertidos para decimal
+  char *msg="[17] Questao 4";
+  word giro_esc;                 //indica o intervalo da medida para converter para decimal
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+
+  mpu_inicializa();     //Inicializar MPU
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  giro_esc=250;         //intervalo para o giro
+
+  
+  delay(2000);
+  lcd_str(1,0,"Giro");
+  lcd_str(2,0,"gr/s");
+  
+  while(TRUE){
+    mpu_rd_ac_tp_gi(vt); // leitura do MPU
+
+    //converte giro para decimal
+    vtf[4]=giro_esc*((float)vt[4]/32767);
+    vtf[5]=giro_esc*((float)vt[5]/32767);
+    vtf[6]=giro_esc*((float)vt[6]/32767);
+
+    //escreve em hex no lcd
+    lcd_hex16(1,5,vt[4]);  lcd_hex16(1,10,vt[5]);  lcd_hex16(1,15,vt[6]);
+
+    //escreve em decimal no lcd
+    lcd_apaga_lin(2);
+    lcd_str(2,0,"gr/s");
+    lcd_dec16nz(2,5,vtf[4]);
+    lcd_dec16nz(2,10,vtf[5]);
+    lcd_dec16nz(2,15,vtf[6]);
+
+    //se usuario apertou alguma tecla, sai
+    if (sw_tira(&tecla)){
+      ser_str("\n--- Fim ---\n");
+      return md;
+    }
+    delay(500);
+  }
   return md;
 }
+
+//questão 5 - teste de medir 1000 medidas de aceleração e colocar na RAM
+char teste_18(char md){
+
+  int qtd_medidas_mpu = 0;            //quantidade de leituras do mpu escritas ou lidas na memória
+  const int max_leituras = 1000; //quantidade de dados coletados
+  long addr = 0;                //ponteiro para endereço atual
+  int vt[7];                    // dado coletado do MPU
+  byte tmp;                     //byte temporario para extrair/colocar dado da memória
+  word eixo_lido;               //palavra inteira que indica o eixo lido da aceleração
+  
+  char *msg="[18] Questao 5";
+
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  lcd_str(1,0,"Pressione qualquer");
+  lcd_str(2,0,"tecla para continuar");
+  ser_str(msg);
+  ser_crlf(1);
+
+  sw_qq_tecla();
+
+  //limpa linhas iniciais
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  
+  lcd_str(1,0,"escritas: ");
+  lcd_dec16nz(1,10,qtd_medidas_mpu);
+  
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+
+  delay(2000);
+
+  //Faz as leituras de aceleração e escreve na ram
+  while(qtd_medidas_mpu < max_leituras){
+    
+    mpu_rd_ac_gi(vt); //leitura do mpu
+
+    //escreve dados de aceleração para eixo X, Y e Z na ram, lembrando que cada eixo tem 2 bytes
+    for(int i = 0 ; i < 3 ; i++){
+
+      //escreve byte da direita e incrementa endereço
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp); 
+      addr++;
+
+      //escreve byte da esquerda e incrementa endereço
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    qtd_medidas_mpu++;
+
+    lcd_apaga_lin(1);
+    lcd_str(1,0,"escritas: ");
+    lcd_dec16nz(1,10,qtd_medidas_mpu);
+  }
+
+  //volta ao começo para ler a memória
+  qtd_medidas_mpu = 0;
+  addr = 0;
+  lcd_apaga_lin(1);
+
+
+  //lê os dados e escreve na serial
+  while(qtd_medidas_mpu < max_leituras){
+
+    //lê os 3 eixos da aceleração
+    for(int i = 0 ; i < 3 ; i++){
+
+      eixo_lido = 0;
+
+      //lê o byte da direita e incrementa addr
+      tmp = sram_rd(addr);
+      eixo_lido = (word) tmp;
+      addr++;
+
+      //lê byte da esquerda e incrementa addr
+      tmp = sram_rd(addr);
+      eixo_lido |= ((word)tmp << 8)& 0xFF00;
+      addr++;
+
+      
+
+      //escreve o valor na serial
+      ser_dec16(eixo_lido);   ser_crlf(1); 
+//      ser_hex16(eixo_lido);   ser_crlf(1); 
+    }
+
+    qtd_medidas_mpu++;
+
+    //mostra contador de leituras completas da aceleração no lcd e endereço atual
+      lcd_apaga_lin(1);
+      lcd_str(1,0,"leituras: ");
+      lcd_dec16nz(1,10,qtd_medidas_mpu);
+
+    
+  } 
+
+  
+  return md;
+}
+
+
+//questão 6 - teste de medir o giro e colocar 1000 medidas na RAM
+char teste_19(char md){
+
+  int qtd_medidas_mpu = 0;            //quantidade de medidas do mpu escritas ou lidas na memória
+  const int max_leituras = 1000;      //quantidade de dados coletados
+  long addr = 0;                      //ponteiro para endereço atual
+  int vt[7];                          //dado coletado do MPU
+  byte tmp;                           //byte temporario para extrair/colocar dado da memória
+  word eixo_lido;                     //palavra que indica o eixo lido do giro
+  
+  char *msg="[19] Questao 6";
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  lcd_str(1,0,"Pressione qualquer");
+  lcd_str(2,0,"tecla para continuar");
+  ser_str(msg);
+  ser_crlf(1);
+
+  sw_qq_tecla();
+  
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  
+  lcd_str(1,0,"escritas: ");
+  lcd_dec16nz(1,10,qtd_medidas_mpu);
+  
+
+  mpu_inicializa();     //Inicializar MPU
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+
+  delay(2000);
+
+  //Faz as leituras de giro e escreve na ram
+  
+  while(qtd_medidas_mpu < max_leituras){
+    
+    mpu_rd_ac_gi(vt); //leitura do MPU que popula vt
+
+    //escreve dados de giro para eixo X, Y e Z na ram
+    for(int i = 4 ; i < 7 ; i++){
+      
+      //escreve byte da direita e incrementa endereço
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp); 
+      addr++;
+
+      //escreve byte da esquerda e incrementa endereço
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    qtd_medidas_mpu++;
+
+    //escreve no lcd quantidade atual de medidas de giro do mpu
+    lcd_apaga_lin(1);
+    lcd_str(1,0,"escritas: ");
+    lcd_dec16nz(1,10,qtd_medidas_mpu);
+    //delay(20);
+  }
+
+  //percorremos a memória do zero para ler as medidas
+  qtd_medidas_mpu = 0;
+  addr = 0;
+
+
+  //lê os dados e escreve na serial
+  while(qtd_medidas_mpu < max_leituras){
+
+    //lê os 3 eixos do giro
+    for(int i = 0 ; i < 3 ; i++){
+
+      eixo_lido = 0;
+
+      //lê byte da direita
+      tmp = sram_rd(addr);
+      eixo_lido = (word) tmp;
+      addr++;
+
+      //lê byte da esquerda
+      tmp = sram_rd(addr);
+      eixo_lido |= ((word)tmp << 8)& 0xFF00;
+      addr++;  
+
+      //escreve o valor na serial
+      ser_dec16(eixo_lido);   ser_crlf(1); 
+//      ser_hex16(eixo_lido);   ser_crlf(1); 
+    }
+ 
+
+    qtd_medidas_mpu++;
+
+    //mostra contador no lcd
+    lcd_apaga_lin(1);
+    lcd_str(1,0,"leituras: ");
+    lcd_dec16nz(1,10,qtd_medidas_mpu);
+  } 
+
+  
+  return md;
+}
+
+
+//questão 7 - teste de medir aceleração e giro até o final da ram ou até apertar um botão
+char teste_20(char md){
+
+  int qtd_medidas_mpu = 0;            //quantidade de medidas do mpu escritas na memória
+  
+  /*quantidade máxima de leituras até encher a SRAM 
+   * cada leitura do MPU é 12 bytes (3 eixos de aceleração e 3 eixos de rotação, cada eixo tem 2 bytes)
+   * A memória total é 256kb = 262144 bytes
+   * com 21845 leituras, encheremos 226140 dos 262144 bytes totais
+   */
+  const int max_leituras = 21845; 
+  
+  long addr = 0;                //ponteiro para endereço atual
+  int vt[7];                    // dado coletado do MPU
+  byte tmp;                     //byte temporario para extrair/colocar dado da memória
+  word eixo_lido;               //palavra inteira que indica o eixo lido da aceleração
+  
+  char *msg="[20] Questao 7";
+
+  int readCount = 0;
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  lcd_str(1,0,"Pressione qualquer");
+  lcd_str(2,0,"tecla para continuar");
+  ser_str(msg);
+  ser_crlf(1);
+
+  sw_qq_tecla();
+  
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  
+  lcd_str(1,0,"escritas: ");
+  lcd_dec16nz(1,10,qtd_medidas_mpu);
+  lcd_str(2,0,"addr: ");
+  lcd_hex32(2,6, addr);
+  
+
+  mpu_inicializa();     //Inicializar MPU
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+
+  delay(2000);
+
+  //Faz as leituras de aceleração e giro e escreve na ram
+  while(qtd_medidas_mpu < max_leituras){
+
+    //sai se usuário apertar alguma tecla
+    if (sw_tira(&tmp)){
+      break;
+    }
+    
+    mpu_rd_ac_gi(vt); //leitura do mpu
+
+    //escreve dados de aceleraçao para eixo X, Y e Z na ram
+    for(int i = 0 ; i < 3 ; i++){
+
+      //escreve byte da direita
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp);
+      addr++;
+
+      //escreve byte da esquerda
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    //escreve dados de giro para eixo X, Y e Z na ram
+    for(int i = 4 ; i < 7 ; i++){
+      
+      //escreve byte da direita
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp); 
+      addr++;
+
+      //escreve byte da esquerda
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    qtd_medidas_mpu++;
+
+    //mostra qtd de medidas e endereço atual no lcd
+    lcd_apaga_lin(1);
+    lcd_apaga_lin(2);
+    lcd_str(1,0,"escritas: ");
+    lcd_dec16nz(1,10,qtd_medidas_mpu);
+    
+    lcd_str(2,0,"addr: ");
+    lcd_hex32(2,6, addr);
+  }
+
+  delay(100);
+
+  //volta ao endereço inicial para lemos a memória
+  addr = 0;
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  lcd_str(2,0,"Espere o serial...");
+  
+
+  //lê os dados e escreve na serial
+  while(readCount < qtd_medidas_mpu){
+
+    //lê os 3 eixos da aceleracao e os 3 do giro
+    for(int i = 0 ; i < 6 ; i++){
+
+      eixo_lido = 0;
+
+      //lê byte da direita
+      tmp = sram_rd(addr);
+      eixo_lido = (word) tmp;
+      addr++;
+
+      //lê byte da esquerda
+      tmp = sram_rd(addr);
+      eixo_lido |= ((word)tmp << 8)& 0xFF00;
+      addr++;
+      
+
+      //escreve o valor na serial
+      ser_dec16(eixo_lido);   ser_crlf(1); 
+    }
+
+    readCount++;
+  } 
+
+  
+  return md;
+}
+
+//questão 8 - teste de medir aceleração e giro até usuário pressionar botão. Memória circular.
+char teste_21(char md){
+
+  int qtd_medidas_mpu = 0;                 //quantidade de medidas escritas na memória
+  const long TOTAL_BYTES_MEMORIA = 262144; // tamanho total em bytes da memória
+  
+  long addrFinal = 0;           //onde a escrita parou na memória
+  long addr = 0;                //ponteiro para endereço atual
+  int vt[7];                    // dado coletado do MPU
+  byte tmp;                     //byte temporario para extrair/colocar dado da memória
+  word eixo_lido;               //palavra inteira que indica o eixo lido da aceleração
+
+  byte sobrescreve = 0; // flag que indica que a memória já foi totalmente usada e que os dados agora são sobrescritos, se for 1, o dado mais antigo estará na posição após addrFinal
+  
+  char *msg="[21] Questao 8";
+
+  int readCount = 0;
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  lcd_str(1,0,"Pressione qualquer");
+  lcd_str(2,0,"tecla para continuar");
+  ser_str(msg);
+  ser_crlf(1);
+
+  sw_qq_tecla();
+  
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  
+  lcd_str(1,0,"escritas: ");
+  lcd_dec16nz(1,10,qtd_medidas_mpu);
+  lcd_str(2,0,"addr: ");
+  lcd_hex32(2,6, addr);
+  
+
+  mpu_inicializa();     //Inicializar MPU
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+
+  delay(2000);
+
+  //Faz as leituras de aceleração e giro e escreve na ram
+  while(TRUE){
+
+    //se chegar ao fim da memória de 256kb volta ao endereço inicial
+    if(addr > 262144){
+      addr = 0;
+      sobrescreve = 1; //agora os dados da memória serão sobrescritos
+    }
+
+    //sai do loop e para de coletar dado se apertar o botão
+    if (sw_tira(&tmp)){
+      break;
+    }
+
+    //faz a medida com o mpu
+    mpu_rd_ac_gi(vt);
+
+    //atualiza o endereço final para a leitura atual
+    addrFinal = addr;
+
+    //escreve dados de aceleraçao para eixo X, Y e Z na ram
+    for(int i = 0 ; i < 3 ; i++){
+
+      //escreve byte da direita
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp);  
+      addr++;
+
+      //escreve byte da esquerda
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    //escreve dados de giro para eixo X, Y e Z na ram
+    for(int i = 4 ; i < 7 ; i++){
+
+      // escreve byte da direita
+      tmp = (byte) (vt[i]);
+      sram_wr(addr,tmp);     
+      addr++;
+
+      //escreve byte da esquerda
+      tmp = (byte) (vt[i] >> 8);
+      sram_wr(addr,tmp);
+      addr++;    
+    }
+
+    qtd_medidas_mpu++;
+
+    //mostra contador de escritas e de endereço no lcd
+    lcd_apaga_lin(1);
+    lcd_apaga_lin(2);
+    lcd_str(1,0,"escritas: ");
+    lcd_dec16nz(1,10,qtd_medidas_mpu);
+    
+    lcd_str(2,0,"addr: ");
+    lcd_hex32(2,6, addr);
+  }
+
+  delay(100);
+  addr = 0;
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  lcd_str(2,0,"Espere o serial...");
+  
+
+  // se a flag sobrescreve for 1, a memória toda foi preenchida
+  // a quantidade máxima de leituras do mpu (ax, ay, az, gx, gy, gz) que cabe na memória é 21845, então só essas serão passadas para a serial
+  // nesse caso, addr é configurado como o valor mais antigo que é o próximo na memória após addrFinal (que ainda não foi sobrescrito)
+  if(sobrescreve == 1){
+    qtd_medidas_mpu = 21845;
+    addr = addrFinal + 1;
+    addr = addr % TOTAL_BYTES_MEMORIA; //caso estoure a a quantidade máxima de endereços
+  }
+
+  //lê os dados e escreve na serial
+  while(readCount < qtd_medidas_mpu){
+
+    //DEBUG escreve no serial a posicao da memoria atual
+    //ser_dec32(addr);   ser_crlf(1); 
+    
+    //lê os 3 eixos da aceleracao e os 3 do giro
+    for(int i = 0 ; i < 6 ; i++){
+
+      eixo_lido = 0;
+
+      //lê byte da direita
+      tmp = sram_rd(addr);
+      eixo_lido = (word) tmp;
+      addr++;
+      addr = addr % TOTAL_BYTES_MEMORIA;
+
+      //lê byte da esquerda
+      tmp = sram_rd(addr);
+      eixo_lido |= ((word)tmp << 8)& 0xFF00;
+      addr++;
+      addr = addr % TOTAL_BYTES_MEMORIA;
+      
+
+      //escreve o valor na serial
+      ser_dec16(eixo_lido);   ser_crlf(1); 
+    }
+
+    readCount++;
+  } 
+
+  
+  return md;
+}
+
+
 
 
 // Selecionar o modo de operação

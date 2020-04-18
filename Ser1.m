@@ -4,17 +4,21 @@ clear all;
 %nr_lt=10024;   %Total de leituras ax ay az tp gx gy gz   
 %qtd=7*nr_lt;  %Total de dados (7 dados em cada leitura)
 
-%Vem do Arduino, função que configura escalas
+%Vem doArduino, função que configura escalas
 %mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
 esc_ac=2;
 esc_giro=250;
 
+if ~isempty(instrfind)
+ fclose(instrfind);
+  delete(instrfind);
+end
 
-sid=serial('COM5','Baudrate',115200);
+sid=serial('COM4','Baudrate',115200);
 fopen(sid);
 if (sid==-1)
-    fprintf(1,'Nao abriu COM5.\n');
-    break;
+    fprintf(1,'Nao abriu COM4.\n');
+    return;
 end
 fprintf(1,'Pronto para receber dados!\n');
 
@@ -129,7 +133,7 @@ xlabel('Amostra');
 ylabel('graus Celsius');
 
 %Aqui acaba o script
-break
+return;
 
 % Como ler arquivo texto
 nome='T1_50K.txt';
@@ -137,7 +141,7 @@ fid=fopen(nome,'r');
 %Verificar se abriu o arquivo
 if (fid==-1)
     fprintf(1,'Nao abriu arquivo [%s]. Parar!\n',nome);
-    break;
+    return;
 end
 w=fscanf(fid,'%d ');
 fclose(fid);

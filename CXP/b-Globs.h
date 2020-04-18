@@ -3,9 +3,6 @@
 // 10/01/2019
 
 
-// MPU
-volatile byte mpu_dado_ok;    //Indicar que MPU tem novo dado
-
 // LCD - variáveis globais
 volatile byte lcd_buf[NRL][NRC+1];   //Buffer para as 4 linhas do LCD
 volatile byte lcd_busy;              //TRUE indica que a interrupção está atualizando LCD
@@ -40,10 +37,15 @@ char *teste_msg[]={ "ERRO",               //0
                     "11-GPS:U-Center",    //11
                     "12-MPU-->MatLab",    //12
                     "13-Blue Tooth",      //13
-                    "14-Vazio",           //14
-                    "15-Vazio",           //15
-                    "16-Vazio",           //16
-                    "17-Vazio"};          //17
+                    "14-Questao 1",           //14
+                    "15-Questao 2",           //15
+                    "16-Questao 3",           //16
+                    "17-Questao 4",           //17
+                    "18-Questao 5",           //18
+                    "19-Questao 6",           //19
+                    "20-Questao 7",           //20
+                    "21-Questao 8"};          //20
+                    
                     
 // OPERA - Mensagens do modo de Operação
 char *opera_msg[]={ "ERRO",     //0

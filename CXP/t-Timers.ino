@@ -78,6 +78,7 @@ void timer1_config(void){
 // ISR Timer 1: FREQ_T1 (100 Hz)
 ISR(TIMER1_COMPA_vect){
   byte i;
+  Scp1();
   flag_10ms=TRUE;
   // Verificar se LCD precisa de atualização
   if (lcd_mudou){

@@ -15,8 +15,8 @@ void opera(void){
     ser_str("\nModo Opera\n");
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
-    //modo=sel_modo(opera_msg, OPERA_TOT);
-    modo=5;
+    modo=sel_modo(opera_msg, OPERA_TOT);
+    //modo=5;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -90,12 +90,10 @@ char opera_5(char md){
   lcd_str(1,6,"Enderecos");
   lcd_str(2,3,"MPU       GPS");
 
-  // GPS RX3: Habilitar recepção e sua interrupção
+
+  // RX3: Habilitar recepção e sua interrupção
   UCSR3B = (1<<RXCIE3) | (1<<RXEN3);  //RXIE=1, RXEN=1
  
-  // Habilitar interrupção MPU (Dado Pronto)
-  mpu_int();
-
   // Laço principal
   mpu_adr=MPU_ADR_INI;
   gps_adr=GPS_ADR_INI;
@@ -105,9 +103,8 @@ char opera_5(char md){
     lcd_hex32(3,0,mpu_adr);
     lcd_hex32(3,10,gps_adr);
     // MPU - Gravar a cada 10 ms
-    //if (flag_10ms == TRUE){  //A cada 10ms Timer1
-   if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
-      mpu_dado_ok=FALSE;
+    if (flag_10ms == TRUE){  //A cada 10ms
+      flag_10ms=FALSE;
       mpu_rd_ac_gi_mg(vt);
       sram_wr_blk(mpu_adr, vt, MPU_PASSO); //Gravar MPU na SRAM
       mpu_adr += MPU_PASSO;
@@ -153,12 +150,8 @@ char opera_5(char md){
     
   }
 
-  // Desabilitar interrupção MPU
-  mpu_des_int();
-
-  // (GPS) RX3: Desabilitar recepção e sua interrupção
+  // RX3: Desabilitar recepção e sua interrupção
   UCSR3B &= ~((1<<RXCIE3) | (1<<RXEN3));  //RXIE=0, RXEN=0
-
 
   /////////////// Marcar o final //////////////////////
   // Gravar linha com 22222 = 0x56CE

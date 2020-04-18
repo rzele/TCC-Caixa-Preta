@@ -18,15 +18,14 @@ void setup() {
   timer1_config();
   twi_config_100k();       //Configurar TWI
   spi_config(SPI_500K);    //Configurar SPI
-  mpu_config();         //Configura MPU +/- 2g    
 }
 
 void loop() {
   
   teste();  //Forçar a entrada  no modo teste
   
-  if (ADCH < 10)  teste();
-  else            opera();
+  /*if (ADCH < 10)  teste();
+  else            opera();*/
   
   while(TRUE);  //Para em loop infinito
 }
