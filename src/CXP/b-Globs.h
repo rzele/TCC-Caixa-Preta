@@ -30,7 +30,7 @@ char *exercicios_msg[]={ "ERRO",                       //0
                          "4-MPU Giro",                 //4
                          "5-SRAM + MPU Acel",          //5
                          "6-SRAM + MPU Giro",          //6
-                         "7-SRAM variável",            //7
+                         "7-SRAM variavel",            //7
                          "8-SRAM circular" };          //8
 
 // TESTE - Mensagens do modo de teste
