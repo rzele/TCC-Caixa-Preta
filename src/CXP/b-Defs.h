@@ -45,6 +45,17 @@
 //#define FREQ_T2 5000  //Freq de interrupção do timer 1
 //#define FREQ_T2 25000  //Freq de interrupção do timer 1
 
+// EXERCICIOS
+#define EXERCICIOS_TOT 8     //Modos de exercicios: 1, 2 , ..., 8
+#define EXERCICIO_1    1     //Não tem
+#define EXERCICIO_2    2     //LEDs
+#define EXERCICIO_3    3     //LCD
+#define EXERCICIO_4    4     //Teclado
+#define EXERCICIO_5    5     //TWI
+#define EXERCICIO_6    6     //Acel e giro
+#define EXERCICIO_7    7     //Magnetometro
+#define EXERCICIO_8    8     //SRAM
+
 // TESTE
 #define TESTE_TOT 17     //Modos de teste: 1, 2 , ..., 17
 #define TESTE_0    0     //Não tem
