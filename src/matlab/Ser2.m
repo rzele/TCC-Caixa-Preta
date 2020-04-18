@@ -30,7 +30,7 @@ esc_gi=250;
 tam=janela*fa;   %Tamanho da janela em nr de amostras
 pa=fa*passo;    %Passo em nr de amostras
 
-sid=serial('COM5','Baudrate',500000);
+sid=serial('COM5','Baudrate',115200);
 fopen(sid);
 if (sid==-1)
     fprintf(1,'Nao abriu COM5.\n');
