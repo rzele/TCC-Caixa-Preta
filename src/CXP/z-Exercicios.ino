@@ -241,18 +241,170 @@ char exercicio_4(char md){
 // 5 - exercicio
 // Grava na SRAM 1000 leituras de aceleração dps envia p/ o monitor serial
 char exercicio_5(char md){
+  byte who;
+  word count=0, n_samples=1000, blk_n_samples=10, i;
+  word blk_wr_size = (blk_n_samples * 3 * 2);
+  int mpu_temp_data[7];
+  byte acel_blk_data[blk_wr_size];
+  long sram_pt_wr=0x00000;
+  long sram_pt_rd=0x00000;
+  int rd_data[3];
+
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
+  delay(500);
+  lcd_apaga();
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,10,who);
+  if (who == 0x73) {
+    lcd_str(1,15," OK");  //MPU respondendo
+  } else {
+    lcd_str(1,15," NOK");  //MPU respondendo
+    return 0;
+  }
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  lcd_str(3,0,"Aperte p/ iniciar");
+  delay(1000);
   sw_qq_tecla();
+  lcd_apaga();
+
+  lcd_str(1,0, "  Leituras feitas:  ");
+
+  // Escreve na SRAM N medidadas da aceleração
+  while (count < n_samples) {
+
+    // Preenche o array de dados somente com a aceleração, até preencher o tamanho de 1 bloco 
+    for( i=0; i < blk_n_samples; i++ ) {
+      mpu_rd_ac_tp_gi( mpu_temp_data );
+      // Salva ByteH depois ByteL p/ depois escrever na ram nesta ordem
+      acel_blk_data[(i * 3 * 2) + 0 ] = (byte)(mpu_temp_data[0] >> 8);
+      acel_blk_data[(i * 3 * 2) + 1 ] = (byte)(mpu_temp_data[0] & 0x0000FFFF);
+      acel_blk_data[(i * 3 * 2) + 2 ] = (byte)(mpu_temp_data[1] >> 8);
+      acel_blk_data[(i * 3 * 2) + 3 ] = (byte)(mpu_temp_data[1] & 0x0000FFFF);
+      acel_blk_data[(i * 3 * 2) + 4 ] = (byte)(mpu_temp_data[2] >> 8);
+      acel_blk_data[(i * 3 * 2) + 5 ] = (byte)(mpu_temp_data[2] & 0x0000FFFF);
+    }
+    
+    sram_wr_blk(sram_pt_wr, acel_blk_data, blk_wr_size );
+
+    count++;
+    lcd_dec16u(2,7, count);
+    sram_pt_wr += blk_wr_size;
+  }
+
+  count = 0;
+
+  ser_str("\nFinalizado escrita dos dados\n");
+  lcd_str(1,0, "  Leituras concluidas:  ");
+  delay(1000);
+
+  ser_str("Iniciando leitura\n");
+
+  // Lê na SRAM N medidadas da aceleração uma a uma
+  while (count < n_samples) {
+    
+    // Lê dois bytes de aceleração em cada eixo concatena e printa
+    rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );
+    rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );
+    rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );
+    ser_dec16(rd_data[0]); ser_crlf(1);
+    ser_dec16(rd_data[1]); ser_crlf(1);
+    ser_dec16(rd_data[2]); ser_crlf(1);
+
+    count++;
+    sram_pt_rd += 2 * 3;
+  }
+
   return md;
 }
 
 // 6 - exercicio
 // Grava na SRAM 1000 leituras de giro dps envia p/ o monitor serial
 char exercicio_6(char md){
+  byte who;
+  word count=0, n_samples=1000, blk_n_samples=10, i;
+  word blk_wr_size = (blk_n_samples * 3 * 2);
+  int mpu_temp_data[7];
+  byte giro_blk_data[blk_wr_size];
+  long sram_pt_wr=0x00000;
+  long sram_pt_rd=0x00000;
+  int rd_data[3];
+
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
+  delay(500);
+  lcd_apaga();
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,10,who);
+  if (who == 0x73) {
+    lcd_str(1,15," OK");  //MPU respondendo
+  } else {
+    lcd_str(1,15," NOK");  //MPU respondendo
+    return 0;
+  }
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  lcd_str(3,0,"Aperte p/ iniciar");
+  delay(1000);
   sw_qq_tecla();
+  lcd_apaga();
+
+  lcd_str(1,0, "  Leituras feitas:  ");
+
+  // Escreve na SRAM N medidadas do giro
+  while (count < n_samples) {
+
+    // Preenche o array de dados somente com o giro, até preencher o tamanho de 1 bloco 
+    for( i=0; i < blk_n_samples; i++ ) {
+      mpu_rd_ac_tp_gi( mpu_temp_data );
+      // Salva ByteH depois ByteL p/ depois escrever na ram nesta ordem
+      giro_blk_data[(i * 3 * 2) + 0 ] = (byte)(mpu_temp_data[4] >> 8);
+      giro_blk_data[(i * 3 * 2) + 1 ] = (byte)(mpu_temp_data[4] & 0x0000FFFF);
+      giro_blk_data[(i * 3 * 2) + 2 ] = (byte)(mpu_temp_data[5] >> 8);
+      giro_blk_data[(i * 3 * 2) + 3 ] = (byte)(mpu_temp_data[5] & 0x0000FFFF);
+      giro_blk_data[(i * 3 * 2) + 4 ] = (byte)(mpu_temp_data[6] >> 8);
+      giro_blk_data[(i * 3 * 2) + 5 ] = (byte)(mpu_temp_data[6] & 0x0000FFFF);
+    }
+    
+    sram_wr_blk(sram_pt_wr, giro_blk_data, blk_wr_size );
+
+    count++;
+    lcd_dec16u(2,7, count);
+    sram_pt_wr += blk_wr_size;
+  }
+
+  count = 0;
+
+  ser_str("\nFinalizado escrita dos dados\n");
+  lcd_str(1,0, "  Leituras concluidas:  ");
+  delay(1000);
+
+  ser_str("Iniciando leitura\n");
+
+  // Lê na SRAM N medidadas do giro uma a uma
+  while (count < n_samples) {
+    
+    // Lê dois bytes de giro em cada eixo concatena e printa
+    rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );
+    rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );
+    rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );
+    ser_dec16(rd_data[0]); ser_crlf(1);
+    ser_dec16(rd_data[1]); ser_crlf(1);
+    ser_dec16(rd_data[2]); ser_crlf(1);
+
+    count++;
+    sram_pt_rd += 2 * 3;
+  }
+
   return md;
 }
 
