@@ -39,7 +39,43 @@ void exercicios(void){
 char exercicio_1(char md){
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
-  sw_qq_tecla();
+  delay(500);
+  lcd_apaga();
+
+  lcd_str(0,0, "------COMMANDS------");
+  lcd_str(1,0, "         +1         ");
+  lcd_str(2,0, "  zera  exit  zera  ");
+  lcd_str(3,0, "         -1         ");
+  leds_cont(0);
+
+  word count = 0;
+  byte key = SW_NADA;
+
+  while (key != SW_SEL) {
+    // Aguarda a leitura de uma tecla
+    while( sw_tira(&key) == FALSE );
+
+    switch (key) {
+      case SW_INF:
+        count--;
+        break;
+      case SW_DIR:
+        count = 0;
+        break;
+      case SW_SUP:
+        count++;
+        break;
+      case SW_ESQ:
+        count = 0;
+        break;
+      default:
+        break;
+    }
+
+    leds_cont(count);
+  }
+
+  leds_cont(0);
   return md;
 }
 
@@ -50,7 +86,51 @@ char exercicio_1(char md){
 char exercicio_2(char md){
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
-  sw_qq_tecla();
+  delay(500);
+  lcd_apaga();
+
+  lcd_str(0,0, "     +1     ");
+  lcd_str(1,0, "-10 exit +10");
+  lcd_str(2,0, "     -1     ");
+  lcd_str(3,0, "SEQ1/2: zera  ");
+  lcd_str(2, 14, "VALOR:");
+  lcd_str(3, 14, "+00000");
+
+  word count = 0;
+  char count_str[7];
+  byte key = SW_NADA;
+
+  while (key != SW_SEL) {
+    // Aguarda a leitura de uma tecla
+    while( sw_tira(&key) == FALSE );
+
+    switch (key) {
+      case SW_INF:
+        count--;
+        break;
+      case SW_DIR:
+        count += 10;
+        break;
+      case SW_SUP:
+        count++;
+        break;
+      case SW_ESQ:
+        count -= 10;
+        break;
+      case SW_SEQ1:
+        count = 0;
+        break;
+      case SW_SEQ2:
+        count = 0;
+        break;
+      default:
+        break;
+    }
+
+    str_dec16(count, count_str);
+    lcd_str(3, 14, count_str);
+  }
+
   return md;
 }
 
