@@ -92,12 +92,11 @@ char exercicio_2(char md){
   lcd_str(0,0, "     +1     ");
   lcd_str(1,0, "-10 exit +10");
   lcd_str(2,0, "     -1     ");
-  lcd_str(3,0, "SEQ1/2: zera  ");
+  lcd_str(3,0, "SEQ1/2: zera");
   lcd_str(2, 14, "VALOR:");
   lcd_str(3, 14, "+00000");
 
   word count = 0;
-  char count_str[7];
   byte key = SW_NADA;
 
   while (key != SW_SEL) {
@@ -127,8 +126,7 @@ char exercicio_2(char md){
         break;
     }
 
-    str_dec16(count, count_str);
-    lcd_str(3, 14, count_str);
+    lcd_dec16(3, 14, count);
   }
 
   return md;
@@ -137,18 +135,106 @@ char exercicio_2(char md){
 // 3 - exercicio
 // Lê aceleração do MPU e exibe no LCD
 char exercicio_3(char md){
+  int mpu_data[7];
+  float mpu_processed_data[7];
+  byte key = SW_NADA, who;
+  word ac_esc=2;
+
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
-  sw_qq_tecla();
+  delay(500);
+  lcd_apaga();
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,10,who);
+  if (who == 0x73) {
+    lcd_str(1,15," OK");  //MPU respondendo
+  } else {
+    lcd_str(1,15," NOK");  //MPU respondendo
+    return 0;
+  }
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  delay(2000);
+  lcd_apaga();
+
+  lcd_str(0, 0, "ax = HHHH | +d.dddd g");
+  lcd_str(1, 0, "ay = HHHH | +d.dddd g");
+  lcd_str(2, 0, "az = HHHH | +d.dddd g");
+  lcd_str(3, 0, " APERTE SEL P/ SAIR ");
+
+  while (key != SW_SEL) {
+    sw_tira(&key);
+    mpu_rd_ac_tp_gi(mpu_data);
+    mpu_processed_data[0]=ac_esc*( ((float) mpu_data[0]) / 32767 );
+    mpu_processed_data[1]=ac_esc*( ((float) mpu_data[1]) / 32767 );
+    mpu_processed_data[2]=ac_esc*( ((float) mpu_data[2]) / 32767 );
+
+    lcd_hex16(0, 5, mpu_data[0]);
+    lcd_hex16(1, 5, mpu_data[1]);
+    lcd_hex16(2, 5, mpu_data[2]);
+
+    lcd_float(0, 12, mpu_processed_data[0], 6);
+    lcd_float(1, 12, mpu_processed_data[1], 6);
+    lcd_float(2, 12, mpu_processed_data[2], 6);
+  }
+
   return md;
 }
 
 // 4 - exercicio
 // Lê giro do MPU e exibe no LCD
 char exercicio_4(char md){
+  int mpu_data[7];
+  float mpu_processed_data[7];
+  byte key = SW_NADA, who;
+  word giro_esc=250;
+
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
-  sw_qq_tecla();
+  delay(500);
+  lcd_apaga();
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,10,who);
+  if (who == 0x73) {
+    lcd_str(1,15," OK");  //MPU respondendo
+  } else {
+    lcd_str(1,15," NOK");  //MPU respondendo
+    return 0;
+  }
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  delay(2000);
+  lcd_apaga();
+
+  lcd_str(0, 0, "gx=HHHH | +d.dddd");
+  lcd_str(1, 0, "gy=HHHH | +d.dddd");
+  lcd_str(2, 0, "gz=HHHH | +d.dddd");
+  lcd_str(3, 0, " APERTE SEL P/ SAIR ");
+
+  while (key != SW_SEL) {
+    sw_tira(&key);
+    mpu_rd_ac_tp_gi(mpu_data);
+    mpu_processed_data[4]=giro_esc*( ((float) mpu_data[4]) / 32767 );
+    mpu_processed_data[5]=giro_esc*( ((float) mpu_data[5]) / 32767 );
+    mpu_processed_data[6]=giro_esc*( ((float) mpu_data[6]) / 32767 );
+
+    lcd_hex16(0, 3, mpu_data[4]);
+    lcd_hex16(1, 3, mpu_data[5]);
+    lcd_hex16(2, 3, mpu_data[6]);
+
+    lcd_float(0, 10, mpu_processed_data[4], 6);
+    lcd_float(1, 10, mpu_processed_data[5], 6);
+    lcd_float(2, 10, mpu_processed_data[6], 6);
+  }
+
   return md;
 }
 
