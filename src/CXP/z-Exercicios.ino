@@ -313,9 +313,10 @@ char exercicio_5(char md){
     rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );
     rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );
     rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );
-    ser_dec16(rd_data[0]); ser_crlf(1);
-    ser_dec16(rd_data[1]); ser_crlf(1);
-    ser_dec16(rd_data[2]); ser_crlf(1);
+    ser_dec16(rd_data[0]); ser_str(";");
+    ser_dec16(rd_data[1]); ser_str(";");
+    ser_dec16(rd_data[2]); ser_str(";");
+    ser_crlf(1);
 
     count++;
     sram_pt_rd += 2 * 3;
@@ -399,9 +400,10 @@ char exercicio_6(char md){
     rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );
     rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );
     rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );
-    ser_dec16(rd_data[0]); ser_crlf(1);
-    ser_dec16(rd_data[1]); ser_crlf(1);
-    ser_dec16(rd_data[2]); ser_crlf(1);
+    ser_dec16(rd_data[0]); ser_str(";");
+    ser_dec16(rd_data[1]); ser_str(";");
+    ser_dec16(rd_data[2]); ser_str(";");
+    ser_crlf(1);
 
     count++;
     sram_pt_rd += 2 * 3;
@@ -464,7 +466,7 @@ char exercicio_7(char md){
   lcd_str(3,0, "  Aperte p/ parar:  ");
 
   // Escreve na SRAM medidade de aceleração e giro até algo ser apertado ou bater no limite da ram
-  while (stop == 0 && sram_pt_wr < sram_max) {
+  while (stop == 0 && sram_pt_wr <= sram_max) {
 
     // Preenche o array de dados com aceleração e giro, até preencher o tamanho de 1 bloco 
     for( i=0; i < blk_n_samples; i++ ) {
@@ -511,18 +513,19 @@ char exercicio_7(char md){
   while (count < n_samples) {
     
     // Lê dois bytes de giro em cada eixo concatena e printa
-    rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );
-    rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );
-    rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );
-    rd_data[3] = (int)( (sram_rd(sram_pt_rd + 6) << 8) | sram_rd(sram_pt_rd + 7) );
-    rd_data[4] = (int)( (sram_rd(sram_pt_rd + 8) << 8) | sram_rd(sram_pt_rd + 9) );
-    rd_data[5] = (int)( (sram_rd(sram_pt_rd + 10) << 8) | sram_rd(sram_pt_rd + 11) );
-    ser_dec16(rd_data[0]); ser_crlf(1);
-    ser_dec16(rd_data[1]); ser_crlf(1);
-    ser_dec16(rd_data[2]); ser_crlf(1);
-    ser_dec16(rd_data[3]); ser_crlf(1);
-    ser_dec16(rd_data[4]); ser_crlf(1);
-    ser_dec16(rd_data[5]); ser_crlf(1);
+    rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );       // ax
+    rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );       // ay
+    rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );       // az
+    rd_data[3] = (int)( (sram_rd(sram_pt_rd + 6) << 8) | sram_rd(sram_pt_rd + 7) );       // gx
+    rd_data[4] = (int)( (sram_rd(sram_pt_rd + 8) << 8) | sram_rd(sram_pt_rd + 9) );       // gy
+    rd_data[5] = (int)( (sram_rd(sram_pt_rd + 10) << 8) | sram_rd(sram_pt_rd + 11) );     // gz
+    ser_dec16(rd_data[0]); ser_str(";");   // ax
+    ser_dec16(rd_data[1]); ser_str(";");   // ay
+    ser_dec16(rd_data[2]); ser_str(";");   // az
+    ser_dec16(rd_data[3]); ser_str(";");   // gx
+    ser_dec16(rd_data[4]); ser_str(";");   // gy
+    ser_dec16(rd_data[5]); ser_str(";");   // gz
+    ser_crlf(1);
 
     count++;
     sram_pt_rd += 2 * 6;
@@ -533,9 +536,144 @@ char exercicio_7(char md){
 
 // 8 - exercicio
 // Grava na SRAM de forma circular de aceleração e giro dps envia p/ monitor serial
+// NOTE: Selecione o tamanho do bloco de leitura (blk_n_samples) de modo que 21845‬ seja multiplo
+// Uma vez que cabem 21.845‬ Amostras = 21845 * (6 * 2Bytes) = 262140 = 256KB - 4B (Não cabe mais uma amostra nesses 4B)
 char exercicio_8(char md){
+  byte who;
+  byte stop = FALSE;
+  byte sram_full = FALSE;
+  word count=0, n_samples=0, blk_n_samples=17, i;
+  word blk_wr_size = (blk_n_samples * 6 * 2);
+  int mpu_temp_data[7];
+  byte mpu_blk_data[blk_wr_size];
+  long sram_pt_wr=0x00000;
+  long sram_pt_rd=0x00000;
+  int rd_data[6];
+
+  // Cabem 21.845‬ Amostras = 21845 * (6 * 2Bytes) = 262140 = 256KB - 4B (Não cabe mais uma amostra nesses 4B)
+  long sram_min=0x00000;
+  long sram_max=0x3FFFC;
+
+  // Checa se 262140B (tamanho que será escrito na ram) é multiplo de blk_wr_size
+  if ( (262140 % blk_wr_size) != 0 ) {
+    lcd_str(0,0, "ERRO- veja o console");
+    ser_str("Tamanho do bloco de amostras não aceito, favor altere e execute novamente");
+    delay(1000);
+    return -1;
+  }
+
   lcd_str(0,0,exercicios_msg[md]);
   ser_str(exercicios_msg[md]);
+  delay(500);
+  lcd_apaga();
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,10,who);
+  if (who == 0x73) {
+    lcd_str(1,15," OK");  //MPU respondendo
+  } else {
+    lcd_str(1,15," NOK");  //MPU respondendo
+    return 0;
+  }
+
+  mpu_inicializa();     //Inicializar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  lcd_str(3,0,"Aperte p/ iniciar");
+  delay(1000);
   sw_qq_tecla();
+  lcd_apaga();
+
+  lcd_str(0,0, "  Leituras feitas:  ");
+  lcd_str(3,0, "  Aperte p/ parar:  ");
+
+  // Escreve na SRAM medidade de aceleração e giro até algo ser apertado
+  while (stop == 0) {
+
+    // Preenche o array de dados com aceleração e giro, até preencher o tamanho de 1 bloco 
+    for( i=0; i < blk_n_samples; i++ ) {
+      mpu_rd_ac_tp_gi( mpu_temp_data );
+      // Salva ByteH depois ByteL p/ depois escrever na ram nesta ordem
+      // Aceleração
+      mpu_blk_data[(i * 6 * 2) + 0 ] = (byte)(mpu_temp_data[0] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 1 ] = (byte)(mpu_temp_data[0] & 0x0000FFFF);
+      mpu_blk_data[(i * 6 * 2) + 2 ] = (byte)(mpu_temp_data[1] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 3 ] = (byte)(mpu_temp_data[1] & 0x0000FFFF);
+      mpu_blk_data[(i * 6 * 2) + 4 ] = (byte)(mpu_temp_data[2] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 5 ] = (byte)(mpu_temp_data[2] & 0x0000FFFF);
+      // Giro
+      mpu_blk_data[(i * 6 * 2) + 6 ] = (byte)(mpu_temp_data[4] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 7 ] = (byte)(mpu_temp_data[4] & 0x0000FFFF);
+      mpu_blk_data[(i * 6 * 2) + 8 ] = (byte)(mpu_temp_data[5] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 9 ] = (byte)(mpu_temp_data[5] & 0x0000FFFF);
+      mpu_blk_data[(i * 6 * 2) + 10 ] = (byte)(mpu_temp_data[6] >> 8);
+      mpu_blk_data[(i * 6 * 2) + 11 ] = (byte)(mpu_temp_data[6] & 0x0000FFFF);
+
+
+      // Se ainda n chegou ao final da memoria, conta quantas amostras teremos no final
+      if (sram_full == FALSE){
+        n_samples++;
+      }
+
+      count++;
+
+      if (sw_tira(&who)) {
+        stop = TRUE;
+      }
+    }
+    
+    sram_wr_blk(sram_pt_wr, mpu_blk_data, blk_wr_size );
+
+    lcd_dec16u(1,7, count);
+    sram_pt_wr += blk_wr_size;
+
+    // Se chegou no limite da memoria, volta p/ o inicio
+    if (sram_pt_wr > sram_max) {
+      sram_pt_wr = sram_min;
+      sram_full = TRUE;
+    }
+  }
+
+  count = 0;
+
+  ser_str("\nFinalizado escrita dos dados\n");
+  lcd_str(0,0, "  Leituras concluidas:  ");
+  delay(1000);
+
+  ser_str("Iniciando leitura\n");
+
+  // Se a memoria ja esta cheia, começa onde seria a proxima escrita
+  if (sram_full == TRUE) {
+    sram_pt_rd = sram_pt_wr;
+  }
+
+  // Lê na SRAM N medidadas de aceleração e giro uma a uma
+  while (count < n_samples) {
+    
+    // Lê dois bytes de giro em cada eixo concatena e printa
+    rd_data[0] = (int)( (sram_rd(sram_pt_rd + 0) << 8) | sram_rd(sram_pt_rd + 1) );       // ax
+    rd_data[1] = (int)( (sram_rd(sram_pt_rd + 2) << 8) | sram_rd(sram_pt_rd + 3) );       // ay
+    rd_data[2] = (int)( (sram_rd(sram_pt_rd + 4) << 8) | sram_rd(sram_pt_rd + 5) );       // az
+    rd_data[3] = (int)( (sram_rd(sram_pt_rd + 6) << 8) | sram_rd(sram_pt_rd + 7) );       // gx
+    rd_data[4] = (int)( (sram_rd(sram_pt_rd + 8) << 8) | sram_rd(sram_pt_rd + 9) );       // gy
+    rd_data[5] = (int)( (sram_rd(sram_pt_rd + 10) << 8) | sram_rd(sram_pt_rd + 11) );     // gz
+    ser_dec16(rd_data[0]); ser_str(";");   // ax
+    ser_dec16(rd_data[1]); ser_str(";");   // ay
+    ser_dec16(rd_data[2]); ser_str(";");   // az
+    ser_dec16(rd_data[3]); ser_str(";");   // gx
+    ser_dec16(rd_data[4]); ser_str(";");   // gy
+    ser_dec16(rd_data[5]); ser_str(";");   // gz
+    ser_crlf(1);   
+
+    count++;
+    sram_pt_rd += 2 * 6;
+
+    // Se a memoria estava cheia e chegamos ao final dela, volta p/ o inicio
+    if ( (sram_full == TRUE) && (sram_pt_rd > sram_max) ) {
+      sram_pt_rd = 0x00000;
+    }
+  }
+
   return md;
 }
