@@ -25,6 +25,17 @@ volatile byte sw_1,sw_2,sw_n,sw_v;      //Variáveis para detectar teclas aciona
 volatile byte sw_st_seq1,sw_st_seq2;    //Maq Estados para buscar sequências
 
 
+// EXERCICIOS - Mensagens do modo de exercicios
+char *exercicios_msg[]={ "ERRO",                       //0
+                         "1-Contador + LEDs",          //1
+                         "2-Contador + LCD",           //2
+                         "3-MPU Acel",                 //3
+                         "4-MPU Giro",                 //4
+                         "5-SRAM + MPU Acel",          //5
+                         "6-SRAM + MPU Giro",          //6
+                         "7-SRAM variavel",            //7
+                         "8-SRAM circular" };          //8
+
 // TESTE - Mensagens do modo de teste
 char *teste_msg[]={ "ERRO",               //0
                     "1-LEDs",             //1
@@ -44,7 +55,7 @@ char *teste_msg[]={ "ERRO",               //0
                     "15-Vazio",           //15
                     "16-Vazio",           //16
                     "17-Vazio"};          //17
-                    
+
 // OPERA - Mensagens do modo de Operação
 char *opera_msg[]={ "ERRO",     //0
                     "1-Vazio",  //1

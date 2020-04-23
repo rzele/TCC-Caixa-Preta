@@ -710,6 +710,7 @@ char teste_12(char md){
   char *msg="[12] MPU --> Matlab";
   byte who;
   word vt[7];
+  word count = 0;
   float vtf[7];
   word ac_esc, giro_esc;
   lcd_apaga();
@@ -734,32 +735,23 @@ char teste_12(char md){
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   ac_esc=2;
   giro_esc=250;
-  delay(1000);
-  lcd_str(3,0,"Inicia em 1 seg.");
-  ser_str("Inicia em 1 segundo.\n");
-  
-  // Remover no futuro
-  //lcd_str(3,0,"Qq Tecla.");
-  //while(sw_tira(&who)==FALSE);    
-  
-  
+  delay(500);
   lcd_apaga();
   lcd_str(0,0,"Acel");
   lcd_str(1,3,"g");
   lcd_str(2,0,"Giro ");
   lcd_str(3,0,"gr/s ");
-  ser_str("#[");      //Avisar Matlab
 
+  // Enviar p/ matlab instrução p/ inicio de leitura dos dados
+  ser_str("\nstart\n");
   // Habilitar interrupção MPU (Dado Pronto)
   mpu_sample_rt(SAMPLE_RT_100Hz);
   //mpu_sample_rt(SAMPLE_RT_200Hz);
 
   mpu_int();
-
   while(TRUE){
-      while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
-      mpu_dado_ok=FALSE;
-
+    while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
+    mpu_dado_ok=FALSE;
     mpu_rd_ac_tp_gi(vt);  //Ler MPU
 
     // Calcular acelerações e giros
@@ -792,18 +784,23 @@ char teste_12(char md){
     ser_dec16(vt[4]);   ser_crlf(1);           //gx
     ser_dec16(vt[5]);   ser_crlf(1);           //gy
     ser_dec16(vt[6]);   ser_crlf(1);           //gz
+
+    count = count + 1;
     
     if (sw_tira(&who))     break;    
   }
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+
+   // Enviar p/ matlab instrução p/ finalizar leitura dos dados
+  ser_str("fim\n");
+
   ser_str("\n--- Fim ---\n");
+
+  lcd_apaga();
+  lcd_str(0,0,"Total de amostras: ");
+  lcd_dec16u(1,0, count);
+
+  sw_qq_tecla();
+
   return md;
 }
 

@@ -23,10 +23,14 @@ void setup() {
 
 void loop() {
   
-  teste();  //Forçar a entrada  no modo teste
+  //teste();  //Forçar a entrada  no modo teste
   
-  if (ADCH < 10)  teste();
-  else            opera();
+  if (ADCH < 10)  opera();
+  else            teste();
+
+  // Modo de exercicios desabilitado
+  // if (ADCH < 10)  opera();
+  // else            exercicios();
   
   while(TRUE);  //Para em loop infinito
 }
