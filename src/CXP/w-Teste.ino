@@ -777,13 +777,14 @@ char teste_12(char md){
     lcd_dec16nz(3,15,vtf[6]);
 
     //Enviar pela porta serial
-    ser_dec16(vt[0]);   ser_crlf(1);           //ax
-    ser_dec16(vt[1]);   ser_crlf(1);           //ay
-    ser_dec16(vt[2]);   ser_crlf(1);           //az
-    ser_dec16(vt[3]);   ser_crlf(1);           //temperatura
-    ser_dec16(vt[4]);   ser_crlf(1);           //gx
-    ser_dec16(vt[5]);   ser_crlf(1);           //gy
-    ser_dec16(vt[6]);   ser_crlf(1);           //gz
+    ser_dec16(vt[0]);   ser_str(";");           //ax
+    ser_dec16(vt[1]);   ser_str(";");           //ay
+    ser_dec16(vt[2]);   ser_str(";");           //az
+    ser_dec16(vt[3]);   ser_str(";");           //temperatura
+    ser_dec16(vt[4]);   ser_str(";");           //gx
+    ser_dec16(vt[5]);   ser_str(";");           //gy
+    ser_dec16(vt[6]);   ser_str(";");           //gz
+    ser_crlf(1);
 
     count = count + 1;
     

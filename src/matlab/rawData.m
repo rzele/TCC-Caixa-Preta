@@ -1,13 +1,9 @@
 % Ler da porta serial
 % Ainda precisa melhorar
 
-fclose all;
+clear all;
+fclose(instrfind);  %Fechar possível porta serial
 close all;
-
-%Vem do Arduino, função que configura escalas
-%mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
-esc_ac=2;
-esc_giro=250;
 
 % Abre porta serial
 sid=serial('COM3','Baudrate',115200);
@@ -17,7 +13,8 @@ if (sid==-1)
     fprintf(1,'Nao abriu COM3.\n');
     return
 end
-fprintf(1,'Pronto para receber dados!\n');
+fprintf('Pronto para receber dados!\n');
+fprintf('Por favor, selecione Teste 12 na Caixa Preta.\n');
 
 % Aguarda o MPU inicializar (enviar -1 pela serial)
 while true
@@ -25,14 +22,23 @@ while true
     if strcmp(temp,'start') == 1
         break;
     end
+    fprintf('%s\n', temp);
 end
-fprintf('Iniciando leitura.\n')
+fprintf('Iniciando leitura.\n');
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Usuário selecionar sua janela
 mediamovel_k = 10;          % Janela da media movel
-cont=0;                     % conta quandos dados foram lidos
-fim=0;                      % condição de parada
-max_size=2000;              % quantidade maxima de amostras exibidas na tela
+max_size=2000;              % Quantidade maxima de amostras exibidas na tela
+freq_render=15;             % Frequencia de atualização do plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Parâmetros
+esc_ac=2;                   % Vem do Arduino, função que configura escalas de aceleração
+esc_giro=250;               % e giro //+/- 2g e +/-250gr/seg
+cont=0;                     % Conta quantas amostras foram lidas
+
 ax=zeros(1,max_size);
 ay=zeros(1,max_size);
 az=zeros(1,max_size);
@@ -40,7 +46,7 @@ tp=zeros(1,max_size);
 gx=zeros(1,max_size);
 gy=zeros(1,max_size);
 gz=zeros(1,max_size);
-
+t = 0:max_size;
 
 % Define a janela p/ plot
 f1 = figure('units','normalized','outerposition',[0 0 1 1]);
@@ -86,24 +92,27 @@ p_gz.YDataSource = 'gz';
 % NOTA: Se o buffer do serial encher (> 512 bytes) o programa explode, caso isso ocorra
 % abaixe o tempo de renderização do grafico
 time = now;
-while fim==0
+while true
     
-    i=1;
-    data=zeros(1,7);   % array de dados lidos (7 por iteração)
-    while i<=7
-        z=fscanf(sid,'%s', 10);
-
-        if strcmp(z,'fim') == 1
-            fim=1;
-            break;
-        else
-            z = str2num(z);
-        end
-
-        data(i)=z;
-        cont=cont+1;
-        i=i+1;
+    % Lê até achar quebra de linha
+    data=fscanf(sid,'%s');
+    
+    % Checa se não é o final da transmissão
+    if ~isempty(strfind(data,'fim'))
+        break;
     end
+
+    % Quebra a string no marcador ';'
+    data=strsplit(data,';');
+
+    % Checa se realmente leu todos os dados
+    if length(data) < 7
+        continue
+    end
+
+    cont=cont+1;
+    
+    data = str2double(data);
     
     % Converter acelerações em "g"
     data(1)=esc_ac*(data(1)/32767);
@@ -127,7 +136,8 @@ while fim==0
     gy = [gy(2:max_size) data(6)];
     gz = [gz(2:max_size) data(7)];
     
-    if (now-time)*100000 > 0.1
+    % Re plota
+    if (now-time)*100000 > 1/freq_render
         refreshdata
         drawnow
         time = now;
@@ -135,7 +145,7 @@ while fim==0
 end
 
 %Aqui acaba o script
-fprintf(1,'Recebidos %d dados\nLeituras = %d.\n',cont,cont/7);
+fprintf(1,'Recebidos %d amostras\n\n',cont);
 fclose(sid);
 return;
 
