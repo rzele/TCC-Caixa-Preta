@@ -156,7 +156,7 @@ char exercicio_3(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   delay(2000);
   lcd_apaga();
@@ -209,7 +209,7 @@ char exercicio_4(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   delay(2000);
   lcd_apaga();
@@ -266,7 +266,7 @@ char exercicio_5(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   lcd_str(3,0,"Aperte p/ iniciar");
   delay(1000);
@@ -353,7 +353,7 @@ char exercicio_6(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   lcd_str(3,0,"Aperte p/ iniciar");
   delay(1000);
@@ -455,7 +455,7 @@ char exercicio_7(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   lcd_str(3,0,"Aperte p/ iniciar");
   delay(1000);
@@ -578,7 +578,7 @@ char exercicio_8(char md){
     return 0;
   }
 
-  mpu_inicializa();     //Inicializar
+  mpu_config();     //Inicializar
   mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   lcd_str(3,0,"Aperte p/ iniciar");
   delay(1000);

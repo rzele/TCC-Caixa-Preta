@@ -10,7 +10,7 @@ esc_ac=2;
 esc_giro=250;
 
 % Abre porta serial
-sid=serial('COM3','Baudrate',500000);
+sid=serial('COM3','Baudrate',115200);
 fopen(sid);
 
 if (sid==-1)
