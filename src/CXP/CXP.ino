@@ -10,7 +10,7 @@ void setup() {
   leds_config();
   scope_config();
   lcd_config();
-  ser_config(250000L);    //RX0 e TX0 bps
+  ser_config(115200L);    //RX0 e TX0 bps
   gps_config(9600);
   ser_tx_fila_config();   //TX fila serial
   ser_rx_fila_config();   //RX fila serial
@@ -25,11 +25,11 @@ void loop() {
   //teste();  //Forçar a entrada  no modo teste
   
   if (ADCH < 10)  opera();
-  else            exercicios();
+  else            teste();
 
-  // Modo de teste desabilitado
-  // if (ADCH < 10)  teste();
-  // else            opera();
+  // Modo de exercicios desabilitado
+  // if (ADCH < 10)  opera();
+  // else            exercicios();
   
   while(TRUE);  //Para em loop infinito
 }
