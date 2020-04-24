@@ -487,7 +487,7 @@ char teste_7_8_bloco(char tipo, char qual){
   else        { ser_str(" ==> Bloco NOK\n"); return FALSE;}
 }
 
-// Mostar tudo que chega do GPS
+// 9 - Mostar tudo que chega do GPS
 char teste_9(char md){
   char *msg="[9] GPS Tudo";
   word tipos[7];    //Contar tipos de mensagens

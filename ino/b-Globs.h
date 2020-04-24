@@ -53,7 +53,7 @@ char *opera_msg[]={ "ERRO",     //0
                     "4-Vazio",  //4
                     "5-Ensaio", //5
                     "6-Caixa Preta Alfa",  //6
-                    "7-Vazio"}; //7
+                    "7-Calibra Fab"}; //7
                     
 
 // Aleat - Gerador pseudo-aleatório

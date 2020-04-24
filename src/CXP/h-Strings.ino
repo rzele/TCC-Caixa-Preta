@@ -2,6 +2,45 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+// Escala Aceleração (Fundo de Escala) - Retorna string com a escala
+// Precisa de espaço de 8 caracteres incluindo o zero final
+void str_fs_acel(byte esc, char *vt){
+  switch(esc){
+    case ACEL_FS_2G:  str_copia_zf("+/- 2g",vt); break;
+    case ACEL_FS_4G:  str_copia_zf("+/- 4g",vt);   break;
+    case ACEL_FS_8G:  str_copia_zf("+/- 8g",vt);   break;
+    case ACEL_FS_16G: str_copia_zf("+/- 16g",vt);  break;
+    default:          str_copia_zf("??????g",vt);  break;
+  }
+}
+
+// Escala Giro (Fundo de Escala) - Retorna string com a escala
+// Precisa de espaço de 14 caracteres incluindo o zero final
+void str_fs_giro(byte esc, char *vt){
+  switch(esc){
+    case GIRO_FS_250:   str_copia_zf("+/- 250 gr/s",vt); break;
+    case GIRO_FS_500:   str_copia_zf("+/- 500 gr/s",vt); break;
+    case GIRO_FS_1000:  str_copia_zf("+/- 1000 gr/s",vt); break;
+    case GIRO_FS_2000:  str_copia_zf("+/- 2000 gr/s",vt); break;
+    default:            str_copia_zf("???????? gr/s",vt); break;
+  }
+}
+
+// Faz cópia de uma string e retorna tamanho string copiada, incluindo o zero final
+// Nome criado para não confundir com strcpy()
+byte str_copia_zf(byte *ft, byte *dest){
+  byte i=0;
+  while(ft[i] != '\0'){
+    dest[i]=ft[i];
+    i++;
+  }
+  dest[i]=ft[i];
+  i++;
+  return i;
+}
+
+
+
 // Faz cópia de uma string e retorna tamanho string copiada, não conta o zero
 // Nome criado para não confundir com strcpy()
 byte str_copia(byte *ft, byte *dest){

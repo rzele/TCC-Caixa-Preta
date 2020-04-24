@@ -22,11 +22,10 @@ void setup() {
 }
 
 void loop() {
-  
-  teste();  //Forçar a entrada  no modo teste
-  
-  if (ADCH < 10)  teste();
-  else            opera();
+
+  //teste();  //Forçar a entrada  no modo teste
+  if (sw_val < 10)  teste();
+  else              opera();
   
   while(TRUE);  //Para em loop infinito
 }

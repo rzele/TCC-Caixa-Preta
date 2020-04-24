@@ -110,10 +110,9 @@ void mpu_rd_ac_gi(word *vetor){
   vetor[0] = (int)((vet [0] << 8) | vet[1]);    //Montar Acel X
   vetor[1] = (int)((vet [2] << 8) | vet[3]);    //Montar Acel Y
   vetor[2] = (int)((vet [4] << 8) | vet[5]);    //Montar Acel Z
-  vetor[4] = (int)((vet [6] << 8) | vet[7]);    //Montar Temp - Será sobrescrita
-  vetor[4] = (int)((vet [8] << 8) | vet[9]);    //Montar Giro x
-  vetor[5] = (int)((vet[10] << 8) | vet[11]);   //Montar Giro y
-  vetor[6] = (int)((vet[12] << 8) | vet[13]);   //Montar Giro z
+  vetor[3] = (int)((vet [8] << 8) | vet[9]);    //Montar Giro x
+  vetor[4] = (int)((vet[10] << 8) | vet[11]);   //Montar Giro y
+  vetor[5] = (int)((vet[12] << 8) | vet[13]);   //Montar Giro z
 }
 
 // Acordar o MPU e programar para usar relógio Giro X
@@ -169,20 +168,19 @@ void mpu_sample_rt(byte sample_rate) {
 
 // MPU: Calibrar
 // Faz uma série de leituras e retorna a média
-void mpu_calibra(word *vt, word qtd) {
+void mpu_calibra(int *vt, word qtd, byte esc_ac, byte esc_gi) {
   long sum[7];  //Acumular para calcular a média
   word aux[7];  //Leituras intermediárias
   word i,j;
 
-  mpu_escalas(GIRO_FS_250, ACEL_FS_2G);  // Menores escalas para maior precisã
-  mpu_sample_rt(SAMPLE_RT_500Hz);       // Taxa de amostragem em 500 Hz
+  mpu_escalas(esc_gi, esc_ac);          // Menores escalas para maior precisã
+  mpu_sample_rt(OP_FREQ);               // Taxa de amostragem de operação
   mpu_int();                            // Habilitar interrupção
-  mpu_dado_ok=FALSE;
   for (i=0; i<7; i++)   sum[i]=0;       //Zerar acumulador
-  mpu_des_int();                        //Desabilitar interrupção
-  mpu_sample_rt(SAMPLE_RT_100Hz);       //Voltar Taxa de amostragem para 100 Hz
-
+  mpu_dado_ok=FALSE;
   for (i=0; i<qtd; i++){
+    //ser_dec16(i);
+    //ser_crlf(1);
     while(mpu_dado_ok == FALSE);
     mpu_dado_ok = FALSE;
     mpu_rd_ac_tp_gi(aux);
@@ -191,114 +189,106 @@ void mpu_calibra(word *vt, word qtd) {
 
   // Calcular as médias
   for (i=0; i<7; i++) vt[i] = sum[i]/qtd;
-
 }
 
 
-// MPU: Realizar Self-Test (ST)
+// MPU: Realizar Self-Test (ST), prn = imprimir resultados?
 // Retorna: TRUE  se passou no teste
 //          FALSE se falhou no teste
-byte mpu_self_test(void) {
-  char msg[100];
-  byte   aux[14];  //Auxiliar na leitura dos registradores
-  word   gx1, gy1, gz1, ax1, ay1, az1; //Valores com Self-Test desabilitado
-  word   gx2, gy2, gz2, ax2, ay2, az2; //Valores Self-Test habilitado
-  byte   gx3, gy3, gz3, ax3, ay3, az3; //Valores reg de Self-Test
+//
+//     - Self test off -  - Self test on -    -Reg. Self test -    -Calculo tolerância 
+// vt[ ax ay az gx gy gz  ax ay az gx gy gz   ax ay az gx gy gz    ax ay az gx gy gz]
+//     0                  6                   12                   18
+// vt deve ter espaço para 24 inteiros
+byte mpu_self_test(int *vt, byte prn) {
+  byte x,cont;
+  byte aux[6];   //Leitura dos registradores de Self test
   float  gxf, gyf, gzf, axf, ayf, azf; //Factory Trim
-  float  gxr, gyr, gzr, axr, ayr, azr; //Alteração em %
-
-  // Desabilitar Self_Test
-  mpu_wr(ACCEL_CONFIG, ACEL_FS_8G << 3);  //Escala 8g, Self-test Desabiliatdo
-  mpu_wr(GYRO_CONFIG, GIRO_FS_250 << 3);  //Escala 250, Self-test Desabiliatdo
-  delay(250);  //Aguardar cofiguração estabilizar
-
-  // Ler valores com Self-Test Desabilitado
-  mpu_rd_blk(ACCEL_XOUT_H, aux, 14);
-  ax1 = (int16_t)((aux[0] << 8) | aux[1]) ;
-  ay1 = (int16_t)((aux[2] << 8) | aux[3]) ;
-  az1 = (int16_t)((aux[4] << 8) | aux[5]) ;
-  gx1 = (int16_t)((aux[6] << 8) | aux[7]) ;
-  gy1 = (int16_t)((aux[8] << 8) | aux[9]) ;
-  gz1 = (int16_t)((aux[10] << 8) | aux[11]) ;
-
+  
+  //Acertar escalas e desligar Self Test
+  mpu_escalas(GIRO_FS_250,ACEL_FS_8G);  //+/- 8g e +/-250gr/seg
+  delay(250);                           //Aguardar cofiguração estabilizar
+  mpu_rd_ac_gi(&vt[0]);                   //aux1 guarda leitura com self-test desabilitado
+  
   // Habilitar Self_Test
   mpu_wr(ACCEL_CONFIG, 0xE0|(ACEL_FS_8G << 3));  //Escala 8g, Self-test Habilitado
   mpu_wr(GYRO_CONFIG, 0xE0|(GIRO_FS_250 << 3));  //Escala 250, Self-test Habilitado
-  delay(250);  //Aguardar cofiguração estabilizar
+  delay(250);                           //Aguardar cofiguração estabilizar
+  mpu_rd_ac_gi(&vt[6]);                   //aux2 guarda leitura com self-test desabilitado
 
-  // Ler valores com Self-Test Habilitado.
-  mpu_rd_blk(ACCEL_XOUT_H, aux, 14);
-  ax2 = (int16_t)((aux[0] << 8) | aux[1]) ;
-  ay2 = (int16_t)((aux[2] << 8) | aux[3]) ;
-  az2 = (int16_t)((aux[4] << 8) | aux[5]) ;
-  gx2 = (int16_t)((aux[6] << 8) | aux[7]) ;
-  gy2 = (int16_t)((aux[8] << 8) | aux[9]) ;
-  gz2 = (int16_t)((aux[10] << 8) | aux[11]) ;
-
-  // Leitura dos resultados do self-test
-  aux[0] = mpu_rd(SELF_TEST_X); //Eixo X: resultado self-test
-  aux[1] = mpu_rd(SELF_TEST_Y); //Eixo Y: resultado self-test
-  aux[2] = mpu_rd(SELF_TEST_Z); //Eixo Z: resultado self-test
-  aux[3] = mpu_rd(SELF_TEST_A); //Restante dos bits dos resultados
-
-  // Extrair dados do registradores de self-test
-  ax3 = (aux[0] >> 3) | ((aux[3] >> 4) & 3) ; // XA_TEST
-  ay3 = (aux[1] >> 3) | ((aux[3] >> 2) & 3) ; // YA_TEST
-  az3 = (aux[2] >> 3) | (aux[3] & 3);         // ZA_TEST
-  gx3 = aux[0]  & 0x1F ;  // XG_TEST
-  gy3 = aux[1]  & 0x1F ;  // YG_TEST
-  gz3 = aux[2]  & 0x1F ;  // ZG_TEST
+  // Leitura dos resultados do self-test - Montar valores
+  mpu_rd_blk(SELF_TEST_X, aux, 4);
+  vt[12] = (0x1C&(aux[0]>>3)) | (0x3&(aux[3]>>4));  //XA_TEST
+  vt[13] = (0x1C&(aux[1]>>3)) | (0x3&(aux[3]>>2));  //YA_TEST
+  vt[14] = (0x1C&(aux[2]>>3)) | (0x3&(aux[3]>>0));  //ZA_TEST
+  vt[15] = aux[0]&0x1F;                             //XG_TEST
+  vt[16] = aux[1]&0x1F;                             //YG_TEST
+  vt[17] = aux[2]&0x1F;                             //ZG_TEST
 
   // Calcular os Factory Trim
-  axf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)ax3 - 1.0) / 30.0)));
-  ayf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)ay3 - 1.0) / 30.0)));
-  azf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)az3 - 1.0) / 30.0)));
-  gxf = ( 25.0 * 131.0) * (pow( 1.046 , ((float)gx3 - 1.0) ));
-  gyf = (-25.0 * 131.0) * (pow( 1.046 , ((float)gy3 - 1.0) ));
-  gzf = ( 25.0 * 131.0) * (pow( 1.046 , ((float)gz3 - 1.0) ));
+  axf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)vt[12] - 1.0) / 30.0)));
+  ayf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)vt[13] - 1.0) / 30.0)));
+  azf = (4096.0*0.34) * (pow((0.92/0.34) , (((float)vt[14] - 1.0) / 30.0)));
+  gxf = ( 25.0 * 131.0) * (pow( 1.046 , ((float)vt[15] - 1.0) ));
+  gyf = (-25.0 * 131.0) * (pow( 1.046 , ((float)vt[16] - 1.0) ));
+  gzf = ( 25.0 * 131.0) * (pow( 1.046 , ((float)vt[17] - 1.0) ));
 
   // Se registrador = 0 --> Factory Trim = 0
-  if (ax3 == 0) axf = 0;
-  if (ay3 == 0) ayf = 0;
-  if (az3 == 0) azf = 0;
-  if (gx3 == 0) gxf = 0;
-  if (gy3 == 0) gyf = 0;
-  if (gz3 == 0) gzf = 0;
+  if (vt[12] == 0) axf = 0;
+  if (vt[13] == 0) ayf = 0;
+  if (vt[14] == 0) azf = 0;
+  if (vt[15] == 0) gxf = 0;
+  if (vt[16] == 0) gyf = 0;
+  if (vt[17] == 0) gzf = 0;
 
   // Calcular as Percentagens de Alteração
-  axr = 100.0 * ((float)(ax2 - ax1) - axf ) / axf;
-  ayr = 100.0 * ((float)(ay2 - ay1) - ayf ) / ayf;
-  azr = 100.0 * ((float)(az2 - az1) - azf ) / azf;
-  gxr = 100.0 * ((float)(gx2 - gx1) - gxf ) / gxf;
-  gyr = 100.0 * ((float)(gy2 - gy1) - gyf ) / gyf;
-  gzr = 100.0 * ((float)(gz2 - gz1) - gzf ) / gzf;
+  vt[18] = 100.0 * ((float)(vt[ 6] - vt[0]) - axf ) / axf;
+  vt[19] = 100.0 * ((float)(vt[ 7] - vt[1]) - ayf ) / ayf;
+  vt[20] = 100.0 * ((float)(vt[ 8] - vt[2]) - azf ) / azf;
+  vt[21] = 100.0 * ((float)(vt[ 9] - vt[3]) - gxf ) / gxf;
+  vt[22] = 100.0 * ((float)(vt[10] - vt[4]) - gyf ) / gyf;
+  vt[23] = 100.0 * ((float)(vt[11] - vt[5]) - gzf ) / gzf;
 
-  // Remova os comentários para imprimir os resultados
-  // Precisa adaptar para a Caixa Preta
-  /* Serial.println("Self Test:   OFF      ON    TEST      FT      %");
-  sprintf(msg,"Acel X   :  %+06d  %+06d  %+04d   ",ax1, ax2, ax3);
-  Serial.print(msg);  Serial.print(axf,2);  Serial.print("  ");
-  Serial.println(axr,2);
-  sprintf(msg,"Acel Y   :  %+06d  %+06d  %+04d   ",ay1, ay2, ay3);
-  Serial.print(msg);  Serial.print(ayf,2);  Serial.print("  ");
-  Serial.println(ayr,2);
-  sprintf(msg,"Acel Z   :  %+06d  %+06d  %+04d   ",az1, az2, az3);
-  Serial.print(msg);  Serial.print(azf,2);  Serial.print("  ");
-  Serial.println(azr,2);
-  sprintf(msg,"Giro X   :  %+06d  %+06d  %+04d   ",gx1, gx2, gx3);
-  Serial.print(msg);  Serial.print(gxf,2);  Serial.print("  ");
-  Serial.println(gxr,2);
-  sprintf(msg,"Giro Y   :  %+06d  %+06d  %+04d   ",gy1, gy2, gy3);
-  Serial.print(msg);  Serial.print(gyf,2);  Serial.print("  ");
-  Serial.println(gyr,2);
-  sprintf(msg,"Giro Z   :  %+06d  %+06d  %+04d   ",gz1, gz2, gz3);
-  Serial.print(msg);  Serial.print(gzf,2);  Serial.print("  ");
-  Serial.println(gzr,2); */
+  if (prn==TRUE){ //Imprimir resultados ?
+    ser_crlf(1);
+    ser_str("\n--- Resultados Funcao Self Test ---\n");
+    ser_spc(17);
+    ser_str("ax     ay     az     gx     gy     gz\n");
+    // Self test off
+    ser_str("Self Test off: ");
+    for (x=0; x<6; x++){  ser_dec16(vt[x]);   ser_spc(1); }
+    ser_crlf(1);
+    // Self test on 
+    ser_str("Self Test on:  ");
+    for (x=6; x<12; x++){  ser_dec16(vt[x]);   ser_spc(1); }
+    ser_crlf(1);
+    // Reg de Self test
+    ser_str("Reg Self Test: ");
+    for (x=12; x<18; x++){  ser_dec16(vt[x]);   ser_spc(1); }
+    ser_crlf(1);
+    //Factory trim
+    ser_str("Factory Trim:  ");
+    ser_float(axf,4); ser_spc(1);  
+    ser_float(ayf,4); ser_spc(1);  
+    ser_float(azf,4); ser_spc(1);  
+    ser_float(gxf,4); ser_spc(1);  
+    ser_float(gyf,4); ser_spc(1);  
+    ser_float(gzf,4); ser_spc(1);  
+    ser_crlf(1);
+    // Resultado Tolerância
+    ser_str("Resultados:    ");
+    for (x=18; x<24; x++){  ser_dec16(vt[x]);   ser_spc(1); }
+    ser_str("\n--- Fim Funcao Self Test ---\n");
+    ser_crlf(1);
+  }
+  
+  cont=0;
+  for (x=18; x<24; x++){
+    if (vt[x]>14) cont++;
+  }
 
-  // Tolerância de +/- 14%
-  if (axr<14 && ayr<14 && azr<14 && gxr<14 && gyr<14 && gzr<14)
-        return 1;  //Passou no Self-Test
-  else  return 0;  //Falhou no Self-Test
+  if (cont==0)  return TRUE;
+  else          return FALSE;
 }
 
 ///////////////// Rotinas Básicas para MPU

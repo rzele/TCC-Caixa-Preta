@@ -5,7 +5,11 @@
 #define TRUE  1
 #define FALSE 0
 
-// BITS - definições
+#define CR 0xD    //Carriage Return
+#define LF 0xA    //Line Feed
+#define SPC 0x20  //Espaço
+
+// BITS - definições das posições
 #define BIT0  0x01
 #define BIT1  0x02
 #define BIT2  0x04
@@ -15,9 +19,9 @@
 #define BIT6  0x40
 #define BIT7  0x80
 
-// Endereços da SRAM
+// Endereços na SRAM
 #define MPU_ADR_INI 0x00000L  //Início área MPU (12.720 msg x 18 = 228.960 Bytes) = 12,7 seg
-#define MPU_ADR_FIM 0x37E60L  //Fim    área MPU
+#define MPU_ADR_FIM 0x37E60L  //Fim    área MPU (228.960)
 #define CXP_ADR_INI 0x37E60L  //Início área de conficuração da Caixa Preta (sobra 416 bytes)
 #define CXP_ADR_FIM 0x38000L  //Fim    área de conficuração da Caixa Preta
 #define GPS_ADR_INI 0x38000L  //Início área GPS (256 msg x 128 = 32.768) = 25,6 seg
@@ -25,7 +29,159 @@
 #define MPU_PASSO   18        //Tamanho de uma mensagem do MPU (Acel, Giro, Mag)
 #define GPS_PASSO   128       //Tamanho da mensagem do GPS (gps_dados[])
 
-// LCD - Constantes para os bits de controle
+// OPERAÇÃO - Principais parâmetros 
+#define OP_FREQ       SAMPLE_RT_100Hz //Freq de operação do MPU e tb para Calibração ao Ligar: 
+#define OP_ESC_ACEL   ACEL_FS_8G      //Acel: escala para operação
+#define OP_ESC_GIRO   GIRO_FS_2000    //Giro: escala para operação
+
+#define OP_QTD_MED_AG   8             //Calibração ao Ligar: quantidade de medidas por eixo acel e giro
+#define OP_QTD_MED_MG  64             //Calibração ao Ligar: quantidade de medidas por eixo mag
+
+// Códigos usados para indicar sim/não, passou/falhou
+#define COD_SIM  0x5353     //2x ASCII(S) Afirmativo
+#define COD_NAO  0x4E4E     //2x ASCII(N) Negativo
+
+// Limiares para indicar Acidente
+#define LIMIAR_AX  4     //4g
+#define LIMIAR_AY  4     //4g
+#define LIMIAR_AZ  4     //4g
+#define LIMIAR_GX  1000 //1.000 gr/s
+#define LIMIAR_GY  1000 //1.000 gr/s
+#define LIMIAR_GZ  1000 //1.000 gr/s
+
+// SRAM (FLASH) - Uso na Operação - Posições para guardar parâmetros
+#define OP_BATEU   CXP_ADR_INI  //Bateu? 0x4E4E=NN=Não (pronta) 0x5353=SS=Sim - Repetição do ASCII
+#define OP_ST_OK   OP_BATEU+2   //Passou no Self Test 0x4E4E=não e 0x5353=sim
+#define OP_CF_OK   OP_ST_OK+2   //Existe calibração de Fábrica (CF) 0x4E4E=não e 0x5353=sim
+// Calibração Aceleração e Giro ao ligar o carro
+#define OPC_QTD_AG  OP_CF_OK+2   //QTd de medidas para a calibração Acel e Giro
+#define OPC_ESC_AC  OPC_QTD_AG+2  //Escala de aceleração para calibragem ao ligar
+#define OPC_ESC_GI  OPC_ESC_AC+2  //Escalas de giro para calibragem ao ligar
+#define OPC_AX      OPC_ESC_GI+2  //Calibração AX
+#define OPC_AY      OPC_AX+2      //Calibração AY
+#define OPC_AZ      OPC_AY+2      //Calibração AZ
+#define OPC_TP      OPC_AZ+2      //Calibração TP
+#define OPC_GX      OPC_TP+2      //Calibração GX
+#define OPC_GY      OPC_GX+2      //Calibração GY
+#define OPC_GZ      OPC_GY+2      //Calibração GZ
+// Calibração Magnetômetro ao ligar o carro
+#define OPC_QTD_MG  OPC_GZ+2      //QTd de medidas para a calibração Magn
+#define OPC_ESC_MG  OPC_QTD_MG+2  //Escalas acel (MSB) e giro (LSB)
+#define OPC_HX      OPC_ESC_MG+2  //Calibração HX
+#define OPC_HY      OPC_HX+2      //Calibração HY
+#define OPC_HZ      OPC_HY+2      //Calibração HZ
+// Parâmetros para operação: escala e limiar
+#define OP_FREQ_AG  OPC_HZ+2      //Freq de amostragem (Hz)
+#define OP_ESC_AC   OP_FREQ_AG+2  //Escala de acel para operaçao
+#define OP_ESC_GI   OP_ESC_AC+2   //Escala de giro para operaçao
+#define OP_ESC_MG   OP_ESC_GI+2   //Escala de magnet para operaçao
+#define OP_LIM_AX   OP_ESC_MG+2   //AX - Limiar para disparo (valor absoluto)
+#define OP_LIM_AY   OP_LIM_AX+2   //AY - Limiar para disparo (valor absoluto)
+#define OP_LIM_AZ   OP_LIM_AY+2   //AZ - Limiar para disparo (valor absoluto)
+#define OP_LIM_GX   OP_LIM_AZ+2   //GX - Limiar para disparo (valor absoluto)
+#define OP_LIM_GY   OP_LIM_GX+2   //GY - Limiar para disparo (valor absoluto)
+#define OP_LIM_GZ   OP_LIM_GY+2   //GZ - Limiar para disparo (valor absoluto)
+// Quem disparou
+#define OP_MPU_ADR  OP_LIM_GZ+2   //(32 bits) Endereço MPU no momento do disparo
+#define OP_GPS_ADR  OP_MPU_ADR+4  //(32 bits) Endereço GPS no momento do disparo
+#define OP_DISP_AX  OP_GPS_ADR+4  //AX disparou (SS=Sim e NN=Não)
+#define OP_DISP_AY  OP_DISP_AX+2  //AX disparou (SS=Sim e NN=Não)
+#define OP_DISP_AZ  OP_DISP_AY+2  //AX disparou (SS=Sim e NN=Não)
+#define OP_DISP_GX  OP_DISP_AZ+2  //AX disparou (SS=Sim e NN=Não)
+#define OP_DISP_GY  OP_DISP_GX+2  //AX disparou (SS=Sim e NN=Não)
+#define OP_DISP_GZ  OP_DISP_GY+2  //AX disparou (SS=Sim e NN=Não)
+// Data e hora do acidente
+#define OP_AC_DATA  OP_DISP_GZ+2  //ddmmyy0 --> Data do acidente, vem do GPS
+#define OP_AC_HORA  OP_AC_DATA+8  //hhmmss.sss0 --> hora do acidente, vem do GPS
+#define OP_VAZIO    OP_AC_HORA+12 //Vazio
+
+// CALIBRAÇÃO DE FÁBRICA
+const char *CF_HOJE = "20/04/20"; //Data para Configuração de Fábrica
+const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
+#define G_PADRAO    9.80665       //1g padrão
+#define G_BSB       9.7808439     //Ac. gravidade em Brasília
+#define CF_ESPERA   6000          //Tempo de espera (seg) antes de calibrar o MPU
+#define CF_FREQ     100           //Calibração de Fábrica: Freq de amostragem do MPU
+#define CF_QTD_MED  1024          //Calibração de Fábrica: quantidade de medidas napor eixo
+
+// Endereços da EEPROM
+// Usada para guardar Calibraçao de Fábrica
+// Posições para Data, Local e Aceleração
+#define EEPROM_TAM      4096  //Tamanho da EEPROM (12 bits de endereços)
+#define CF_COD_OK       0x5353            //Código indica calibração já fita, SIM = SS = 0x5353
+#define CF_OK           0                 //0 - Já fez calibração? SS = SIM
+#define CF_DATA         CF_OK+2           //2 - Data da configuração
+#define CF_LOCAL        CF_DATA+14        //10 - String com Local da configuração
+#define CFG_PADRAO      CF_LOCAL+32       //30 - String com Aceleração da gravidade padrão
+#define CFG_LOCAL       CFG_PADRAO+16     //40 - String com Aceleração da gravidade local
+#define CFG_PADRAO_BIN  CFG_LOCAL+16      //50 - Inteiro com Aceleração da gravidade padrão
+#define CFG_LOCAL_BIN   CFG_PADRAO_BIN+2  //52 - Inteiro com Aceleração da gravidade local
+#define CF_WHO          CFG_LOCAL_BIN+2   //54 - Resposta ao Who am I
+#define CF_FA           CF_WHO+2          //56 - Freq de amostragem usada na calibração
+//////// Calibração --- Posições para guardar resultados da média das medidas
+#define CF_AX           CF_FA+2           //58
+#define CF_AY           CF_AX+2           //5A
+#define CF_AZ           CF_AY+2           //5C
+#define CF_TP           CF_AZ+2           //5E
+#define CF_GX           CF_TP+2           //60
+#define CF_GY           CF_GX+2           //62
+#define CF_GZ           CF_GY+2           //64
+//////// Somatórios --- Posições para guardar a média das medidas
+#define CF_QTD         CF_GZ+2            //66 - Quantidade de medidas por eixo
+#define CF_AX_SOMA     CF_QTD+2           //68
+#define CF_AY_SOMA     CF_AX_SOMA+4       //6C
+#define CF_AZ_SOMA     CF_AY_SOMA+4       //70
+#define CF_TP_SOMA     CF_AZ_SOMA+4       //74
+#define CF_GX_SOMA     CF_TP_SOMA+4       //78
+#define CF_GY_SOMA     CF_GX_SOMA+4       //7C
+#define CF_GZ_SOMA     CF_GY_SOMA+4       //80
+//////// Calibração --- Posições para guardar a Primeira e última das medidas e a média
+#define CF_AX_PRI      CF_GZ_SOMA+4       //84
+#define CF_AY_PRI      CF_AX_PRI+2        //86
+#define CF_AZ_PRI      CF_AY_PRI+2        //88
+#define CF_TP_PRI      CF_AZ_PRI+2        //8A
+#define CF_GX_PRI      CF_TP_PRI+2        //8C
+#define CF_GY_PRI      CF_GX_PRI+2        //8E
+#define CF_GZ_PRI      CF_GY_PRI+2        //90
+#define CF_AX_ULT      CF_GZ_PRI+2        //92
+#define CF_AY_ULT      CF_AX_ULT+2        //94
+#define CF_AZ_ULT      CF_AY_ULT+2        //96
+#define CF_TP_ULT      CF_AZ_ULT+2        //9A
+#define CF_GX_ULT      CF_TP_ULT+2        //9C
+#define CF_GY_ULT      CF_GX_ULT+2        //9E
+#define CF_GZ_ULT      CF_GY_ULT+2        //A0
+//////// Self Test --- Posições para guardar resultados do self-test
+#define CF_ST_OK       CF_GZ_ULT+2        //A2 - Passou no self test? TRUE/FALSE
+#define CF_ST_OFF_AX   CF_ST_OK+2
+#define CF_ST_OFF_AY   CF_ST_OFF_AX+2
+#define CF_ST_OFF_AZ   CF_ST_OFF_AY+2
+#define CF_ST_OFF_GX   CF_ST_OFF_AZ+2
+#define CF_ST_OFF_GY   CF_ST_OFF_GX+2
+#define CF_ST_OFF_GZ   CF_ST_OFF_GY+2
+
+#define CF_ST_ON_AX    CF_ST_OFF_GZ+2
+#define CF_ST_ON_AY    CF_ST_ON_AX+2
+#define CF_ST_ON_AZ    CF_ST_ON_AY+2
+#define CF_ST_ON_GX    CF_ST_ON_AZ+2
+#define CF_ST_ON_GY    CF_ST_ON_GX+2
+#define CF_ST_ON_GZ    CF_ST_ON_GY+2
+
+#define CF_ST_REG_AX   CF_ST_ON_GZ+2    //ax - Reg de self-test (16 bits mas usa apenas 8 bits)
+#define CF_ST_REG_AY   CF_ST_REG_AX+2   //ay - Reg de self-test (16 bits mas usa apenas 8 bits)
+#define CF_ST_REG_AZ   CF_ST_REG_AY+2   //az - Reg de self-test (16 bits mas usa apenas 8 bits)
+#define CF_ST_REG_GX   CF_ST_REG_AZ+2   //gx - Reg de self-test (16 bits mas usa apenas 8 bits)
+#define CF_ST_REG_GY   CF_ST_REG_GX+2   //gy - Reg de self-test (16 bits mas usa apenas 8 bits)
+#define CF_ST_REG_GZ   CF_ST_REG_GY+2   //gz - Reg de self-test (16 bits mas usa apenas 8 bits)
+
+#define CF_ST_TOL_AX   CF_ST_REG_GZ+2   //ax - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+#define CF_ST_TOL_AY   CF_ST_TOL_AX+2   //ay - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+#define CF_ST_TOL_AZ   CF_ST_TOL_AY+2   //az - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+#define CF_ST_TOL_GX   CF_ST_TOL_AZ+2   //gx - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+#define CF_ST_TOL_GY   CF_ST_TOL_GX+2   //gy - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+#define CF_ST_TOL_GZ   CF_ST_TOL_GY+2   //gz - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
+
+
+// LCD Constantes para os bits de controle
 #define LCD_BL  8 //Back Light
 #define LCD_RW  4 //R/#W
 #define LCD_RS  2 //RS
@@ -134,7 +290,6 @@
 #define MPU_ADR  0x68  //Endereço MPU-6050
 #define MPU_EWR  0xD0  //MPU para escrita (0x68<<1)
 #define MPU_ERD  0xD1  //MPU para leitura (0x68<<1 + 1)
-
 #define MPU9250_WHO 0x73  //MPU Who am I
 
 //Escalas para Giroscópio
@@ -189,25 +344,8 @@
 #define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
 
 //////////////////////////////////////////////////////////////////////////////////
-/////////////////////// 06/04/2020 ///////////////////////////////////////////////
+////////////// CONSTANTES DE BAIXO NÍVEL /////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
-
-
-
-//////////////////////// CXP ////////////////////////
-// Modos de operação
-#define MODO_0  0     //
-#define MODO_1  1     //
-#define MODO_2  2     //
-#define MODO_3  3     //
-#define MODO_4  4     //
-#define MODO_5  5     //
-#define MODO_6  6     //
-#define MODO_7  7     //
-#define MODO_8  8     //
-#define MODO_9  9     //
-
-#define MODO_TOTAL 10
 
 // SRAM 23LC1024
 
@@ -249,13 +387,6 @@
 
 #define SER_TX_FILA_TAM 100 //Tamanho da fila circular de TX
 #define SER_RX_FILA_TAM 100 //Tamanho da fila circular de RX
-#define CR 0xD    //Carriage Return
-#define LF 0xA    //Line Feed
-#define SPC 0x20  //Espaço
-
-/////////////////// TECLAS ///////////////////////////
-
-
 
 
 // Endereços da FLASH 24LC1025 (128 KB) TWI

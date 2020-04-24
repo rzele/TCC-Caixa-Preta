@@ -2,6 +2,16 @@
 // CXP - Caixa Preta
 // 22/01/2019
 
+// GPS: Habilitar recepção e interrupção (RX3)
+void gps_int(void){
+  UCSR3B = (1<<RXCIE3) | (1<<RXEN3);  //RXIE=1, RXEN=1 
+}
+
+// GPS: Desabilitar recepção e interrupção (RX3)
+void gps_des_int(void){
+  UCSR3B &= ~((1<<RXCIE3) | (1<<RXEN3));  //RXIE=0, RXEN=0
+}
+
 // Extrair dados do GPS
 // Identifica o tipo de mensagem e extrai os dados de interesse
 // Atualiza o vetor gps_dados

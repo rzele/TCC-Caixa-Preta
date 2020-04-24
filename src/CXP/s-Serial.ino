@@ -2,6 +2,57 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+// Auxiliar no DUMP de memórias
+void ser_dump_memo(long adr, byte *vet){
+  word i;
+  ser_hex16(adr>>16);
+  ser_spc(1);
+  ser_hex16(adr&0xFFFF);
+  ser_str(": ");
+  for (i=0; i<16; i++){
+    ser_hex8(vet[i]);
+    ser_spc(1);
+  }
+  ser_str("- ");
+  
+  for (i=0; i<16; i++){
+    if (vet[i]>0x1F)  ser_char(vet[i]);
+    else              ser_char('.');
+  }
+  ser_crlf(1);
+}
+
+// Imprimir GPS em uma só linha, dados no pacote gps_dados
+void ser_gps_dados_lin(char *gps_vt){
+    ser_str(&gps_vt[GPS_STATUS]);   ser_spc(1);     //Status
+    
+    ser_char(gps_vt[GPS_DATA+0]);  ser_char(gps_vt[GPS_DATA+1]);    ser_char('/');  //Data
+    ser_char(gps_vt[GPS_DATA+2]);  ser_char(gps_vt[GPS_DATA+3]);    ser_char('/');
+    ser_char(gps_vt[GPS_DATA+4]);  ser_char(gps_vt[GPS_DATA+5]);    ser_spc(1);
+
+    ser_char(gps_vt[GPS_HORA+0]);  ser_char(gps_vt[GPS_HORA+1]);    ser_char(':');  //Hora
+    ser_char(gps_vt[GPS_HORA+2]);  ser_char(gps_vt[GPS_HORA+3]);    ser_char(':');
+    ser_char(gps_vt[GPS_HORA+4]);  ser_char(gps_vt[GPS_HORA+5]);    ser_spc(1);
+    
+    //ser_str(&gps_vt[GPS_HORA]);     ser_spc(1);     //Hora
+    //ser_str(&gps_vt[GPS_DATA]);     ser_spc(1);     //Data
+    ser_str(&gps_vt[GPS_LAT]);                      //Lat
+    ser_str(&gps_vt[GPS_NS]);       ser_spc(1);     //N-S
+    ser_str(&gps_vt[GPS_LONG]);                     //Long
+    ser_str(&gps_vt[GPS_EW]);       ser_spc(1);     //E-W
+    ser_str(&gps_vt[GPS_VEL_KPH]);                  //Vel km/h
+    ser_str(&gps_vt[GPS_VEL_UN]);   ser_spc(1);     //Unidade da velocidade
+    ser_str(&gps_vt[GPS_VEL_NOS]);  ser_spc(1);     //Vel Nós
+    ser_str(&gps_vt[GPS_CURSO]);    ser_spc(1);     //Curso
+    ser_str(&gps_vt[GPS_ALT]);                      //Altitude
+    ser_str(&gps_vt[GPS_ALT_UN]);   ser_str(" [");  //Unidade da Altitude
+    ser_str(&gps_vt[GPS_QTD_SAT]);  ser_spc(1);     //Qtd de Satélites
+    ser_str(&gps_vt[GPS_PDOP]);     ser_spc(1);     //PDOP
+    ser_str(&gps_vt[GPS_HDOP]);     ser_spc(1);     //HDOP
+    ser_str(&gps_vt[GPS_VDOP]);     ser_str("] ");  //VDOP
+    ser_str(&gps_vt[GPS_ADR_SRAM]); ser_crlf(1);    //ADR SRAM-FLASH
+}
+
 
 // Imprimir GPS, dados no pacote gps_dados
 void ser_gps_dados(char *gps_vt){
@@ -24,6 +75,30 @@ void ser_gps_dados(char *gps_vt){
     ser_str(" Alt=");   ser_str(&gps_vt[GPS_ALT]);
     ser_str(" Alt_uni=");   ser_str(&gps_vt[GPS_ALT_UN]);
     ser_str(" Adr_MPU=");   ser_str(&gps_vt[GPS_ADR_SRAM]);
+}
+
+
+
+// Compor e imprimir uma linha com acel, temp e giro
+// Recebe vetor com bytes e monta words para imprimir
+void ser_lin_ac_tp_gi(byte *vet){
+  byte i;
+  for (i=0; i<14; i+=2){
+    ser_dec16( ( (word)vet[i]<<8) | vet[i+1]);
+    ser_spc(1);
+  }
+  ser_crlf(1);
+}
+
+// Compor e imprimir uma linha com acel e giro
+// Recebe vetor com bytes e monta words para imprimir
+void ser_lin_ac_gi(byte *vet){
+  byte i;
+  for (i=0; i<12; i+=2){
+    ser_dec16( ( (word)vet[i]<<8) | vet[i+1]);
+    ser_spc(1);
+  }
+  ser_crlf(1);
 }
 
 // Compor e imprimir uma linha com cel, giro e mag

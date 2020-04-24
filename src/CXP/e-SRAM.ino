@@ -4,6 +4,193 @@
 //
 // 23LC1024 - SRAM SPI de 128 KB
 
+// Copiar toda a SRAM para a FLASH
+// Gasta 42 seg.
+// Deveria gastar +/- 6 seg (2.048 pag x 3ms = 6,144 seg)
+// #define FLASH_PAG   128
+// #define GPS_ADR_FIM 0x40000L  //Fim    área GPS   
+void sram_flash(void){
+  byte buf[FLASH_PAG];
+  long adr=0;
+  for (adr=0; adr<GPS_ADR_FIM; adr+=FLASH_PAG){
+//    ser_hex32(adr);
+//    ser_crlf(1);
+    sram_rd_blk(adr,buf,FLASH_PAG);
+    flash_wr_blk(adr,buf,FLASH_PAG);
+    flash_espera(adr);
+  }
+}
+
+// Operação - Mostrar configuração ao ligar o carro na SRAM
+void sram_op_mostra(void){
+  int x,y;
+  byte msg[20];
+  //lcd_str(1,0,"SRAM - Configuracao");
+  //lcd_str(2,0,"Use o Monitor Serial");
+  ser_str("\n--- SRAM: Dados da Configuração ao Ligar o carro ---\n");
+
+  // Bateu?
+  x=sram_rd_16b(OP_BATEU);
+  if (x==COD_SIM) ser_str("Caixa Preta Acidentada.\n");
+  if (x==COD_NAO) ser_str("Caixa Preta Não Acidentada.\n");
+
+  // Sef-Test?
+  x=sram_rd_16b(OP_ST_OK);
+  ser_str("Sef Test = ");
+  if (x==COD_SIM) ser_str("OK.\n");
+  if (x==COD_NAO) ser_str("NOK.\n");
+
+  // Calibração de Fábrica?
+  x=sram_rd_16b(OP_CF_OK);
+  ser_str("Calibracao de Fabrica = ");
+  if (x==COD_SIM) ser_str("SIM.\n");
+  if (x==COD_NAO) ser_str("NAO.\n");
+
+  // Qtd de medidas Acel e Giro
+  x=sram_rd_16b(OPC_QTD_AG);
+  ser_dec16unz(x);
+  ser_str(" medidas para Calibrar ao Ligar");
+  x=sram_rd_16b(OPC_ESC_AC);
+  str_fs_acel(x,msg);
+  ser_str("\nCalibra Escala Acel = ");  ser_str(msg);
+  x=sram_rd_16b(OPC_ESC_GI);
+  str_fs_giro(x,msg);
+  ser_str("\nCalibra Escala Giro = ");  ser_str(msg);
+  ser_str("\nCalibracao (ax-ay-az-tp-gx-gy-gz): ");
+  for (x=0; x<7; x++){
+    ser_dec16(sram_rd_16b(OPC_AX+2*x));
+    ser_spc(1);
+  }
+
+  //Parâmetros operação e limiares
+  x=sram_rd_16b(OP_FREQ_AG);
+  x=1000/(x+1);
+  ser_str("\nFreq de Amostragem = ");
+  ser_dec16unz(x);
+  ser_str(" Hz = ");
+  x=sram_rd_16b(OP_ESC_AC);
+  str_fs_acel(x,msg);
+  ser_str("\nOpera Escala Acel = ");  ser_str(msg);
+  x=sram_rd_16b(OP_ESC_GI);
+  str_fs_giro(x,msg);
+  ser_str("\nOpera Escala Giro = ");  ser_str(msg);
+  ser_str("\nLimiares de disparo (ax-ay-az-gx-gy-gz): ");
+  for (x=0; x<6; x++){
+    ser_dec16unz(sram_rd_16b(OP_LIM_AX+2*x));
+    ser_spc(1);
+  }
+
+  //Quem disparou
+  ser_str("\nDisparo no endereco: 0x");
+  ser_hex32(sram_rd_32b(OP_MPU_ADR));  
+  ser_str("\nQuem Disparou: AX AY AZ GX GY GZ\n");
+  ser_spc(15);
+  for (x=0; x<6; x++){
+    y=sram_rd_16b(OP_DISP_AX+2*x);
+    if (y==COD_SIM) ser_str(" S ");
+    if (y==COD_NAO) ser_str(" N ");
+  }
+  
+  //Data e Hora
+  sram_rd_str(OP_AC_DATA, msg, 14);
+  ser_str("\nData do acidente: ");
+  ser_char(msg[0]); ser_char(msg[1]); ser_char('/'); 
+  ser_char(msg[2]); ser_char(msg[3]); ser_char('/'); 
+  ser_char(msg[4]); ser_char(msg[5]);
+  
+  sram_rd_str(OP_AC_HORA, msg, 14);
+  ser_str("\nHora do acidente: ");
+  ser_char(msg[0]); ser_char(msg[1]); ser_char(':'); 
+  ser_char(msg[2]); ser_char(msg[3]); ser_char(':'); 
+  ser_char(msg[4]); ser_char(msg[5]);
+
+  ser_str("\n--- SRAM: Fim dos Dados da Configuração ao Ligar o carro ---\n");
+}
+
+// Dump da SRAM
+void sram_dump(long adr, long qtd){
+  long i=0;
+  byte vt[16];
+  for (i=0; i<qtd; i+=16){
+    if ( (i%256) == 0)  ser_crlf(1);
+    sram_rd_blk(adr+i,vt,16);
+    ser_dump_memo(adr+i,vt);
+  }
+}
+
+// Ler um valor de 32 bits da SRAM
+// Big Endian
+long sram_rd_32b(long adr){
+  long x;
+  x=sram_rd(adr++);           //MSB
+  x = (x<<8)|sram_rd(adr++);  
+  x = (x<<8)|sram_rd(adr++);  
+  x = (x<<8)|sram_rd(adr);    //LSB
+  return x;
+}
+
+// Escrever um valor de 32 bits da SRAM
+// Big Endian
+void sram_wr_32b(long adr, long dado){
+  sram_wr(adr++,(dado>>24)&0xFF); //MSB
+  sram_wr(adr++,(dado>>16)&0xFF);
+  sram_wr(adr++,(dado>>8)&0xFF);
+  sram_wr(adr,dado&0xFF);         //LSB
+}
+
+
+// Ler um valor de 16 bits da SRAM
+// Big Endian
+int sram_rd_16b(long adr){
+  int x;
+  x=sram_rd(adr++);             //MSB
+  x = (x<<8)|sram_rd(adr);    //LSB
+  return x;
+}
+
+// Escrever um valor de 16 bits da SRAM
+// Big Endian
+void sram_wr_16b(long adr, int dado){
+  int x;
+  sram_wr(adr++,dado>>8);     //MSB
+  sram_wr(adr,dado&0xFF);     //LSB
+}
+
+// Ler uma string da SRAM
+// O ponteiro msg deve ter espaço adequado
+// Qtd indica a quantidade máxima, o último byte é o zero final
+void sram_rd_str(long adr, byte *msg, word qtd){
+  word i=0,cont=0;
+  byte x;
+  if (qtd > 0){
+    do{
+      x=sram_rd(adr++);
+      msg[i++]=x;
+      cont++;
+    }
+    while( x!='\0' && cont<qtd);
+    if (cont==qtd)  msg[qtd-1]='\0';
+  }
+  else  msg[0]='\0';
+}
+
+// Gravar uma string na SRAM
+void sram_wr_str(long adr, byte *msg){
+  word i=0;
+  while( msg[i] != '\0')  sram_wr(adr++, msg[i++]);
+  sram_wr(adr, '\0');   //Gravar o zero final
+}
+
+// Zerar toda a SRAM
+void sram_zera(void){
+  byte vt[128];
+  long adr;
+  word i;
+  for (i=0; i<128; i++) vt[i]=0;
+  for (adr=MPU_ADR_INI; adr<GPS_ADR_FIM; adr+=128)
+    sram_wr_blk(adr, vt, 128);
+}
+
 // Escrever uma sequência
 // se adr = 0x0 0000 -> 0x1 FFFF, SRAM0 #CS0
 // se adr = 0x2 0000 -> 0x3 FFFF, SRAM1 #CS1
