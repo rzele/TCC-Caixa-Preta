@@ -4,6 +4,7 @@
 //
 // 23LC1024 - SRAM SPI de 128 KB
 
+/*
 // Copiar toda a SRAM para a FLASH
 // Gasta 42 seg.
 // Deveria gastar +/- 6 seg (2.048 pag x 3ms = 6,144 seg)
@@ -18,6 +19,32 @@ void sram_flash(void){
     sram_rd_blk(adr,buf,FLASH_PAG);
     flash_wr_blk(adr,buf,FLASH_PAG);
     flash_espera(adr);
+  }
+}
+*/
+
+// Copiar toda a SRAM para a FLASH
+// Gasta 9,2 seg.
+// #define FLASH_PAG   128
+// #define SRAM_TAM_CHIP 0x20000L = Tamanho de um Chip SRAM
+// Cada Flash tem 128 K e são 128 bytes por pagina
+// São 1024 páginas x 3 mseg por pag  = 3,072  seg
+// Com 2 flash temos 6,144 seg
+// Então temos 3 seg gastos na comunicação SPI e TWI
+void sram_flash(void){
+  byte buf[FLASH_PAG];
+  long adr=0;
+
+  //Cada laço gasta 9,186 mseg
+  // 1K x 9,186 ms = 9,4 seg no total
+  while (adr<SRAM_TAM_CHIP){
+    SCP1();
+    sram_rd_blk(adr,buf,FLASH_PAG);
+    flash_wr_blk(adr,buf,FLASH_PAG);
+    scp1();
+    sram_rd_blk(adr+0x20000L,buf,FLASH_PAG);
+    flash_wr_blk(adr+0x20000L,buf,FLASH_PAG);
+    adr+=FLASH_PAG;
   }
 }
 
@@ -181,6 +208,7 @@ void sram_wr_str(long adr, byte *msg){
   sram_wr(adr, '\0');   //Gravar o zero final
 }
 
+/*
 // Zerar toda a SRAM
 void sram_zera(void){
   byte vt[128];
@@ -190,6 +218,34 @@ void sram_zera(void){
   for (adr=MPU_ADR_INI; adr<GPS_ADR_FIM; adr+=128)
     sram_wr_blk(adr, vt, 128);
 }
+*/
+
+// Zerar toda a SRAM
+// Nova rotina para ficar rápido
+void sram_zera(void){
+  long adr;
+
+  // Zerar SRAM 0
+  adr=0;
+  spi_cs0();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS0();  //Desabilitar SRAM0
+  
+  // Zerar SRAM 1
+  adr=0;
+  spi_cs1();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS1();  //Desabilitar SRAM1
+}
+
 
 // Escrever uma sequência
 // se adr = 0x0 0000 -> 0x1 FFFF, SRAM0 #CS0

@@ -349,6 +349,8 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 
 // SRAM 23LC1024
 
+#define SRAM_TAM_CHIP 0x20000L  //Máximo por chip
+
 // Instruções da SRAM
 #define SRAM_READ    3   //Ler dado da memória
 #define SRAM_WRITE   2   //Escrever dado da memória

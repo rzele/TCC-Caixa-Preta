@@ -18,7 +18,7 @@ void teste(void){
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=12;
+    //modo=8;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -299,6 +299,7 @@ char teste_7(char md){
   word x,cont=0;
   byte y;
   char *msg="[7]U7=SRAM0 U5=SRAM1";
+
   lcd_apaga();
   lcd_str(0,0,msg);
   ser_str(msg);
@@ -388,6 +389,8 @@ char teste_8(char md){
     if (sw_tira(&y))     break;        
     delay(1000);
   }
+  sw_qq_tecla(); //Remover
+
   ser_str("\n--- Fim ---\n");
   return;
 }

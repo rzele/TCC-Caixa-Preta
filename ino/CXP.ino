@@ -16,9 +16,11 @@ void setup() {
   ser_rx_fila_config();   //RX fila serial
   timer2_config();
   timer1_config();
-  twi_config_100k();       //Configurar TWI
-  spi_config(SPI_500K);    //Configurar SPI
-  mpu_config();         //Configura MPU +/- 2g    
+  //twi_config_100k();       //Configurar TWI
+  twi_config_400k();       //Configurar TWI
+  //spi_config(SPI_500K);  //Configurar SPI
+  spi_config(SPI_8M);      //Configurar SPI
+  mpu_config();            //Configura MPU +/- 2g    
 }
 
 void loop() {
