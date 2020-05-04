@@ -40,7 +40,7 @@ char *teste_msg[]={ "ERRO",               //0
                     "11-GPS:U-Center",    //11
                     "12-MPU-->MatLab",    //12
                     "13-Blue Tooth",      //13
-                    "14-Vazio",           //14
+                    "14-MPU Serial",      //14
                     "15-Vazio",           //15
                     "16-Vazio",           //16
                     "17-Vazio"};          //17

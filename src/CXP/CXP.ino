@@ -23,7 +23,7 @@ void setup() {
 
 void loop() {
 
-  //teste();  //Forçar a entrada  no modo teste
+  teste();  //Forçar a entrada  no modo teste
   if (sw_val < 10)  teste();
   else              opera();
   

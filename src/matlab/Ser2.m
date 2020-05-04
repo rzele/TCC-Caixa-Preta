@@ -5,7 +5,7 @@
 
 
 clear all;
-%fclose(instrfind);  %Fechar possível porta serial
+fclose(instrfind);  %Fechar possível porta serial
 close all;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,11 +30,11 @@ esc_gi=250;
 tam=janela*fa;   %Tamanho da janela em nr de amostras
 pa=fa*passo;    %Passo em nr de amostras
 
-sid=serial('COM5','Baudrate',115200);
+sid=serial('COM4','Baudrate',115200);
 fopen(sid);
 if (sid==-1)
-    fprintf(1,'Nao abriu COM5.\n');
-    break;
+    fprintf(1,'Nao abriu COM4.\n');
+    return;
 end
 
 x1=0;
@@ -268,7 +268,7 @@ ylabel('graus Celsius');
 figure(1);
 
 %Aqui acaba o script
-break
+return;
 
 % Como ler arquivo texto com o Matlab
 nome='T1_50K.txt';
@@ -276,7 +276,7 @@ fid=fopen(nome,'r');
 %Verificar se abriu o arquivo
 if (fid==-1)
     fprintf(1,'Nao abriu arquivo [%s]. Parar!\n',nome);
-    break;
+    return;;
 end
 w=fscanf(fid,'%d ');
 fclose(fid);

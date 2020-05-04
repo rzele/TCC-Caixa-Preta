@@ -815,11 +815,98 @@ char teste_13(char md){
   return md;
 }
 
-// 14 - Vazio
+// 13 - MPU Serial
 char teste_14(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  char *msg="[14] MPU --> Serial";
+  byte who;
+  word vt[7];
+  float vtf[7];
+  word ac_esc, giro_esc;
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+
+  mpu_acorda();     //Acordar MPU
+  who=mpu_whoami();
+  if (who != 0x73){
+    lcd_str(1,0,"MPU nao responde!");  //MPU Não responde
+    ser_str("MPU nao responde!");  //MPU Não responde
+    sw_qq_tecla();
+    ser_str("\n--- Fim ---\n");
+    return  FALSE;
+  }
+
+  //lcd_cursor_lc(1,0);
+  //lcd_str(2,0,"Qq tecla inicia TX");
+  //while(sw_tira(&who)==FALSE);
+  mpu_config();         //MPU configurar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  ac_esc=2;
+  giro_esc=250;
+  delay(1000);
+  lcd_str(3,0,"Inicia em 1 seg.");
+  ser_str("Inicia em 1 segundo.\n");
+  
+  // Remover no futuro
+  //lcd_str(3,0,"Qq Tecla.");
+  //while(sw_tira(&who)==FALSE);    
+  
+  
+  lcd_apaga();
+  lcd_str(0,0,"Acel");
+  lcd_str(1,3,"g");
+  lcd_str(2,0,"Giro ");
+  lcd_str(3,0,"gr/s ");
+  ser_str("#[");      //Avisar Matlab
+
+  // Habilitar interrupção MPU (Dado Pronto)
+  mpu_sample_rt(SAMPLE_RT_100Hz);
+  //mpu_sample_rt(SAMPLE_RT_200Hz);
+
+  mpu_int();
+
+  while(TRUE){
+      while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
+      mpu_dado_ok=FALSE;
+
+    mpu_rd_ac_tp_gi(vt);  //Ler MPU
+
+    // Calcular acelerações e giros
+    vtf[0]=ac_esc*((float)vt[0]/32767);
+    vtf[1]=ac_esc*((float)vt[1]/32767);
+    vtf[2]=ac_esc*((float)vt[2]/32767);
+    vtf[3]=36.53+(vt[3]/340);
+    vtf[4]=giro_esc*((float)vt[4]/32767);
+    vtf[5]=giro_esc*((float)vt[5]/32767);
+    vtf[6]=giro_esc*((float)vt[6]/32767);
+
+    // LCD
+    lcd_hex16(0,5,vt[0]);  lcd_hex16(0,10,vt[1]);  lcd_hex16(0,15,vt[2]);
+    lcd_float(1,5,vtf[0],1);
+    lcd_float(1,10,vtf[1],1);
+    lcd_float(1,15,vtf[2],1);
+    
+    lcd_hex16(2,5,vt[4]);  lcd_hex16(2,10,vt[5]);  lcd_hex16(2,15,vt[6]);
+    lcd_apaga_lin(3);
+    lcd_str(3,0,"gr/s");
+    lcd_dec16nz(3,5,vtf[4]);
+    lcd_dec16nz(3,10,vtf[5]);
+    lcd_dec16nz(3,15,vtf[6]);
+
+    //Enviar pela porta serial
+    ser_dec16(vt[0]);   ser_crlf(1);           //ax
+    ser_dec16(vt[1]);   ser_crlf(1);           //ay
+    ser_dec16(vt[2]);   ser_crlf(1);           //az
+    //ser_dec16(vt[3]);   ser_crlf(1);           //temperatura
+    ser_dec16(vt[4]);   ser_crlf(1);           //gx
+    ser_dec16(vt[5]);   ser_crlf(1);           //gy
+    ser_dec16(vt[6]);   ser_crlf(1);           //gz
+    
+    if (sw_tira(&who))     break;    
+  }
+
+  ser_str("\n--- Fim ---\n");
   return md;
 }
 

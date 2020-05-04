@@ -217,7 +217,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define TESTE_11  11     //GPS U-Center
 #define TESTE_12  12     //MPU-->Matlab
 #define TESTE_13  13     //BlueTooth
-#define TESTE_14  14     //Livre
+#define TESTE_14  14     //MPU SERIAL
 #define TESTE_15  15     //Livre
 #define TESTE_16  16     //Livre
 #define TESTE_17  17     //Livre
