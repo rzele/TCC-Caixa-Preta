@@ -1,0 +1,4 @@
+ola
+olá
+eu sou um
+teste

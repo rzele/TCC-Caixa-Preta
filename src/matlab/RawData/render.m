@@ -6,25 +6,10 @@ classdef render < handle
         fig
         time
         freq_render
-        layout_objects_name = {...
-            'Acel',...
-            'Vel',...
-            'Space',...
-            'Gvel',...
-            'Gdeg',...
-            'Gtilt',...
-            'Mag',...
-            'FusionTilt',...
-            'CompTilt',...
-            'KalmanTilt',...
-            'MadgwickTilt',...
-            'Space3D',...
-            'Tilt3D'...
-        }
         setted_objects_name = {}
         layout = struct()
         layout_default_struct = struct(    ...
-            'props', [],                   ...
+            'subplot', [],                   ...
             'grid', [],                    ...
             'plots', struct (              ...
                 'x', [],                   ...
@@ -42,13 +27,10 @@ classdef render < handle
         function obj = render(freq, layout)
             aux_setted_objects_name = struct();
 
+            obj.grid_n_rows = length(layout(:,1));
+            obj.grid_n_columns = length(layout);
             obj.freq_render = freq;
             obj.time = now;
-
-            % Istancia a estrutura dos objetos do layout
-            for name = obj.layout_objects_name
-                obj.layout.(cell2mat(name)) = obj.layout_default_struct;
-            end
 
             % Define o grid de cada objeto no layout em função de linha e colunas do grid
             for row = 1:obj.grid_n_rows
@@ -56,6 +38,11 @@ classdef render < handle
                     obj_name = cell2mat(layout(row, col));
 
                     if ~strcmp(obj_name,'')
+                        % Istancia a estrutura do objeto do layout se ainda n?o iniciada
+                        if ~isfield(obj.layout, obj_name)
+                            obj.layout.(obj_name) = obj.layout_default_struct;
+                        end
+
                         position = ((row - 1) * obj.grid_n_columns) + col;
                         obj.layout.(obj_name).grid = [obj.layout.(obj_name).grid position];
                         aux_setted_objects_name.(obj_name) = [];
@@ -69,8 +56,8 @@ classdef render < handle
 
             % Percorre cada objeto do layout definido renderizando o quadro de plot com 3 eixos
             for i = 1:length(obj.setted_objects_name)
-                obj_name = cell2mat(obj.setted_objects_name(i))
-                obj.layout.(obj_name).props = subplot(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+                obj_name = cell2mat(obj.setted_objects_name(i));
+                obj.layout.(obj_name).subplot = subplot(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
                 obj.layout.(obj_name).plots.x = plot(0, 'r');
                 grid;
                 hold on
@@ -82,11 +69,15 @@ classdef render < handle
 
         % Define as propriedades de cada objeto no layout (titulo, legenda...)
         function setProperties(obj, obj_name, p_title, p_xlabel, p_ylabel, p_legend)
-            subplot(obj.layout.(obj_name).props)
-            title(p_title)
-            xlabel(p_xlabel);
-            ylabel(p_ylabel);
-            legend(p_legend);
+
+            % Verifica se o objeto existe e foi inicializado
+            if isfield(obj.layout, obj_name) && ~isempty(obj.layout.(obj_name).subplot)
+                subplot(obj.layout.(obj_name).subplot)
+                title(p_title)
+                xlabel(p_xlabel);
+                ylabel(p_ylabel);
+                legend(p_legend);
+            end
         end
         
         % Define a variavel source de cada eixo
@@ -105,6 +96,13 @@ classdef render < handle
                 drawnow
                 obj.time = now;
             end
+        end
+
+        % Rendereza mesmo se não deu o tempo da frequencia
+        function force_render(obj)
+            refreshdata
+            drawnow
+            obj.time = now;
         end
     end
     
