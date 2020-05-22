@@ -5,21 +5,103 @@
 // 23LC1024 - SRAM SPI de 128 KB
 
 // Copiar toda a SRAM para a FLASH
-// Gasta 42 seg.
-// Deveria gastar +/- 6 seg (2.048 pag x 3ms = 6,144 seg)
+// Gasta 9,2 seg.
 // #define FLASH_PAG   128
-// #define GPS_ADR_FIM 0x40000L  //Fim    área GPS   
+// #define SRAM_TAM_CHIP 0x20000L = Tamanho de um Chip SRAM
+// Cada Flash tem 128 K e são 128 bytes por pagina
+// São 1024 páginas x 3 mseg por pag  = 3,072  seg
+// Com 2 flash temos 6,144 seg
+// Então temos 3 seg gastos na comunicação SPI e TWI
 void sram_flash(void){
   byte buf[FLASH_PAG];
   long adr=0;
-  for (adr=0; adr<GPS_ADR_FIM; adr+=FLASH_PAG){
-//    ser_hex32(adr);
-//    ser_crlf(1);
+
+  //Cada laço gasta 9,186 mseg
+  // 1K x 9,186 ms = 9,4 seg no total
+  while (adr<SRAM_TAM_CHIP){
+    SCP1();
     sram_rd_blk(adr,buf,FLASH_PAG);
     flash_wr_blk(adr,buf,FLASH_PAG);
-    flash_espera(adr);
+    scp1();
+    sram_rd_blk(adr+0x20000L,buf,FLASH_PAG);
+    flash_wr_blk(adr+0x20000L,buf,FLASH_PAG);
+    adr+=FLASH_PAG;
   }
 }
+
+// Operação - Mostrar dados da configuração ao ligar o carro na SRAM
+// Não imprime qualquer tipo de rótulo, só os dados
+void sram_op_dados(void){
+  int x,y;
+  byte msg[20];
+
+  // Bateu?
+  x=sram_rd_16b(OP_BATEU);    //Bateu?
+  ser_dec16unz(x);    ser_crlf(1);
+  
+  x=sram_rd_16b(OP_ST_OK);  // Sef-Test?
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_CF_OK);  // Calibração de Fábrica?
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OPC_QTD_AG);  // Qtd de medidas Acel e Giro
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OPC_ESC_AC);  //Escala Acel da calibração
+  ser_dec16unz(x);    ser_crlf(1);
+  
+  x=sram_rd_16b(OPC_ESC_GI);  //Escala Giro da calilbração
+  ser_dec16unz(x);    ser_crlf(1);
+
+  sram_rd_blk(OPC_AX,msg,14);  //Médias = Erro intrínseco
+  ser_lin_ac_tp_gi(msg); 
+
+  x=sram_rd_16b(OPC_QTD_MG);  // Qtd de medidas Mag
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OPC_ESC_MG);  //Escala MG
+  ser_dec16unz(x);    ser_crlf(1);
+  
+  x=sram_rd_16b(OPC_HX);  //Média HX
+  ser_dec16unz(x);    ser_spc(1);
+  x=sram_rd_16b(OPC_HY);  //Média HY
+  ser_dec16unz(x);    ser_spc(1);
+  x=sram_rd_16b(OPC_HZ);  //Média HZ
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_FREQ_AG);  //Freq de Amostragem 
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_ESC_AC); //Opera Escala Acel 
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_ESC_GI); //Opera Escala Giro 
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_ESC_MG); //Opera Escala Mag 
+  ser_dec16unz(x);    ser_crlf(1);
+
+  sram_rd_blk(OP_LIM_AX,msg,14);  //Limiares para disparo
+  ser_lin_ac_gi(msg); 
+
+  x=sram_rd_32b(OP_MPU_ADR); //Ponteiro do MPU no momento do disparo
+  ser_dec32unz(x);    ser_crlf(1);
+
+  x=sram_rd_32b(OP_GPS_ADR); //Ponteiro do GPS no momento do disparo
+  ser_dec32unz(x);    ser_crlf(1);
+
+  sram_rd_blk(OP_DISP_AX,msg,14);  //Quem disparou?
+  ser_lin_ac_gi(msg); 
+
+  sram_rd_str(OP_AC_DATA, msg, 14); //Data do acidente
+  ser_str(msg);   ser_crlf(1);
+  
+  sram_rd_str(OP_AC_HORA, msg, 14); //Hora do acidente
+  ser_str(msg);   ser_crlf(1);
+
+}
+
 
 // Operação - Mostrar configuração ao ligar o carro na SRAM
 void sram_op_mostra(void){
@@ -108,15 +190,52 @@ void sram_op_mostra(void){
 }
 
 // Dump da SRAM
+// Sempre começa no múltiplo de 16, inferior a adr
 void sram_dump(long adr, long qtd){
   long i=0;
   byte vt[16];
+  adr = adr & 0xFFFFF0;
   for (i=0; i<qtd; i+=16){
     if ( (i%256) == 0)  ser_crlf(1);
     sram_rd_blk(adr+i,vt,16);
     ser_dump_memo(adr+i,vt);
   }
 }
+
+
+// Zerar área usada pelo MPU e GPS
+// Salva Calib ao Ligar, zera tudo e depois a reescreve
+void sram_zera_mpu_gps(void){
+  long adr;
+  byte vet[CXP_ADR_FIM-CXP_ADR_INI+20]; //Vetor para guardar calib ao ligar
+
+  //Guardar área de config ao ligar
+  sram_rd_blk(CXP_ADR_INI,vet,CXP_ADR_FIM-CXP_ADR_INI);
+  
+  // Zerar SRAM 0
+  adr=0;
+  spi_cs0();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS0();  //Desabilitar SRAM0
+  
+  // Zerar SRAM 1
+  adr=0;
+  spi_cs1();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS1();  //Desabilitar SRAM1
+
+  //Gravar área de config ao ligar
+  sram_wr_blk(CXP_ADR_INI,vet,CXP_ADR_FIM-CXP_ADR_INI);
+}
+
 
 // Ler um valor de 32 bits da SRAM
 // Big Endian
@@ -182,18 +301,76 @@ void sram_wr_str(long adr, byte *msg){
 }
 
 // Zerar toda a SRAM
+// Nova rotina para ficar rápido
 void sram_zera(void){
-  byte vt[128];
   long adr;
-  word i;
-  for (i=0; i<128; i++) vt[i]=0;
-  for (adr=MPU_ADR_INI; adr<GPS_ADR_FIM; adr+=128)
-    sram_wr_blk(adr, vt, 128);
+
+  // Zerar SRAM 0
+  adr=0;
+  spi_cs0();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS0();  //Desabilitar SRAM0
+  
+  // Zerar SRAM 1
+  adr=0;
+  spi_cs1();  //Selecionar SRAM0
+  spi_transf(SRAM_WRITE);      //Indicar escrita
+  spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+  spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+  spi_transf((byte)adr);                //ender (7..0)
+  for (adr=0; adr<SRAM_TAM_CHIP; adr++)   spi_transf(0);   //Escrever ZERO
+  spi_CS1();  //Desabilitar SRAM1
 }
+
 
 // Escrever uma sequência
 // se adr = 0x0 0000 -> 0x1 FFFF, SRAM0 #CS0
 // se adr = 0x2 0000 -> 0x3 FFFF, SRAM1 #CS1
+// Faz a transição de 0x1FFFF para 0x20000
+// **==>> NÃO faz a volta de 0x3FFFF para 0x00000 (fica na pag 1: volta para 0x20000)
+void sram_wr_blk(long adr, byte *vet, word qtd){
+  word cont,aux;
+  long adrf;
+  adrf=adr+qtd;
+  if ( (adr&0xFE0000L) == (adrf&0xFE0000L) ){ //Verificar pag de 128K
+    //ser_str("\nWR Pag1\n");
+    if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0
+    else                          spi_cs1();  //Selecionar SRAM1
+    spi_transf(SRAM_WRITE);      //Indicar escrita
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    // Escrever os bytes indicados
+    for (cont=0; cont<qtd; cont++)  spi_transf(vet[cont]);
+  }
+  else{
+    //ser_str("\nWR Pag2\n");
+    aux=SRAM_TAM_CHIP-adr;      //Quantos para pag 1, SRAM_TAM_CHIP = 0x20000L
+    spi_cs0();
+    spi_transf(SRAM_WRITE);      //Indicar escrita
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    for (cont=0; cont<aux; cont++)  spi_transf(vet[cont]);
+    spi_CS0();
+    qtd=qtd-aux;              //Quantos na pag 1, 
+    adr=SRAM_TAM_CHIP;        //SRAM_TAM_CHIP = 0x20000L
+    spi_cs1();
+    spi_transf(SRAM_WRITE);      //Indicar escrita
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    for (cont=0; cont<qtd; cont++)  spi_transf(vet[aux+cont]);
+    spi_CS1();
+  }
+  spi_CS0();  //Mais fácil desabilitar as duas
+  spi_CS1();  //Mais fácil desabilitar as duas
+}
+/*
 void sram_wr_blk(long adr, byte *vet, word qtd){
   word cont;
   if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0
@@ -207,10 +384,52 @@ void sram_wr_blk(long adr, byte *vet, word qtd){
   spi_CS0();  //Mais fácil desabilitar as duas
   spi_CS1();  //Mais fácil desabilitar as duas
 }
+*/
 
 // Ler uma sequência
 // se adr = 0x0 0000 -> 0x1 FFFF, SRAM0 #CS0
 // se adr = 0x2 0000 -> 0x3 FFFF, SRAM1 #CS1
+// Faz a transição de 0x1FFFF para 0x20000
+// **==>> NÃO faz a volta de 0x3FFFF para 0x00000 (fica na pag 1: volta para 0x20000)
+void sram_rd_blk(long adr, byte *vet, word qtd){
+  word cont,aux;
+  long adrf;
+  adrf=adr+qtd;
+  if ( (adr&0xFE0000L) == (adrf&0xFE0000L) ){ //Verificar pag de 128K
+    //ser_str("\nRD Pag1\n");
+    if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0
+    else                          spi_cs1();  //Selecionar SRAM1
+    spi_transf(SRAM_READ);       //Indicar leitura
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    // Ler os bytes indicados
+    for (cont=0; cont<qtd; cont++)  vet[cont] = spi_transf(0x00);
+  }
+  else{
+    //ser_str("\nRD Pag2\n");
+    aux=SRAM_TAM_CHIP-adr;      //Quantos para pag 1, SRAM_TAM_CHIP = 0x20000L
+    spi_cs0();
+    spi_transf(SRAM_READ);       //Indicar leitura
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    for (cont=0; cont<aux; cont++)  vet[cont] = spi_transf(0x00);
+    spi_CS0();
+    qtd=qtd-aux;              //Quantos n pag 1, 
+    adr=SRAM_TAM_CHIP;        //SRAM_TAM_CHIP = 0x20000L
+    spi_cs1();
+    spi_transf(SRAM_READ);       //Indicar leitura
+    spi_transf((byte)(adr >> 16) & 0xff); //ender (23..16)
+    spi_transf((byte)(adr >> 8) & 0xff);  //ender (15..8)
+    spi_transf((byte)adr);                //ender (7..0)
+    for (cont=0; cont<qtd; cont++)  vet[aux+cont] = spi_transf(0x00);
+    spi_CS1();
+  }
+  spi_CS0();  //Mais fácil desabilitar as duas
+  spi_CS1();  //Mais fácil desabilitar as duas
+}
+/*
 void sram_rd_blk(long adr, byte *vet, word qtd){
   word cont;
   if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0
@@ -224,6 +443,7 @@ void sram_rd_blk(long adr, byte *vet, word qtd){
   spi_CS0();  //Mais fácil desabilitar as duas
   spi_CS1();  //Mais fácil desabilitar as duas
 }
+*/
 
 // Escrever o dado no endereço adr da SRAM
 // se adr = 0x0 0000 -> 0x1 FFFF, SRAM0 #CS0

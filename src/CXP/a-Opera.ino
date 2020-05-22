@@ -16,7 +16,7 @@ void opera(void){
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     modo=sel_modo(opera_msg, OPERA_TOT);
-    //modo=6;
+    //modo=8;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -27,6 +27,7 @@ void opera(void){
       case OPERA_5:  opera_5(modo);  break;
       case OPERA_6:  opera_6(modo);  break;
       case OPERA_7:  opera_7(modo);  break;
+      case OPERA_8:  opera_8(modo);  break;
     }
   }
   while(1);
@@ -56,6 +57,7 @@ char opera_3(char md){
   sw_qq_tecla();
   return md;
 }
+
 // 4 - Vazio
 char opera_4(char md){
   lcd_str(0,0,opera_msg[md]);
@@ -251,7 +253,7 @@ char opera_6(char md){
   
   // Fazer toda a preparação para a operação
   // Grava SRAM, faz calibração ao ligar, inicializa MPU
-  opera_prepara();        //Fazer todos os preparativos para a operação da Caixa Preta
+  opera6_prepara();        //Fazer todos os preparativos para a operação da Caixa Preta
   lcd_str(3,0,msg5);
   ser_crlf(1);
   ser_str(msg5);
@@ -373,8 +375,8 @@ char opera_6(char md){
   return md;
 }
 
-// Fazer toda a preparação para a operação
-void opera_prepara(void){
+// Fazer toda a preparação para a operação 6
+void opera6_prepara(void){
   char *msg3="Self Test = ";
   char *msg4="Calib Fabr  = ";
   byte x;
@@ -531,7 +533,7 @@ void calibra_fab(void){
       if (aux==freq){
         aux=0;
         cont++;         //Passou mais um segundo
-        ser_dec8(CF_ESPERA-cont);
+        ser_dec32unz (CF_ESPERA-cont);
         ser_crlf(1);
       }
   }
@@ -588,7 +590,9 @@ void calibra_fab(void){
   }
 
   st=mpu_self_test(vet_st,FALSE);
-  eeprom_wr_16b(CF_ST_OK,st);
+  if (st==TRUE)   eeprom_wr_16b(CF_ST_OK,COD_SIM);
+  else            eeprom_wr_16b(CF_ST_OK,COD_NAO);
+  
   for (x=0; x<24; x++)
     eeprom_wr_16b(CF_ST_OFF_AX+(2*x),vet_st[x]);
 
@@ -599,4 +603,341 @@ void calibra_fab(void){
   ser_str("\nFim. Qq tecla para finalizar.");
   sw_qq_tecla();
   
+}
+
+
+// 8 - Adquirir dados
+// Semelhante ao Opera_6, <bateu> inicia aquisição
+// Após <bateu>, Preenche toda a memória.
+char opera_8(char md){
+  char *msg1="[8] Adquirir Dados";
+  char *msg2="Zerando SRAM";
+  char *msg3="SEL = Inic Aquisicao";
+  char *msg4=" MPUxxxxx   GPS xxxxx";
+  char *msg5="Faltam xxxxx segundos";
+  char *msg6="==>> ADQUIRINDO <<==";
+  char *msg7="==>> TX  SERIAL <<==";
+  char *msg8="FIM: Tecle para sair";
+  unsigned int mpu_cont, gps_cont;    //Contar dados para animar tela
+  unsigned long mpu_adr;        //MPU - Contador de endereços para gravação
+  unsigned long mpu_adr_bateu;  //MPU - Endereço para finalizar gravação após batida
+  unsigned long gps_adr;        //GPS - Contador de endereços para gravação
+  unsigned long cont_pb;        //Contador decrescente para indicar o que falta pós batida
+  int z;
+  byte tec;
+  byte bateu;                   //Indicar se bateu (FALSE / TRUE)
+  word segs;                    //Segundos que faltam para finalizar
+  byte vt[18];                  //Receber ax, ay, az, gx, gy, gz, hx, hy, hz ou gps_dados
+  char msg_aux[20];
+  byte data[8];                 //Última atualização da data
+  byte hora[12];                //Última atualização da hora
+
+  lcd_apaga();
+  lcd_str(0,0,msg1);
+  ser_str(msg1);  ser_crlf(1);
+  opera8_prepara();
+
+  //Laço de principal
+  gps_int();
+  while (TRUE){
+    lcd_apaga();
+    lcd_str(0,0,msg1);
+    ser_crlf(3);
+    ser_str(msg1);  ser_crlf(1);
+    lcd_str(1,0,msg2);
+    ser_str(msg2);  ser_crlf(1);
+    sram_zera_mpu_gps();   //Zerar SRAM, preserva Calib ao Ligar
+    mpu_cont=0;
+    gps_cont=0;
+    lcd_apaga_lin(1);
+    lcd_str(1,0,msg3);
+    ser_str(msg3);  ser_crlf(1);
+    lcd_str(3,0,msg4);
+    bateu=FALSE;
+    mpu_adr=MPU_ADR_INI;
+    gps_adr=GPS_ADR_INI;
+    gps_tipo=GPS_NADA;
+    mpu_dado_ok=FALSE;
+    //gps_int();
+
+    // Laço de Aquisição
+    for (z=0; z<GPS_PASSO; z++) gps_dados[z]='\0'; //***Prencher com zeros
+    while(TRUE){
+      lcd_dec16u(3,4,mpu_cont);
+      lcd_dec16u(3,15,gps_cont);
+  
+      // MPU trabalha por interrupção
+      if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
+        mpu_dado_ok=FALSE;
+        mpu_cont++;
+        mpu_rd_ac_gi_mg(vt);
+        sram_wr_blk(mpu_adr, vt, MPU_PASSO); //Gravar MPU na SRAM
+        mpu_adr += MPU_PASSO;
+        if (mpu_adr == MPU_ADR_FIM){
+          mpu_adr=MPU_ADR_INI;
+          lcd_char(3,0,'*');
+        }
+        if (bateu == TRUE){
+          //ser_str("\nmpu_adr=");  ser_hex32(mpu_adr);
+          //ser_str(" cont_pb=");   ser_dec32(cont_pb);
+          cont_pb -= MPU_PASSO;       //Se bateu, acionar contador decrescente
+        }
+      }
+
+      // GPS usa interrupção com dois buffers selecionados pela variável gps_msg_fase
+      if (gps_msg_ok == TRUE){
+        gps_msg_ok=FALSE;
+        if (gps_msg_fase==0){
+          //ser_str(gps_msg_1);     //Imprimir msg GPS
+          //ser_crlf(1);            //CR LF
+          gps_extrai(gps_msg_1);  //Extrair parâmetros do GPS
+        }
+        else{
+          //ser_str(gps_msg_0);     //Imprimir msg gps
+          //ser_crlf(1);            //CR LF
+          gps_extrai(gps_msg_0);  //Extrair parâmetros do GPS
+        }
+      }
+
+      // GPS - Só grava após receber GPS_GLL
+      if (gps_tipo == GPS_GLL){
+        gps_tipo=GPS_NADA;
+        gps_cont++;
+        str_dec32u(mpu_adr, msg_aux);                 //Gerar string do contador de endereço mpu_adr
+        str_rmvz_u(msg_aux);                          //Remover zeros à esquerda
+        str_copia(msg_aux,&gps_dados[GPS_ADR_SRAM]);  //Copiar para o vetor gps_dados
+        sram_wr_blk(gps_adr, gps_dados, GPS_PASSO);   //Gravar gps_dados na SRAM
+        ser_gps_dados_lin(gps_dados);                 //Imprimir tudo que veio do GPS
+        str_copia(&gps_dados[GPS_HORA],hora);         //Atualizar variável hora, para o caso de batida
+        str_copia(&gps_dados[GPS_DATA],data);         //Atualizar variável data, para o caso de batida
+      /*
+        for (z=0; z<GPS_PASSO; z++){
+          ser_hex8(gps_dados[z]);
+          ser_spc(1);
+          if ((z%32) == 0) ser_crlf(1);
+        }
+        ser_crlf(1);
+        */
+        for (z=0; z<GPS_PASSO; z++)  gps_dados[z]='\0'; //***Prencher com zeros
+        gps_adr += GPS_PASSO;                         //Avançar contador de endereço gps_adr
+        if (gps_adr == GPS_ADR_FIM){                  //Verificar limite do contador
+          gps_adr=GPS_ADR_INI;
+          lcd_char(3,11,'*');
+        }
+        //str_copia(&gps_dados[GPS_HORA],hora);         //Atualizar variável hora, para o caso de batida
+        //str_copia(&gps_dados[GPS_DATA],data);         //Atualizar variável data, para o caso de batida
+      }
+
+      // Se bateu, verificar se já preencheu toda a memória
+      if (bateu == TRUE){
+        segs=cont_pb/(MPU_PASSO*100);
+        lcd_dec16u(2,7,segs);   //Imprimir contador segundos após batida (SEL)
+        if (cont_pb == 0)   break;      //cont_pb=0 ==> FIM
+      }
+
+      //Tecla? Dá início à aquisição
+      if (sw_tira(&tec)==TRUE){
+        if (tec==SW_SEL){
+          bateu=TRUE;       //Indicar que bateu
+          sram_wr_32b(OP_MPU_ADR, mpu_adr);                      //Guardar contador de endereços SRAM(MPU) no instante da batida
+          sram_wr_32b(OP_GPS_ADR, gps_adr);                      //Guardar contador de endereços SRAM(GPS) no instante da batida
+          sram_wr_str(OP_AC_DATA, data);                          //Guardar data da batida
+          sram_wr_str(OP_AC_HORA, hora);                          //Guardar hora da batida
+          sram_wr_16b(OP_BATEU,COD_SIM);                          //Marcar BATIDA
+          sram_wr_16b(OP_DISP_AX, COD_SIM);                       //AX simula disparo da batida
+          cont_pb=MPU_ADR_FIM-MPU_ADR_INI;                        //Inicializar contador pós batida
+          lcd_str(1,0,msg6);
+          lcd_str(2,0,msg5);
+          ser_crlf(2);
+          ser_str(msg6);
+          ser_crlf(2);
+        }
+        if (tec==SW_SEQ1){      //Sair do Opera 8
+          gps_des_int();  //GPS: Desabilitar interrupção
+          mpu_des_int();  //MPU: Desabilitar interrupção
+          lcd_apaga();
+          lcd_str(0,0,msg1);
+          lcd_str(2,0,msg8);
+          ser_crlf(2);
+          ser_str(msg8);
+          sw_qq_tecla();
+          return md;
+        }
+      }
+    }
+
+    // Marcar o final
+    // Gravar linha com 22222 = 0x56CE
+    for (z=0; z<18; z+=2){vt[z+0]=0x56; vt[z+1]=0xCE; }
+    if (mpu_adr==0) mpu_adr=MPU_ADR_FIM-MPU_PASSO;  //Voltar ponteiro um passo
+    else            mpu_adr = mpu_adr-MPU_PASSO;
+    sram_wr_blk(mpu_adr, vt, MPU_PASSO);            //Gravar linha com 22222 na SRAM
+    ser_str("\nGravar 2222 em adr="); ser_hex32(mpu_adr);
+    ser_crlf(1);
+
+    // TX serial;
+    lcd_str(1,0,msg7);
+    ser_str(msg7);   ser_crlf(1);
+    opera8_serial();    //TX todos os dados
+    ser_crlf(5);
+    //sram_op_mostra();
+
+    //while(TRUE);
+  }
+  gps_des_int();  //GPS: Desabilitar interrupção
+  mpu_des_int();  //MPU: Desabilitar interrupção
+  lcd_str(3,0,"--Erro--");    //Se chegou aqui, deu erro no laço
+  ser_str("\n\n--Erro--");    //Se chegou aqui, deu erro no laço
+  while(TRUE);
+}
+
+// TX serial para opera 8
+void opera8_serial(void){
+  char *msg1="MPU faltam xxxxx";
+  byte vet_mpu[MPU_PASSO];      //Ler bytes: ax-ay-az-gx-gy-gz
+  byte vet_gps[GPS_PASSO];  //Ler mensagem GPS
+  long adr;       //Ponteiro para ler os dados
+  word qtd;     //Quantidade de linhas MPU ou GPS
+  word cont;    //Contador do envio serial
+
+  // MPU TX
+  lcd_apaga_lin(2);
+  lcd_str(2,0,msg1);
+  ser_str("\n\n#[m\n");                       //Marcar início TX MPU
+  sram_rd_str(OP_AC_DATA, vet_gps, 10);       //Ler data do acidente
+  ser_str(vet_gps);                           //Imprimir data do acidente
+  ser_crlf(1);
+  sram_rd_str(OP_AC_HORA, vet_gps, 10);       //Ler hora do acidente
+  ser_str(vet_gps);                           //Imprimir hora do acidente
+  ser_crlf(1);
+  adr=sram_rd_32b(OP_MPU_ADR);                //Endereço qdo SEL foi acionada
+  ser_dec32unz(adr);                            //Imprimir endereço
+  //ser_hex32(adr);                            //Imprimir endereço
+  ser_crlf(1);
+  qtd=(MPU_ADR_FIM - MPU_ADR_INI)/MPU_PASSO;  //Qtd de linhas do MPU
+  ser_dec16u(qtd);                            //Imprimir qtd de linhas MPU
+  ser_crlf(1);
+  for (cont=0; cont<qtd; cont++){
+    sram_rd_blk(adr,vet_mpu,12);
+    ser_dec16u(cont);
+    ser_spc(1);
+    //ser_dec32u(adr);
+    ser_hex32(adr);
+    ser_spc(1);
+    ser_lin_ac_gi_mg(vet_mpu);
+    adr+=MPU_PASSO;
+    if (adr==MPU_ADR_FIM) adr=MPU_ADR_INI;
+    lcd_dec16u(2,11,qtd-cont);
+  }
+  ser_str("\n\nm]#\n");    //Marcar fim TX MPU
+
+  // GPS TX
+  lcd_str(1,0,"GPS");
+  ser_str("#[g\n");    //Marcar início TX GPS
+  sram_rd_str(OP_AC_DATA, vet_gps, 10);       //Ler data do acidente
+  ser_str(vet_gps);                           //Imprimir data do acidente
+  ser_crlf(1);
+  sram_rd_str(OP_AC_HORA, vet_gps, 10);       //Ler hora do acidente
+  ser_str(vet_gps);                           //Imprimir hora do acidente
+  ser_crlf(1);
+  adr=sram_rd_32b(OP_GPS_ADR);                //Endereço qdo SEL foi acionada
+  ser_dec32unz(adr);                            //Imprimir endereço
+  ser_crlf(1);
+  // Estimar endereço da linha mais antiga do GPS
+  // qtd = ainda tem a quantidade de leituras do MPU
+  cont=qtd/(1000/(OP_FREQ+1));    //Freq MPU = 1000/(OP_FREQ+1) = 1000/(9+1) = 100
+  cont=cont*GPS_PASSO;
+  adr = adr + cont;     //Calcular adr da linha mais antiga
+  if (adr>=GPS_ADR_FIM) adr=GPS_ADR_INI+(adr-GPS_ADR_FIM);
+  qtd=(GPS_ADR_FIM - GPS_ADR_INI)/GPS_PASSO;  //Qtd de linhas do GPS
+  ser_dec16unz(qtd);                            //Imprimir qtd de linhas GPS
+  ser_crlf(1);
+  for (cont=0; cont<qtd; cont++){
+    sram_rd_blk(adr,vet_gps,GPS_PASSO);
+    ser_dec32u(cont);
+    ser_spc(1);
+    ser_dec32(adr);
+    ser_spc(1);
+    ser_gps_dados_lin(vet_gps);
+    //ser_crlf(1);
+    adr+=GPS_PASSO;
+    if (adr==GPS_ADR_FIM) adr=GPS_ADR_INI;
+    lcd_dec16u(2,11,qtd-cont-1);
+  }
+  ser_str("g]#\n");    //Marcar fim TX GPS
+
+  ser_str("#[l\n");    //Marcar Início TX Calibração do Ligar
+  sram_op_dados();
+  ser_str("l]#\n");    //Marcar Fim TX Calibração do Ligar
+
+  ser_str("#[f\n");    //Marcar Início TX Calibração do Ligar
+  eeprom_cf_dados();
+  ser_str("f]#\n");    //Marcar Fim TX Calibração do Ligar - Fim de tudo
+}
+
+// Fazer toda a preparação para a operação 8
+void opera8_prepara(void){
+  char *msg1="Erro Who am I = ";
+  char *msg2="Self Test Falhou";
+  byte x;
+  byte st;        //Resultado do Self Test
+  int st_vet[24]; //Receber resultados do Self Test
+  byte esc_ac,esc_gi,esc_mg;   //Guardar Escalas de acel, giro e mag
+  int aux[7];
+
+  mpu_acorda();
+  mpu_config();
+  x=mpu_whoami();                     //Who am I
+  if (x != MPU9250_WHO){
+    lcd_str(1,0,msg1); lcd_dec16unz(1,16,x);
+    ser_str(msg1);     ser_dec16unz(x);  ser_crlf(1);
+    delay(1000);
+  }
+  st=mpu_self_test(st_vet,FALSE);   //Self Test
+  if (st==TRUE)
+    sram_wr_16b(OP_ST_OK,COD_SIM);
+  else{
+    sram_wr_16b(OP_ST_OK,COD_NAO);
+    lcd_str(1,0,msg2);
+    ser_str(msg2);  ser_crlf(1);
+    delay(1000);
+  }
+  x=eeprom_rd_16b(CF_OK);   //Calibração de Fábrica
+  sram_wr_16b(OP_CF_OK,x);  //Gravar código de Calibr de Fábrica
+
+  //Calibração Acel e Giro ao ligar o carro
+  esc_ac=ACEL_FS_2G;    //Escala acel para calibrar ao ligar
+  esc_gi=GIRO_FS_250;   //Escala giro para calibrar ao ligar
+  mpu_calibra(aux, OP_QTD_MED_AG, esc_ac, esc_gi);  //Função de calibração
+  sram_wr_16b(OPC_QTD_AG,OP_QTD_MED_AG);   //Qtd de medidas para calibração ao ligar
+  sram_wr_16b(OPC_ESC_AC,esc_ac);      //Calibra sempre usa +/- 2g
+  sram_wr_16b(OPC_ESC_GI,esc_gi);      //Calibra sempre usa +/- 250 gr/s
+  for (x=0; x<7; x++)   sram_wr_16b(OPC_AX+(2*x),aux[x]);
+  //Calibração Magnetômetro ao ligar o carro
+  //esc_mg=0;             //Escala do Magnetômetro
+  //sram_wr_16b(OPC_QTD_MG,OP_QTD_MED_MG);    //Qtd de medidas para  média do Mag calibração ao ligar
+  //sram_wr_16b(OPC_ESC_MG,esc_mg);           //Escala do Mag para calibração ao ligar
+  //mag_calibra();
+  
+  //Definir freq e limiares de acidente
+  sram_wr_16b(OP_BATEU,COD_NAO);        //Nao Batida
+  sram_wr_32b(OP_MPU_ADR,0L);           //Endereço da SRAM onde ocorreu disparo
+  sram_wr_16b(OP_FREQ_AG,OP_FREQ);      //Freq de amostragem para operação
+  sram_wr_16b(OP_ESC_AC,OP_ESC_ACEL);   //Escala ACEL para operação
+  sram_wr_16b(OP_ESC_GI,OP_ESC_GIRO);   //Escala GIRO para operação
+  sram_wr_16b(OP_LIM_AX,LIMIAR_AX);     //AX - Limiar para disparo de acidente
+  sram_wr_16b(OP_LIM_AY,LIMIAR_AY);     //AY - Limiar para disparo de acidente
+  sram_wr_16b(OP_LIM_AZ,LIMIAR_AZ);     //AZ - Limiar para disparo de acidente
+  sram_wr_16b(OP_LIM_GX,LIMIAR_GX);     //GX - Limiar para disparo de acidente
+  sram_wr_16b(OP_LIM_GY,LIMIAR_GY);     //GY - Limiar para disparo de acidente
+  sram_wr_16b(OP_LIM_GZ,LIMIAR_GZ);     //GZ - Limiar para disparo de acidente
+
+  //Quem disparou
+  for (x=0; x<6; x++)   sram_wr_16b(OP_DISP_AX+2*x,COD_NAO);
+
+  //Data e Hora
+  sram_wr_str(OP_AC_DATA,"ddmmyy");
+  sram_wr_str(OP_AC_HORA,"hhmmss.sss");
+
+  //sram_op_mostra();
 }

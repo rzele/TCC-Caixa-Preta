@@ -38,8 +38,8 @@
 #define OP_QTD_MED_MG  64             //Calibração ao Ligar: quantidade de medidas por eixo mag
 
 // Códigos usados para indicar sim/não, passou/falhou
-#define COD_SIM  0x5353     //2x ASCII(S) Afirmativo
-#define COD_NAO  0x4E4E     //2x ASCII(N) Negativo
+#define COD_SIM  0x5353     //(21.331) 2x ASCII(S) Afirmativo
+#define COD_NAO  0x4E4E     //(20.046) 2x ASCII(N) Negativo
 
 // Limiares para indicar Acidente
 #define LIMIAR_AX  4     //4g
@@ -100,9 +100,9 @@ const char *CF_HOJE = "20/04/20"; //Data para Configuração de Fábrica
 const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define G_PADRAO    9.80665       //1g padrão
 #define G_BSB       9.7808439     //Ac. gravidade em Brasília
-#define CF_ESPERA   6000          //Tempo de espera (seg) antes de calibrar o MPU
+#define CF_ESPERA   3600          //Tempo de espera (seg) antes de calibrar o MPU
 #define CF_FREQ     100           //Calibração de Fábrica: Freq de amostragem do MPU
-#define CF_QTD_MED  1024          //Calibração de Fábrica: quantidade de medidas napor eixo
+#define CF_QTD_MED  16384         //Calibração de Fábrica: quantidade de medidas por eixo
 
 // Endereços da EEPROM
 // Usada para guardar Calibraçao de Fábrica
@@ -193,6 +193,10 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define LCD_LINHA2 BIT2 //Linha 0 foi alterada
 #define LCD_LINHA3 BIT3 //Linha 1 foi alterada
 
+// LCD - Setas Esqeuerda e Direita
+#define LCD_SETA_DIR  0x7E  //
+#define LCD_SETA_ESQ  0x7F  //
+
 // Timer 1 
 #define FREQ_T1 100  //Freq de interrupção do timer 1
 
@@ -223,7 +227,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define TESTE_17  17     //Livre
 
 // OPERA
-#define OPERA_TOT  7     //Modos de teste: 1, 2 , ..., 7
+#define OPERA_TOT  8     //Modos de teste: 1, 2 , ..., 8
 #define OPERA_0    0     //Não tem
 #define OPERA_1    1     //Livre
 #define OPERA_2    2     //Livre
@@ -232,6 +236,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define OPERA_5    5     //Livre
 #define OPERA_6    6     //Livre
 #define OPERA_7    7     //Livre
+#define OPERA_8    8     //Livre
 
 // TECLADO - Parametros para leitura das chaves
 #define  SW_FILA_TAM  10  // tamanho da fila do teclado
@@ -348,6 +353,8 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 //////////////////////////////////////////////////////////////////////////////////
 
 // SRAM 23LC1024
+
+#define SRAM_TAM_CHIP 0x20000L  //Máximo por chip
 
 // Instruções da SRAM
 #define SRAM_READ    3   //Ler dado da memória
