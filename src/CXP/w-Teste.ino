@@ -17,8 +17,11 @@ void teste(void){
     while(sw_val<0x10);  //Esperar soltar tecla SEL
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
-    modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=12;
+    // modo=sel_modo(teste_msg, TESTE_TOT);
+    
+    // força entrada no modo 12
+    modo=12;
+
     lcd_apaga();
     ser_crlf(1);
     switch(modo){

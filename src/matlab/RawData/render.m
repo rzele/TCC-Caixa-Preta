@@ -28,7 +28,7 @@ classdef render < handle
             aux_setted_objects_name = struct();
 
             obj.grid_n_rows = length(layout(:,1));
-            obj.grid_n_columns = length(layout);
+            obj.grid_n_columns = length(layout(1,:));
             obj.freq_render = freq;
             obj.time = now;
 
@@ -98,11 +98,23 @@ classdef render < handle
             end
         end
 
-        % Rendereza mesmo se não deu o tempo da frequencia
+        % Rendereza mesmo se n?o deu o tempo da frequencia
         function force_render(obj)
             refreshdata
             drawnow
             obj.time = now;
+        end
+
+        % Linka todos os eixos, so pode ser executado quando n?o for mais atualizar os gr?ficos
+        function linkAllAxes(obj)
+            axis = [];
+
+            for i = 1:length(obj.setted_objects_name)
+                obj_name = cell2mat(obj.setted_objects_name(i));
+                axis = [axis obj.layout.(obj_name).subplot];
+            end
+
+            linkaxes(axis, 'x');
         end
     end
     
