@@ -4,6 +4,7 @@
 % - file_simulated_freq ainda não funciona muito bem
 
 addpath('quaternion_library');      % include quaternion library
+addpath('helpers');                 % include some useful functions
 close all;                          % close all figures
 clear;                              % clear all variables
 clc;                                % clear the command terminal
@@ -29,8 +30,8 @@ Acel_G = 'N';                               % Aceleração desconsiderando a gravi
 
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
-read_from_serial=false;      % Set to false to use a file
-serial_COM='COM3';          
+read_from_serial=true;      % Set to false to use a file
+serial_COM='COM4';          
 serial_baudrate=115200;     
 file_full_path='Dados/roll-pitch-roll-90-each.txt';          
 file_simulated_freq=Inf;    % Simulate a pulling frequence, e.g.: to simulate an freq of 100 samples per second use 100hz
@@ -43,25 +44,25 @@ freq_sample=100;            % Frequencia da amostragem dos dados
 window_k = 10;              % Janela da media movel (minimo = 2)
 
 % Plotagem
-plot_in_real_time=false;    % Define se o plot será so no final, ou em tempo real
+plot_in_real_time=true;    % Define se o plot será so no final, ou em tempo real
 freq_render=5;             % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
-
+    
         Acel,       Acel_G,     FusionTilt,     FusionTilt;...
         Vel,        Space,      CompTilt,       CompTilt;...
         Gvel,       Gdeg,       KalmanTilt,     KalmanTilt;...
         Gtilt,      Gtilt,      MadgwickTilt,   MadgwickTilt;...
-
+        
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
 % Constantes do sensor
 const_g=9.8;                % Constante gravitacional segundo fabricante do MPU
-gx_bias=0.80;               % 
-gy_bias=0.77;               % 
-gz_bias=0.45;               % 
-ax_bias=0.0325;             % 
-ay_bias=0.07;              % 
-az_bias=0.07;               % 
+gx_bias=0.0;                % 
+gy_bias=0.0;                % 
+gz_bias=0.0;                % 
+ax_bias=0.0;                % 
+ay_bias=0.0;                % 
+az_bias=0.0;                % 
 esc_ac=2;                   % Vem do Arduino, função que configura escalas de aceleração
 esc_giro=250;               % e giro //+/- 2g e +/-250gr/seg
 
@@ -89,6 +90,9 @@ B = [deltaT; 0];
 C = [1 0];
 Q = [0.002^2 0; 0 0];
 R = 0.03;
+
+% Variável de ajuste do filtro madgwick
+beta=0.1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -137,8 +141,12 @@ t = 0:max_size;                         % Eixo temporal do gráfico
 %% Define uma janela p/ plot
 plot_1 = render(freq_render, layout);
 
+% Obtem a lista de itens unicos definidos no layout
+% para evitar calculo de itens descenessários
+setted_objects_name = plot_1.setted_objects_name;
+
 % Seta as labels de cada gráfico
-plot_1.setProperties(Acel, 'Aceleração em g', 'Amostra', 'g', {'aX', 'aY', 'aZ'});
+	
 plot_1.setProperties(Vel, 'Velocidade em m/s', 'Amostra', 'm/s', {'vX', 'vY', 'vZ'});
 plot_1.setProperties(Space, 'Espaço em metros', 'Amostra', 'metros', {'X', 'Y', 'Z'});
 plot_1.setProperties(Gvel, 'Giro em graus/seg', 'Amostra', 'graus/seg', {'gX', 'gY', 'gZ'});
@@ -172,7 +180,7 @@ kalmanFilterPitch = kalman(A,B,C,Q,R);
 kalmanFilterYaw = kalman(A,B,C,Q,R);
 
 %% Iniciaaliza o filtro de madgwick
-madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', 0.1);
+madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
 
 %% Abre porta serial
 if read_from_serial
@@ -233,140 +241,167 @@ while true
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    newPitch = (gPitch(max_size) + ((gy(max_size-1) + gy(max_size)) / (2 * freq_sample) ));
-    newRoll = (gRoll(max_size) + ((gx(max_size-1) + gx(max_size)) / (2 * freq_sample) ));
-    newYaw = (gYaw(max_size) + ((gz(max_size-1) + gz(max_size)) / (2 * freq_sample) ));
-    
-    gPitch  = [gPitch(2:max_size) newPitch];
-    gRoll   = [gRoll(2:max_size)  newRoll];
-    gYaw    = [gYaw(2:max_size)   newYaw];
+    if isOneIn(setted_objects_name, {Gdeg, Gtilt, FusionTilt, CompTilt})
+        newPitch = (gPitch(max_size) + ((gy(max_size-1) + gy(max_size)) / (2 * freq_sample) ));
+        newRoll = (gRoll(max_size) + ((gx(max_size-1) + gx(max_size)) / (2 * freq_sample) ));
+        newYaw = (gYaw(max_size) + ((gz(max_size-1) + gz(max_size)) / (2 * freq_sample) ));
+
+        gPitch  = [gPitch(2:max_size) newPitch];
+        gRoll   = [gRoll(2:max_size)  newRoll];
+        gYaw    = [gYaw(2:max_size)   newYaw];
+    end
     
     %% Calcula a matriz de rotação (X,Y,Z) que foi responsável por mover o corpo da posição da amostra anterior para a atual
-    delta_gPitch = gPitch(max_size) - gPitch(max_size-1);
-    delta_gRoll = gRoll(max_size) - gRoll(max_size-1);
-    delta_gYaw = gYaw(max_size) - gYaw(max_size-1);
-    temp_Rx = [...
-        [1,                0,               0        ];...
-        [0,     cosd(delta_gRoll),  -sind(delta_gRoll)];...
-        [0,     sind(delta_gRoll),  cosd(delta_gRoll)]
-    ];
-    temp_Ry = [...
-        [cosd(delta_gPitch),        0,       sind(delta_gPitch)];...
-        [0,                         1,               0        ];...
-        [-sind(delta_gPitch),        0,      cosd(delta_gPitch)]
-    ];
-    temp_Rz = [...
-        [cosd(delta_gYaw),         -sind(delta_gYaw),       0];...
-        [sind(delta_gYaw),         cosd(delta_gYaw),       0];...
-        [0,                         0,                      1]
-    ];
-    temp_R = temp_Rx * temp_Ry * temp_Rz;
+    % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
+    if isOneIn(setted_objects_name, {Gtilt, FusionTilt, CompTilt})
+        delta_gPitch = gPitch(max_size) - gPitch(max_size-1);
+        delta_gRoll = gRoll(max_size) - gRoll(max_size-1);
+        delta_gYaw = gYaw(max_size) - gYaw(max_size-1);
+        temp_Rx = [...
+            [1,                0,               0        ];...
+            [0,     cosd(delta_gRoll),  -sind(delta_gRoll)];...
+            [0,     sind(delta_gRoll),  cosd(delta_gRoll)]
+        ];
+        temp_Ry = [...
+            [cosd(delta_gPitch),        0,       sind(delta_gPitch)];...
+            [0,                         1,               0        ];...
+            [-sind(delta_gPitch),        0,      cosd(delta_gPitch)]
+        ];
+        temp_Rz = [...
+            [cosd(delta_gYaw),         -sind(delta_gYaw),       0];...
+            [sind(delta_gYaw),         cosd(delta_gYaw),       0];...
+            [0,                         0,                      1]
+        ];
+        temp_R = temp_Rx * temp_Ry * temp_Rz;
 
-    % Calcula a matriz de rotação (X,Y,Z) que move o corpo da posição inicial para a posição atual
-    Rot = Rot * temp_R;
-    
+        % Calcula a matriz de rotação (X,Y,Z) que move o corpo da posição inicial para a posição atual
+        Rot = Rot * temp_R;
 
-    %% Extrai Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando a atual matriz de rotação (X,Y,Z)
-    newRoll = atan2(Rot(3,2), Rot(3,3)) * 180/pi;
-    newYaw = atan2(Rot(2,1), Rot(1,1)) * 180/pi;
-    if cosd(newYaw) == 0
-        newPitch = atan2(-Rot(3,1), Rot(2,1)/sind(newYaw)) * 180/pi;
-    else
-        newPitch = atan2(-Rot(3,1), Rot(1,1)/cosd(newYaw)) * 180/pi;
+
+        %% Extrai Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando a atual matriz de rotação (X,Y,Z)
+        % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
+        newRoll = atan2(Rot(3,2), Rot(3,3)) * 180/pi;
+        newYaw = atan2(Rot(2,1), Rot(1,1)) * 180/pi;
+        if cosd(newYaw) == 0
+            newPitch = atan2(-Rot(3,1), Rot(2,1)/sind(newYaw)) * 180/pi;
+        else
+            newPitch = atan2(-Rot(3,1), Rot(1,1)/cosd(newYaw)) * 180/pi;
+        end
+
+        gPitch_abs = [gPitch_abs(2:max_size) newPitch];
+        gRoll_abs = [gRoll_abs(2:max_size) newRoll];
+        gYaw_abs = [gYaw_abs(2:max_size) newYaw];
     end
-
-    gPitch_abs = [gPitch_abs(2:max_size) newPitch];
-    gRoll_abs = [gRoll_abs(2:max_size) newRoll];
-    gYaw_abs = [gYaw_abs(2:max_size) newYaw];
     
     %% Calcula Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando aceleração
     % Usando a aceleração, usamos o vetor de gravidade que deve sempre
     % estar presente p/ determinar a posição do corpo
     % assim temos que p/ a order de rotação X,Y,Z
-    newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
-    if (az(max_size)>=0)
-        sign = 1;
-    else
-        sign = -1;
+    % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
+    if isOneIn(setted_objects_name, {FusionTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space})
+        newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
+        if (az(max_size)>=0)
+            sign = 1;
+        else
+            sign = -1;
+        end
+        miu = 0.001;
+        newRoll = atan2( ay(max_size),   (sign * sqrt( az(max_size)^2 + miu * ax(max_size)^2 ))) * 180/pi;
+
+        aPitch  = [aPitch(2:max_size) newPitch];
+        aRoll   = [aRoll(2:max_size)   newRoll];
     end
-    miu = 0.001;
-    newRoll = atan2( ay(max_size),   (sign * sqrt( az(max_size)^2 + miu * ax(max_size)^2 ))) * 180/pi;
-    
-    aPitch  = [aPitch(2:max_size) newPitch];
-    aRoll   = [aRoll(2:max_size)   newRoll];
 
     %% Calcula rotação usando filtro complementar
-    newRoll = (1-mu)*(compl_Roll(max_size) + delta_gRoll) + mu*aRoll(max_size);
-    newPitch = (1-mu)*(compl_Pitch(max_size) + delta_gPitch) + mu*aPitch(max_size);
-    % newYaw = 
+    % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
+    if isOneIn(setted_objects_name, CompTilt)
+        newRoll = (1-mu)*(compl_Roll(max_size) + delta_gRoll) + mu*aRoll(max_size);
+        newPitch = (1-mu)*(compl_Pitch(max_size) + delta_gPitch) + mu*aPitch(max_size);
+        % newYaw = 
 
-    compl_Roll = [compl_Roll(2:max_size) newRoll];
-    compl_Pitch = [compl_Pitch(2:max_size) newPitch];
-    % compl_Yaw = [compl_Yaw(2:max_size) newYaw]
+        compl_Roll = [compl_Roll(2:max_size) newRoll];
+        compl_Pitch = [compl_Pitch(2:max_size) newPitch];
+        % compl_Yaw = [compl_Yaw(2:max_size) newYaw]
+    end
 
     %% Calcula rotação usando filtro de Kalman
-    % Calcula a predição p/ cada eixo individualmente
-    kalmanFilterRoll.predict(gx(max_size));
-    kalmanFilterPitch.predict(gy(max_size));
+    % Ref do calculo: https://www.youtube.com/watch?v=urhaoECmCQk
+    % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
+    if isOneIn(setted_objects_name, {KalmanTilt, Acel_G, Vel, Space})
+        % Calcula a predição p/ cada eixo individualmente
+        kalmanFilterRoll.predict(gx(max_size));
+        kalmanFilterPitch.predict(gy(max_size));
+
+        % Atualiza a predição p/ cada eixo individualmente
+        roll_and_bias = kalmanFilterRoll.update(aRoll(max_size));
+        pitch_and_bias = kalmanFilterPitch.update(aPitch(max_size));
+
+        % Insere o valor filtrado no eixo a ser plotado
+        kalman_Roll = [kalman_Roll(2:max_size)  roll_and_bias(1)];
+        kalman_Pitch = [kalman_Pitch(2:max_size)  pitch_and_bias(1)];
+    end
     
-    % Atualiza a predição p/ cada eixo individualmente
-    roll_and_bias = kalmanFilterRoll.update(aRoll(max_size));
-    pitch_and_bias = kalmanFilterPitch.update(aPitch(max_size));
-
-    % Insere o valor filtrado no eixo a ser plotado
-    kalman_Roll = [kalman_Roll(2:max_size)  roll_and_bias(1)];
-    kalman_Pitch = [kalman_Pitch(2:max_size)  pitch_and_bias(1)];
-
     %% Calcula rotação usando filtro de madgwick
-    gyroscope = [gx(max_size), gy(max_size), gz(max_size)] * (pi/180) ;
-    accelerometer = [ax(max_size), ay(max_size), az(max_size)];
-    madgwickFilter.UpdateIMU(gyroscope, accelerometer);
+    % Ref do calculo: https://nitinjsanket.github.io/tutorials/attitudeest/madgwick
+    % e https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+    if isOneIn(setted_objects_name, MadgwickTilt)
+        gyroscope = [gx(max_size), gy(max_size), gz(max_size)] * (pi/180) ;
+        accelerometer = [ax(max_size), ay(max_size), az(max_size)];
+        madgwickFilter.UpdateIMU(gyroscope, accelerometer);
 
-    % Converte o resultado do filtro de quaternion para angulos absolutos (relativo a terra) em euler
-    
-    euler = quatern2euler(quaternConj(madgwickFilter.Quaternion)) * (180/pi);
-    madgwick_Roll = [madgwick_Roll(2:max_size)      euler(1)];
-    madgwick_Pitch = [madgwick_Pitch(2:max_size)    euler(2)];
-    madgwick_Yaw = [madgwick_Yaw(2:max_size)        euler(3)];
+        % Converte o resultado do filtro de quaternion para angulos absolutos (relativo a terra) em euler
+
+        euler = quatern2euler(quaternConj(madgwickFilter.Quaternion)) * (180/pi);
+        madgwick_Roll = [madgwick_Roll(2:max_size)      euler(1)];
+        madgwick_Pitch = [madgwick_Pitch(2:max_size)    euler(2)];
+        madgwick_Yaw = [madgwick_Yaw(2:max_size)        euler(3)];
+    end
     
     
     %% Calcula a aceleração removendo a gravidade
     % Obtem o vetor gravidade atual rotacionando em sentido contrário realizado pelo corpo, considerando gravidade = 1g
     % e usando os dados do filtro de kalman p/ roll e pitch e do giroscópio p/ yaw
-    gravity_vector =   [-sind(kalman_Pitch(max_size)),...
-                         cosd(kalman_Pitch(max_size))*sind(kalman_Roll(max_size)),...
-                         cosd(kalman_Pitch(max_size))*cosd(kalman_Roll(max_size))
-                       ];
-    ax_without_gravity = [ax_without_gravity(2:max_size) (ax(max_size) - gravity_vector(1))];
-    ay_without_gravity = [ay_without_gravity(2:max_size) (ay(max_size) - gravity_vector(2))];
-    az_without_gravity = [az_without_gravity(2:max_size) (az(max_size) - gravity_vector(3))];
+    % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
+    if isOneIn(setted_objects_name, {Acel_G, Vel, Space})
+        gravity_vector =   [-sind(kalman_Pitch(max_size)),...
+                             cosd(kalman_Pitch(max_size))*sind(kalman_Roll(max_size)),...
+                             cosd(kalman_Pitch(max_size))*cosd(kalman_Roll(max_size))
+                           ];
+        ax_without_gravity = [ax_without_gravity(2:max_size) (ax(max_size) - gravity_vector(1))];
+        ay_without_gravity = [ay_without_gravity(2:max_size) (ay(max_size) - gravity_vector(2))];
+        az_without_gravity = [az_without_gravity(2:max_size) (az(max_size) - gravity_vector(3))];
+    end
 
     %% Calcula Velocidade integrando a aceleração
     % Usando a aceleração, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    newVx = (vx(max_size) + ((ax_without_gravity(max_size-1) + ax_without_gravity(max_size)) / (2 * freq_sample) ));
-    newVy = (vy(max_size) + ((ay_without_gravity(max_size-1) + ay_without_gravity(max_size)) / (2 * freq_sample) ));
-    newVz = (vz(max_size) + ((az_without_gravity(max_size-1) + az_without_gravity(max_size)) / (2 * freq_sample) ));
-    
-    vx = [vx(2:max_size)  newVx];
-    vy = [vy(2:max_size)  newVy];
-    vz = [vz(2:max_size)  newVz];
+    if isOneIn(setted_objects_name, {Vel, Space})
+        newVx = (vx(max_size) + ((ax_without_gravity(max_size-1) + ax_without_gravity(max_size)) / (2 * freq_sample) ));
+        newVy = (vy(max_size) + ((ay_without_gravity(max_size-1) + ay_without_gravity(max_size)) / (2 * freq_sample) ));
+        newVz = (vz(max_size) + ((az_without_gravity(max_size-1) + az_without_gravity(max_size)) / (2 * freq_sample) ));
+
+        vx = [vx(2:max_size)  newVx];
+        vy = [vy(2:max_size)  newVy];
+        vz = [vz(2:max_size)  newVz];
+    end
 
     %% Calcula Posição integrando a Velocidade
     % Usando a Velocidade, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    newPx = (px(max_size) + ((vx(max_size-1) + vx(max_size)) / (2 * freq_sample) ));
-    newPy = (py(max_size) + ((vy(max_size-1) + vy(max_size)) / (2 * freq_sample) ));
-    newPz = (pz(max_size) + ((vz(max_size-1) + vz(max_size)) / (2 * freq_sample) ));
-    
-    px = [px(2:max_size)  newPx];
-    py = [py(2:max_size)  newPy];
-    pz = [pz(2:max_size)  newPz];
-    
+    if isOneIn(setted_objects_name, Space)
+        newPx = (px(max_size) + ((vx(max_size-1) + vx(max_size)) / (2 * freq_sample) ));
+        newPy = (py(max_size) + ((vy(max_size-1) + vy(max_size)) / (2 * freq_sample) ));
+        newPz = (pz(max_size) + ((vz(max_size-1) + vz(max_size)) / (2 * freq_sample) ));
+
+        px = [px(2:max_size)  newPx];
+        py = [py(2:max_size)  newPy];
+        pz = [pz(2:max_size)  newPz];
+    end
+  
     %% Tenta redesenhar o plot, se deu o tempo da frequencia
     if plot_in_real_time
         plot_1.try_render();
