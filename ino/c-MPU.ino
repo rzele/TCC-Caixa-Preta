@@ -39,6 +39,7 @@ void mpu_rd_ac_gi_mg(byte *vetor){
 /////////////// Magnetômetro   /////////////////////
 ////////////////////////////////////////////////////
 
+/*
 // Ler Magnetômetro
 // Retorna vetor de 3 words [hx hy hz]
 void mpu_rd_mg(word *vetor){
@@ -54,6 +55,99 @@ void mpu_mag_config(void){
   // Despertar MAG, Modo 1 continuo e 16 bits
   mpu_wr(MAG_CNTL_1, 0x12);
   delay(200);       //200ms  
+}*/
+
+// Inicializar Magnetômetro
+void mpu_mag_config(void){
+  
+  //desabilita modo mestre no mpu
+  mpu_wr(USER_CTRL, 0x00);
+
+  //habilita o bypass mode para acessarmos o magnetometro diretamente
+  mpu_wr(INT_PIN_CFG, 0x02); 
+
+//  //configurar modo FUSE ROM para magnetometro
+//  mpu_wr_mg_reg(MAG_CNTL_1, 0x1F);
+//  delay(100); //espera trocar de modo
+//
+//  //lê os ajustes de sensiblidade nos registradores do magnetometro asax, asay e asaz
+//  mpu_rd_mg_blk(MAG_ASAX, mag_asa, 3);
+//
+//  //magnetometro no modo power down
+//  mpu_wr_mg_reg(MAG_CNTL_1, 0x00);
+//  delay(100); //espera trocar de modo
+//
+//  //magnetometro no modo continuo, 100hz e output de 16 bits
+//  mpu_wr_mg_reg(MAG_CNTL_1, 0x16);
+//  delay(100); //espera trocar de modo
+}
+
+// (50) lê registrador do magnetometro
+byte mpu_rd_mg_reg(byte reg){
+
+  byte dado;
+  
+  twi_start(50);                         //START
+  twi_er(MAG_I2C_ADDR_WR, 51);           //Endereçar Magnetometro para escrita
+  //twi_er(MAG_I2C_ADDR << 1, 51); 
+  
+
+  twi_dado_er(reg, 52);                  //Informar registrador
+  twi_start_rep(53);                     //START Repetido
+  twi_et(MAG_I2C_ADDR_RD, 54);           //Endereçar Magnetometro para leitura
+  dado = twi_dado_et_nack(55);           //Receber dado do magnetometro com NACK
+  
+  twi_stop();                    //Gerar STOP para finalizar
+
+  return dado;
+}
+
+//(60) lê em bloco os registradores do magnetometro
+void mpu_rd_mg_blk(byte reg, byte *dado, byte qtd){
+  byte i;
+  twi_start(60);                  //START
+  twi_er(MAG_I2C_ADDR_WR, 61);    //Endereçar MPU para escrita
+  twi_dado_er(reg, 62);           //Informar registrador
+  twi_start_rep(63);              //START Repetido
+  twi_et(MAG_I2C_ADDR_RD, 64);     //Endereçar Magnetometro para leitura
+
+  for (i=0; i<qtd; i++)
+    dado[i] = twi_dado_et_ack(65);  //Receber dados e gerar ACK
+    
+  dado = twi_dado_et_nack(66);  //Receber último dado e gerar NACK
+  twi_stop();                   //Gerar STOP para finalizar
+
+}
+
+
+
+// (70) escreve no magnetometro
+byte mpu_wr_mg_reg(byte reg, byte dado){
+  twi_start(70);                //start
+  twi_er(MAG_I2C_ADDR_WR, 71);  //endereça magnetometro para escrita
+  twi_dado_er(reg, 72);         //informa o registrador
+  twi_dado_er(dado, 73);        //informa o dado
+  twi_stop();                   //stop
+}
+
+//deve retornar 0x48
+byte mag_whoami(){
+  byte who = 0;
+  who = mpu_rd_mg_reg(0x00);
+  return who;
+}
+
+// Ler Magnetômetro
+// Retorna vetor de 3 words [hx hy hz]
+void mpu_rd_mg_out(word *vetor){
+	byte i,vet[6];
+
+	mpu_rd_mg_blk(MAG_XOUT_L, vet, 6);
+
+	vetor[0] = (int)((int)(vet [1] << 8) | vet[0]);    //Montar Mag X
+	vetor[1] = (int)((int)(vet [3] << 8) | vet[2]);    //Montar Mag Y
+	vetor[2] = (int)((int)(vet [5] << 8) | vet[4]);    //Montar Mag Z
+
 }
 
 ////////////////////////////////////////////////////
@@ -76,7 +170,7 @@ void mpu_int(void){
   EICRB = (EICRB | (1<<ISC41)) & ~(1 << ISC40); //INT4 = flanco descida
   EIMSK = EIMSK | (1 << INT4);                  //INT4 habilitada  
 
-  mpu_wr(INT_PIN_CFG,0x80);  //push-pull, pulso 50 useg
+  mpu_wr(INT_PIN_CFG,0x82);  //push-pull, pulso 50 useg e bypass mode
   mpu_wr(INT_ENABLE,1);     //DATA_RDY_EN
 }
 
@@ -151,6 +245,9 @@ void mpu_config(void) {
 
   // Definir escalas
   mpu_escalas(GIRO_FS_250, ACEL_FS_2G);   //Escalas acel = +/2g e giro = +/-250 gr/s
+
+  //configura o magnetometro
+  mpu_mag_config();
 }
 
 // Selecionar Fundo de Escalas para o MPU

@@ -271,7 +271,7 @@ char teste_5(char md){
 }
 
 // 6 - MPU - Magnetômetro
-char teste_6(char md){
+/*char teste_6(char md){
   byte who;
   int vetor[7];
   char *msg="[6] MPU6050 Magneto";
@@ -288,6 +288,70 @@ char teste_6(char md){
     ser_str("\nhx=");      ser_hex16(vetor[0]);
     ser_str("  hy=");      ser_hex16(vetor[1]);
     ser_str("  hz=");      ser_hex16(vetor[2]);
+    if (sw_tira(&who))     break;
+  }
+  ser_str("\n--- Fim ---\n");
+  return;
+}*/
+
+// 6 - MPU - Magnetômetro
+
+char teste_6(char md){
+  byte who;
+  byte debug;
+  int vetor[3];
+  char *msg="[6] MPU9250 Magneto";
+
+  debug = mpu_rd(INT_PIN_CFG);
+  ser_str("INT_PIN_CFG deve ser 0x02: 0x");
+  ser_hex8(debug);
+  ser_crlf(1);
+
+  who = mag_whoami();
+  
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+  ser_str("id mag deve ser 0x48: ");
+  ser_hex8(who);
+  ser_crlf(1);
+
+  lcd_str(1,0, "id mag: 0x");
+  lcd_hex8(1,10,who);
+
+  //delay(2000);
+
+
+  //lcd_apaga_lin(1);
+
+  //mpu_sample_rt(SAMPLE_RT_100Hz);
+  //mpu_int();
+
+  while(TRUE){
+
+//   if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
+//    
+//      mpu_dado_ok=FALSE;
+//
+//      lcd_apaga_lin(1);
+//  
+//      mpu_rd_mg_out(vetor);
+//      
+//      lcd_str(1,0,"x: ");
+//      lcd_hex16(1,2,vetor[0]);
+//      ser_hex16(vetor[0]); ser_char(' ');
+//  
+//      lcd_str(1,7,"y: ");
+//      lcd_hex16(1,9,vetor[1]); ser_char(' ');;
+//  
+//      lcd_str(1,14,"z: ");
+//      lcd_hex16(1,16,vetor[2]); ser_char(' ');
+//
+//      ser_crlf(1);
+//   }
+    
+    
     if (sw_tira(&who))     break;
   }
   ser_str("\n--- Fim ---\n");

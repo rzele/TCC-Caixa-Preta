@@ -103,3 +103,6 @@ volatile byte adc_ok;     //Flag indica que terminou conversão
 volatile byte sw_val;     //Teclado: valor lido pelo ADC
 volatile byte vcar_val;   //VCAR: valor lido pelo ADC
 volatile byte vcap_val;   //VCAP: valor lido pelo ADC
+
+//magnetometro
+volatile byte mag_asa[3]; //local para armazenar os valores dos registradores asax, asay e asaz do magnetometro
