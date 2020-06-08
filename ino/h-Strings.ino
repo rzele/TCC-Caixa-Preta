@@ -40,7 +40,6 @@ byte str_copia_zf(byte *ft, byte *dest){
 }
 
 
-
 // Faz cópia de uma string e retorna tamanho string copiada, não conta o zero
 // Nome criado para não confundir com strcpy()
 byte str_copia(byte *ft, byte *dest){
@@ -129,7 +128,8 @@ void str_float(float f, byte prec, char *msg){
     }
     //Caso +.123 (falta um zero)
     if (ix==1)  msg[ix++]='0';
-    msg[ix++]=',';
+    //msg[ix++]=',';    //Vírgula
+    msg[ix++]='.';      //Ponto
     
     //Parte fracionária
     for(i=0; i<prec; i++){

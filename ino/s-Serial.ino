@@ -2,6 +2,11 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+// COM0 --> Arduino
+// COM1 --> 
+// COM2 --> Bluetooth
+// COM3 --> GPS
+
 // Auxiliar no DUMP de memórias
 void ser_dump_memo(long adr, byte *vet){
   word i;
@@ -23,9 +28,11 @@ void ser_dump_memo(long adr, byte *vet){
 }
 
 // Imprimir GPS em uma só linha, dados no pacote gps_dados
+// Apenas separa os campos por espaços
 void ser_gps_dados_lin(char *gps_vt){
     ser_str(&gps_vt[GPS_STATUS]);   ser_spc(1);     //Status
-    
+
+    /*
     ser_char(gps_vt[GPS_DATA+0]);  ser_char(gps_vt[GPS_DATA+1]);    ser_char('/');  //Data
     ser_char(gps_vt[GPS_DATA+2]);  ser_char(gps_vt[GPS_DATA+3]);    ser_char('/');
     ser_char(gps_vt[GPS_DATA+4]);  ser_char(gps_vt[GPS_DATA+5]);    ser_spc(1);
@@ -33,23 +40,25 @@ void ser_gps_dados_lin(char *gps_vt){
     ser_char(gps_vt[GPS_HORA+0]);  ser_char(gps_vt[GPS_HORA+1]);    ser_char(':');  //Hora
     ser_char(gps_vt[GPS_HORA+2]);  ser_char(gps_vt[GPS_HORA+3]);    ser_char(':');
     ser_char(gps_vt[GPS_HORA+4]);  ser_char(gps_vt[GPS_HORA+5]);    ser_spc(1);
-    
-    //ser_str(&gps_vt[GPS_HORA]);     ser_spc(1);     //Hora
-    //ser_str(&gps_vt[GPS_DATA]);     ser_spc(1);     //Data
-    ser_str(&gps_vt[GPS_LAT]);                      //Lat
+    */
+
+    gps_vt[GPS_HORA+6]='\0';  //Remover fração de segundos
+    ser_str(&gps_vt[GPS_HORA]);     ser_spc(1);     //Hora
+    ser_str(&gps_vt[GPS_DATA]);     ser_spc(1);     //Data
+    ser_str(&gps_vt[GPS_LAT]);      ser_spc(1);     //Lat
     ser_str(&gps_vt[GPS_NS]);       ser_spc(1);     //N-S
-    ser_str(&gps_vt[GPS_LONG]);                     //Long
+    ser_str(&gps_vt[GPS_LONG]);     ser_spc(1);     //Long
     ser_str(&gps_vt[GPS_EW]);       ser_spc(1);     //E-W
-    ser_str(&gps_vt[GPS_VEL_KPH]);                  //Vel km/h
+    ser_str(&gps_vt[GPS_VEL_KPH]);  ser_spc(1);     //Vel km/h
     ser_str(&gps_vt[GPS_VEL_UN]);   ser_spc(1);     //Unidade da velocidade
     ser_str(&gps_vt[GPS_VEL_NOS]);  ser_spc(1);     //Vel Nós
     ser_str(&gps_vt[GPS_CURSO]);    ser_spc(1);     //Curso
-    ser_str(&gps_vt[GPS_ALT]);                      //Altitude
-    ser_str(&gps_vt[GPS_ALT_UN]);   ser_str(" [");  //Unidade da Altitude
+    ser_str(&gps_vt[GPS_ALT]);      ser_spc(1);     //Altitude
+    ser_str(&gps_vt[GPS_ALT_UN]);   ser_spc(1);     //Unidade da Altitude
     ser_str(&gps_vt[GPS_QTD_SAT]);  ser_spc(1);     //Qtd de Satélites
     ser_str(&gps_vt[GPS_PDOP]);     ser_spc(1);     //PDOP
     ser_str(&gps_vt[GPS_HDOP]);     ser_spc(1);     //HDOP
-    ser_str(&gps_vt[GPS_VDOP]);     ser_str("] ");  //VDOP
+    ser_str(&gps_vt[GPS_VDOP]);     ser_spc(1);     //VDOP
     ser_str(&gps_vt[GPS_ADR_SRAM]); ser_crlf(1);    //ADR SRAM-FLASH
 }
 

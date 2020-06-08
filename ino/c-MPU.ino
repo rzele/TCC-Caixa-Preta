@@ -3,6 +3,8 @@
 // 22/01/2019
 
 
+
+
 // Ler Aceleração, Giro e Mag
 // Retorna vetor de 18 bytes
 // [axh axl ayh ayl azh azl gxh gxl gyh gyl gzh gzl hxh hxl hyh hyl hzh hzl]
@@ -60,6 +62,53 @@ void mpu_mag_config(void){
 /////////// Aceleração e Giro      /////////////////
 ////////////////////////////////////////////////////
 
+// Ler no MPU a banda do filtro
+// Retorna 5, 10, 21, ..., 260 (Escala do Acelerômetro)
+int mpu_rd_bw(void){
+  byte x;
+  x=mpu_rd(CONFIG);
+  switch(x){
+    case 0:   return 260;
+    case 1:   return 184;
+    case 2:   return  94;
+    case 3:   return  44;
+    case 4:   return  21;
+    case 5:   return  10;
+    case 6:   return   5;
+    case 7:   return 999; //Indicar Valor reservado
+  }
+}
+
+// Ler no MPU a freq de amostragem
+// Retorna 100, 200, ..., 1000
+// Considera Gyro Rate = 1.000 (DLPF=0)
+int mpu_rd_freq(void){
+  byte x;
+  x=mpu_rd(SMPLRT_DIV);
+  x=1000/(1+x);
+  return x;
+}
+
+// Ler no MPU a escala usada para o acelerômetro
+// Retorna 2, 4, 8 ou 16
+int mpu_rd_esc_acel(void){
+  byte x;
+  x=mpu_rd(ACCEL_CONFIG);
+  x=(x>>3)&0x7;
+  x=2<<x;
+  return x;
+}
+
+// Ler no MPU a escala usada para o giroscópio
+// Retorna 250, 500, 1000 ou 2000 graus/seg
+int mpu_rd_esc_giro(void){
+  byte x;
+  x=mpu_rd(GYRO_CONFIG);
+  x=(x>>3)&0x7;
+  x=250<<x;
+  return x;
+}
+
 // Preparar para MPU usar INT4
 // Pino PE4 entrada com pullup
 // Habilitar INT4 para flanco de descida
@@ -86,6 +135,15 @@ void mpu_int(void){
 void mpu_des_int(void){
   EIMSK &= ~(1 << INT4);    //INT4 Desabilitada  
   mpu_wr(INT_ENABLE,0);     //DATA_RDY_EN = 0 (desab)
+}
+
+// Ler Temperatura
+int mpu_rd_tp(void){
+  byte vet[2];
+  int x;
+  mpu_rd_blk(TEMP_OUT_H, vet, 2);
+  x = (int)((vet [0] << 8) | vet[1]);    //Montar Temperatura
+  return x;
 }
 
 // Ler Aceleração, temperatura e giro
@@ -173,7 +231,7 @@ void mpu_calibra(int *vt, word qtd, byte esc_ac, byte esc_gi) {
   word aux[7];  //Leituras intermediárias
   word i,j;
 
-  mpu_escalas(esc_gi, esc_ac);          // Menores escalas para maior precisã
+  mpu_escalas(esc_gi, esc_ac);          // Menores escalas para maior precisão
   mpu_sample_rt(OP_FREQ);               // Taxa de amostragem de operação
   mpu_int();                            // Habilitar interrupção
   for (i=0; i<7; i++)   sum[i]=0;       //Zerar acumulador

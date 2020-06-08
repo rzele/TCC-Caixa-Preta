@@ -38,7 +38,66 @@ void loop() {
 // Serve selecionar modo de Teste
 // A linha 0 é preparada por quem chama
 // Usa as linhas 1, 2 e 3
+
 byte sel_modo(char *msg[], byte total){
+  byte prov=total;    //provisório = 1, 2, ..., OPERA_TOT
+  byte tecla,aux;
+  byte nr,ser;
+  byte fase;    //Indicar se estava recebendo nr pela serial
+  fase=0;
+  while(TRUE){
+    lcd_apaga_lin(1);
+    lcd_apaga_lin(2);
+    lcd_apaga_lin(3);
+    lcd_str(2,0,"-->");
+    aux=prov;
+    lcd_str(1,3,msg[aux++]);
+    if (aux>total)  aux=1;    
+    lcd_str(2,3,msg[aux]);
+    ser_str(msg[aux++]);  ser_crlf(1);
+    if (aux>total)  aux=1;    
+    lcd_str(3,3,msg[aux]);
+    //Esperar tecla ou serial
+    while(TRUE){
+      if ( sw_tira(&tecla) == TRUE) break;
+      if (ser_rx_tira(&ser) == TRUE){
+        if (fase==1){
+          if (ser>0x2F && ser<0x3A) nr=10*nr + (ser-0x30);
+          if (ser==CR || ser==LF){
+            if (nr<=total)   return(nr);    //nr dentro da faixa, retorna    
+            else            fase=0;        //nr fora da faixa, anula
+          }
+        }
+        else{
+          if (ser>0x2F && ser<0x3A){
+            fase=1;                 //Marcar que está recebendo nr
+            nr=ser-0x30;
+          }
+          if (ser=='t' || ser=='T'){
+            ser&=~(0x20);   //Transformar em T maiúscula
+            return(ser);
+          }
+          if (ser=='o' || ser=='O'){
+            ser&=~(0x20);   //Transformar em O maiúscula
+            return(ser);
+          }
+        }
+      }
+    }
+    //while ( sw_tira(&tecla) == FALSE);
+    switch(tecla){
+      case SW_SUP:  prov--;  break;
+      case SW_INF:  prov++;  break;
+      case SW_SEL:  if (++prov>total)  prov=1;
+                    return prov;
+    }
+    if (prov>total)  prov=1;
+    if (prov==0)     prov=total;
+  }
+}
+
+
+byte sel_modo_velho(char *msg[], byte total){
   byte prov=total;    //provisório = 1, 2, ..., OPERA_TOT
   byte tecla,aux;
   while(TRUE){

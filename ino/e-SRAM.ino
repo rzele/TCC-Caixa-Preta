@@ -29,10 +29,11 @@ void sram_flash(void){
   }
 }
 
-// Operação - Mostrar dados da configuração ao ligar o carro na SRAM
+// Operação - Imprimir dados da Calibração ao Ligar o carro na SRAM
 // Não imprime qualquer tipo de rótulo, só os dados
 void sram_op_dados(void){
   int x,y;
+  long xl;
   byte msg[20];
 
   // Bateu?
@@ -45,13 +46,19 @@ void sram_op_dados(void){
   x=sram_rd_16b(OP_CF_OK);  // Calibração de Fábrica?
   ser_dec16unz(x);    ser_crlf(1);
 
-  x=sram_rd_16b(OPC_QTD_AG);  // Qtd de medidas Acel e Giro
+  x=sram_rd_16b(OPC_FREQ_AG);  // Calibração - Freq
   ser_dec16unz(x);    ser_crlf(1);
 
-  x=sram_rd_16b(OPC_ESC_AC);  //Escala Acel da calibração
+  x=sram_rd_16b(OPC_BW_AG);  // Calibração - BW
   ser_dec16unz(x);    ser_crlf(1);
-  
-  x=sram_rd_16b(OPC_ESC_GI);  //Escala Giro da calilbração
+
+  x=sram_rd_16b(OPC_ESC_AC);  // Calibração - Escala Acelerômetro
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OPC_ESC_GI);  // Calibração - Escala Giroscópio
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OPC_QTD_AG);  // Qtd de medidas Acel e Giro
   ser_dec16unz(x);    ser_crlf(1);
 
   sram_rd_blk(OPC_AX,msg,14);  //Médias = Erro intrínseco
@@ -70,13 +77,17 @@ void sram_op_dados(void){
   x=sram_rd_16b(OPC_HZ);  //Média HZ
   ser_dec16unz(x);    ser_crlf(1);
 
-  x=sram_rd_16b(OP_FREQ_AG);  //Freq de Amostragem 
+  //Operação
+  x=sram_rd_16b(OP_FREQ_AG);  //Operação - Freq
   ser_dec16unz(x);    ser_crlf(1);
 
-  x=sram_rd_16b(OP_ESC_AC); //Opera Escala Acel 
+  x=sram_rd_16b(OP_BW_AG);  //Operação - BW
   ser_dec16unz(x);    ser_crlf(1);
 
-  x=sram_rd_16b(OP_ESC_GI); //Opera Escala Giro 
+  x=sram_rd_16b(OP_ESC_AC);  //Operação - Escala Acelerômetro
+  ser_dec16unz(x);    ser_crlf(1);
+
+  x=sram_rd_16b(OP_ESC_GI);  //Operação - Escala Giroscópio
   ser_dec16unz(x);    ser_crlf(1);
 
   x=sram_rd_16b(OP_ESC_MG); //Opera Escala Mag 
@@ -85,14 +96,20 @@ void sram_op_dados(void){
   sram_rd_blk(OP_LIM_AX,msg,14);  //Limiares para disparo
   ser_lin_ac_gi(msg); 
 
-  x=sram_rd_32b(OP_MPU_ADR); //Ponteiro do MPU no momento do disparo
-  ser_dec32unz(x);    ser_crlf(1);
+  ser_dec32unz(sram_rd_32b(OP_MPU_ADR));    ser_crlf(1);  //Enderço MPU no disparo
+  
+  ser_dec32unz(sram_rd_32b(OP_GPS_ADR));    ser_crlf(1);  //Enderço GPS no disparo
 
-  x=sram_rd_32b(OP_GPS_ADR); //Ponteiro do GPS no momento do disparo
-  ser_dec32unz(x);    ser_crlf(1);
+  x=sram_rd_16b(OP_DISP_TP); //Temperatura no momento do disparo
+  ser_dec16unz(x);    ser_crlf(1);
 
   sram_rd_blk(OP_DISP_AX,msg,14);  //Quem disparou?
   ser_lin_ac_gi(msg); 
+
+  ser_dec32unz(sram_rd_32b(OP_ULT_ADR));  //Último endereço usado
+
+  x=sram_rd_16b(OP_BRK);
+  ser_dec16unz(x);    ser_crlf(1);
 
   sram_rd_str(OP_AC_DATA, msg, 14); //Data do acidente
   ser_str(msg);   ser_crlf(1);
@@ -124,20 +141,32 @@ void sram_op_mostra(void){
 
   // Calibração de Fábrica?
   x=sram_rd_16b(OP_CF_OK);
+  ser_dec16(x);
   ser_str("Calibracao de Fabrica = ");
   if (x==COD_SIM) ser_str("SIM.\n");
   if (x==COD_NAO) ser_str("NAO.\n");
+
+  x=sram_rd_16b(OPC_FREQ_AG);
+  ser_str("\n\nFreq Amost = ");   ser_dec16unz(x);      //Calibração - Freq de amostragem 
+  ser_str(" Hz"); 
+  
+  x=sram_rd_16b(OPC_BW_AG);
+  ser_str("\nBanda BW = ");   ser_dec16unz(x);          //Calibração - BW=Banda Passante
+  ser_str(" Hz");
+  
+  x=sram_rd_16b(OPC_ESC_AC);                    
+  ser_str("\nEscala Acelerometro = ");  ser_dec16unz(x);  //Calibração - Escala Acelerômetro
+  ser_str(" g");
+  
+  x=sram_rd_16b(OPC_ESC_GI);                    
+  ser_str("\nEscala Giroscopio = ");  ser_dec16unz(x);  //Calibração - Escala Giroscópio
+  ser_str(" graus/seg\n");
 
   // Qtd de medidas Acel e Giro
   x=sram_rd_16b(OPC_QTD_AG);
   ser_dec16unz(x);
   ser_str(" medidas para Calibrar ao Ligar");
-  x=sram_rd_16b(OPC_ESC_AC);
-  str_fs_acel(x,msg);
-  ser_str("\nCalibra Escala Acel = ");  ser_str(msg);
-  x=sram_rd_16b(OPC_ESC_GI);
-  str_fs_giro(x,msg);
-  ser_str("\nCalibra Escala Giro = ");  ser_str(msg);
+
   ser_str("\nCalibracao (ax-ay-az-tp-gx-gy-gz): ");
   for (x=0; x<7; x++){
     ser_dec16(sram_rd_16b(OPC_AX+2*x));
@@ -146,16 +175,25 @@ void sram_op_mostra(void){
 
   //Parâmetros operação e limiares
   x=sram_rd_16b(OP_FREQ_AG);
-  x=1000/(x+1);
-  ser_str("\nFreq de Amostragem = ");
-  ser_dec16unz(x);
-  ser_str(" Hz = ");
-  x=sram_rd_16b(OP_ESC_AC);
-  str_fs_acel(x,msg);
-  ser_str("\nOpera Escala Acel = ");  ser_str(msg);
-  x=sram_rd_16b(OP_ESC_GI);
-  str_fs_giro(x,msg);
-  ser_str("\nOpera Escala Giro = ");  ser_str(msg);
+  ser_str("\n\nOpera Freq Amost = ");   ser_dec16unz(x);      //Operação - Freq de amostragem 
+  ser_str(" Hz"); 
+  
+  x=sram_rd_16b(OP_BW_AG);
+  ser_str("\nOpera Banda BW = ");   ser_dec16unz(x);          //Operação - BW=Banda Passante
+  ser_str(" Hz");
+  
+  x=sram_rd_16b(OP_ESC_AC);                    
+  ser_str("\nOpera Escala Acelerometro = ");  ser_dec16unz(x);  //Operação - Escala Acelerômetro
+  ser_str(" g");
+  
+  x=sram_rd_16b(OP_ESC_GI);                    
+  ser_str("\nOpera Escala Giroscopio = ");  ser_dec16unz(x);  //Operação - Escala Giroscópio
+  ser_str(" graus/seg");
+
+  x=sram_rd_16b(OP_ESC_MG);                    
+  ser_str("\nOpera Escala magnetometro = ");  ser_dec16unz(x);  //Operação - Escala Giroscópio
+  ser_str(" ???");
+
   ser_str("\nLimiares de disparo (ax-ay-az-gx-gy-gz): ");
   for (x=0; x<6; x++){
     ser_dec16unz(sram_rd_16b(OP_LIM_AX+2*x));
@@ -163,8 +201,10 @@ void sram_op_mostra(void){
   }
 
   //Quem disparou
-  ser_str("\nDisparo no endereco: 0x");
-  ser_hex32(sram_rd_32b(OP_MPU_ADR));  
+  ser_str("\nMPU: Disparo no endereco ");
+  ser_dec32unz(sram_rd_32b(OP_MPU_ADR));  
+  ser_str("\nGPS: Disparo no endereco ");
+  ser_dec32unz(sram_rd_32b(OP_GPS_ADR));  
   ser_str("\nQuem Disparou: AX AY AZ GX GY GZ\n");
   ser_spc(15);
   for (x=0; x<6; x++){
@@ -172,6 +212,14 @@ void sram_op_mostra(void){
     if (y==COD_SIM) ser_str(" S ");
     if (y==COD_NAO) ser_str(" N ");
   }
+
+  ser_str("\nMPU: Ultimo endereco = ");
+  ser_dec32unz(sram_rd_32b(OP_ULT_ADR));  
+
+  ser_str("\nAquisicao interrompida: ");
+  x=sram_rd_16b(OP_BRK);
+  if (x==COD_SIM) ser_str("Sim");                    
+  else            ser_str("Nao");                    
   
   //Data e Hora
   sram_rd_str(OP_AC_DATA, msg, 14);

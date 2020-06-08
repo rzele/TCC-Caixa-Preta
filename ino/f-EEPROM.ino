@@ -29,20 +29,29 @@ byte eeprom_cf_dados(void){
   x=eeprom_rd_16b(CFG_PADRAO_BIN);        //g Padrao binário
   ser_dec16u(x); ser_crlf(1);
 
-  x=eeprom_rd_16b(CFG_LOCAL_BIN);        //g Local binário
+  x=eeprom_rd_16b(CFG_LOCAL_BIN);         //g Local binário
   ser_dec16u(x); ser_crlf(1);
 
-  x=eeprom_rd_16b(CF_WHO);      //Resposta ao Who am I
-  ser_hex16(x); ser_crlf(1);
+  x=eeprom_rd_16b(CF_WHO);               //Resposta ao Who am I em decimal
+  ser_dec16unz(x); ser_crlf(1);
   
-  x=eeprom_rd_16b(CF_FA);               //Freq de amostragem
+  x=eeprom_rd_16b(CF_FA);               //Freq de amostragem em Hz
+  ser_dec16unz(x); ser_crlf(1);
+
+  x=eeprom_rd_16b(CF_BW);               //Banda passante do filtro
+  ser_dec16unz(x); ser_crlf(1);
+
+  x=eeprom_rd_16b(CF_ESC_AC);           //Escala do acelerômetro
+  ser_dec16unz(x); ser_crlf(1);
+
+  x=eeprom_rd_16b(CF_ESC_GI);           //Escala do giroscópio
+  ser_dec16unz(x); ser_crlf(1);
+
+  x=eeprom_rd_16b(CF_QTD);              //Qtd de medidas para a média
   ser_dec16unz(x); ser_crlf(1);
 
   eeprom_rd_blk(CF_AX,msg,14);        //Médias = Erro intrínseco
   ser_lin_ac_tp_gi(msg); //ser_crlf(1);
-
-  x=eeprom_rd_16b(CF_FA);               //Qtd de medidas para a média
-  ser_dec16unz(x); ser_crlf(1);
 
   eeprom_rd_blk(CF_AX_SOMA,msg,28);   //Somatorio por eixo (32 bits): 
   for (x=0; x<28; x+=4){
@@ -50,7 +59,7 @@ byte eeprom_cf_dados(void){
     z = (z<<8)+msg[x+1];
     z = (z<<8)+msg[x+2];
     z = (z<<8)+msg[x+3];
-    ser_dec32(z);
+    ser_dec32unz(z);
     ser_spc(1);
   }
   ser_crlf(1);
@@ -107,13 +116,23 @@ byte eeprom_cf_mostra(void){
   x=eeprom_rd_16b(CFG_LOCAL_BIN);                
   ser_str(" (");  ser_dec16u(x);  ser_str(")");
   x=eeprom_rd_16b(CF_WHO);                        
-  ser_str("\nWho am I = 0x");   ser_hex16(x);     //Resposta ao Who am I
+  ser_str("\nWho am I = 0x");   ser_hex16(x);                       //Resposta ao Who am I
   x=eeprom_rd_16b(CF_FA);                    
-  ser_str("\n\nFreq (Hz) Amost = ");   ser_dec16unz(x);  //Freq de amostragem
-
+  ser_str("\n\nFreq Amost = ");   ser_dec16unz(x);               //Freq de amostragem
+  ser_str(" Hz");
+  x=eeprom_rd_16b(CF_BW);
+  ser_str("\nBanda BW = ");   ser_dec16unz(x);                       //BW=Banda Passante
+  ser_str(" Hz");
+  x=eeprom_rd_16b(CF_ESC_AC);                    
+  ser_str("\nEscala Acelerometro = ");  ser_dec16unz(x);        //Escala Acelerômetro
+  ser_str(" g");
+  x=eeprom_rd_16b(CF_ESC_GI);                    
+  ser_str("\nEscala Giroscopio = ");  ser_dec16unz(x);  //Escala Acelerômetro
+  ser_str(" graus/seg");
+  
   ser_crlf(1);
   ser_spc(20);
-  ser_str("ax     ay     az     tp     gx     gy     gz");
+  ser_str("\nax     ay     az     tp     gx     gy     gz");
   ser_str("\nErro intinseco:   ");
   eeprom_rd_blk(CF_AX,msg,14);
   ser_lin_ac_tp_gi(msg);
@@ -133,7 +152,7 @@ byte eeprom_cf_mostra(void){
     z = (z<<8)+msg[x+1];
     z = (z<<8)+msg[x+2];
     z = (z<<8)+msg[x+3];
-    ser_dec32(z);
+    ser_dec32nz(z);
     ser_spc(1);
   }
   ser_crlf(1);

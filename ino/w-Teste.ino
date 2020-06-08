@@ -17,8 +17,8 @@ void teste(void){
     while(sw_val<0x10);  //Esperar soltar tecla SEL
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
+    //modo=13;
     modo=sel_modo(teste_msg, TESTE_TOT);
-    //modo=8;
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -39,6 +39,7 @@ void teste(void){
       case TESTE_15: teste_15(modo); break;
       case TESTE_16: teste_16(modo); break;
       case TESTE_17: teste_17(modo); break;
+      
     }
   }
   while(1);
@@ -812,17 +813,113 @@ char teste_12(char md){
 
 // 13 - BlueTooth
 char teste_13(char md){
+  byte x,i,j;
   lcd_str(0,0,teste_msg[md]);
+  lcd_str(1,0,"Qq tecla termina");
   ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  ser_crlf(1);
+  bt_config(115200);
+  bt_tx_EN(); //Habilitar Transmissão
+  x='A';
+  i=0;
+  while(TRUE){
+    //Finalizar
+    if (sw_tira(&j)==TRUE)  break;
+    lcd_char(3,i++,x);
+    ser_char(x);
+    UDR2=x++;
+    delay(500);
+    //while( (UCSR2A&(1<<TXC2)) == 0);
+    if (x=='Z'+1) x=CR;
+    if (x==CR+1)  x=LF;
+    if (x==LF+1)  x='A';
+    if (i==20)  i=0;
+  }
   return md;
 }
 
-// 14 - Vazio
+// 14 - Bluetooth - AT Command 
+// PC <==> Arduino (COM0) opera em 115.200 bps
+// Arduino (COM2) <==> HC-05 opera em 38.400 bps
+// Habilitar <Ambos, NL e CR> no Monitor Serial
+// 1) Remova o jumper J1
+// 2) Acione o pequeno bptão do HC-05
+// 3) Recoloque o (J1) jumper de alimentação
+// 4) Led pisca lentamente
+//
+// AT+UART=115200,0,0
+//
 char teste_14(char md){
+  byte cmdo[50];  //Comando para HC-05
+  byte b,i,j,cmdo_ok;
+  word cont_tx,cont_rx;     //Contadores do que vai e vem HC-05
   lcd_str(0,0,teste_msg[md]);
   ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  ser_str("\nSelecionar 115.200 bps e <Ambos, NL e CR>\n");
+  lcd_str(1,0,"PC==>BT: ");
+  lcd_str(2,0,"BT==>PC: ");
+  lcd_str(3,0,"Qq tecla termina");  
+  bt_config(38400);
+  bt_tx_EN();     //BT Habilitar Transmissão
+  bt_rx_EN();     //BT Habilitar a Recepção
+  bt_rx_int_EN(); //BT Habilitar Interrup RX
+  bt_tx_int_EN(); //BT Habilitar Interrup TX
+
+  bt_rx_fila_config();
+  bt_tx_fila_config();
+  cont_tx=cont_rx=0;  //Contador de colunas para linhas 1 e 2
+  bt_tx_ok=TRUE;
+  cmdo_ok=FALSE;
+  i=0;
+  while(TRUE){
+
+    //Finalizar
+    if (sw_tira(&j)==TRUE)  break;
+
+    //Ver se chegou algo do PC
+    if(ser_rx_tira(&b) == TRUE){
+      bt_tx_poe(b);
+      cmdo[i++]=b;
+      if (b==LF){
+        cmdo_ok=TRUE;
+        cmdo[i]=0;
+      }
+      cont_tx++;
+      lcd_dec16unz(1,9,cont_tx);
+    }
+    
+    if (cmdo_ok == TRUE){
+    cmdo_ok=FALSE;
+      ser_str("CMDO: [ ");
+      for (j=0; j<i; j++){
+        ser_hex8(cmdo[j]);
+        ser_spc(1);
+      }
+      ser_str("] ==> ");
+      ser_str(cmdo);
+      b=0;
+      i=0;
+   }
+
+    //Se puder, transmite para BT
+    if (bt_tx_ok==TRUE){
+      if (bt_tx_tira(&b)==TRUE){
+        bt_tx_ok=FALSE;
+        UDR2=b;        
+      }
+    }
+
+    //Se puder, transmite para o PC
+    if (ser_tx_ok==TRUE){
+      if (bt_rx_tira(&b)==TRUE){
+        ser_tx_ok=FALSE;
+        UDR0=b;        
+        cont_rx++;
+        lcd_dec16unz(2,9,cont_rx);
+        b=0;
+      }
+    }
+  }
   return md;
 }
 

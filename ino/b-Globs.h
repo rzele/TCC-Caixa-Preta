@@ -40,7 +40,7 @@ char *teste_msg[]={ "ERRO",               //0
                     "11-GPS:U-Center",    //11
                     "12-MPU-->MatLab",    //12
                     "13-Blue Tooth",      //13
-                    "14-Vazio",           //14
+                    "14-BT - Cmds AT",    //14
                     "15-Vazio",           //15
                     "16-Vazio",           //16
                     "17-Vazio"};          //17
@@ -61,6 +61,14 @@ char *opera_msg[]={ "ERRO",     //0
 volatile word rrand_m ;  //multiplicador
 volatile word rrand_d;   //divisor
 volatile word rrand_u;   //semente
+
+// Bluetooth
+volatile byte bt_rx_ok;                    //Indica que terminou recepção
+volatile byte bt_tx_ok;                    //Indica que terminou transmissão
+volatile char bt_rx_fila[BT_RX_FILA_TAM];  //Espaço para a fila serial de RX
+volatile byte bt_rx_pin, bt_rx_pout;       //Ponteiros para usar a fila
+volatile char bt_tx_fila[BT_TX_FILA_TAM];  //Espaço para a fila serial de RX
+volatile byte bt_tx_pin, bt_tx_pout;       //Ponteiros para usar a fila
 
 //GPS
 volatile byte gps_dados[GPS_DADOS_TAM];     //Vetor para guardar dados extraídos das msg do GPS
