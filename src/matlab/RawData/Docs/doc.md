@@ -23,19 +23,14 @@ O script tem por objetivo apresentar de forma simples os dados e cálculos envol
     - [Ajustes de filtro de kalman](#ajustes-de-filtro-de-kalman)
     - [Ajustes de filtro madgwick](#ajustes-de-filtro-madgwick)
     - [Criação de mais janelas de plotagem](#criação-de-mais-janelas-de-plotagem)
-    - [Criação de novos layouts](#criação-de-novos-layouts)
+    - [Criação de novos items de layouts](#criação-de-novos-items-de-layouts)
   - [Análise de dados e exemplos](#análise-de-dados-e-exemplos)
-    - [Dados](#dados)
-    - [Rotação em XYZ sequencial de 45º](#rotação-em-xyz-sequencial-de-45º)
-    - [Rotação em XYZ individual de 90º](#rotação-em-xyz-individual-de-90º)
-    - [Rotação em XYZ sequencial de 90º](#rotação-em-xyz-sequencial-de-90º)
-    - [Rotação em XYX sequencial de 90º (simulação de rotação em Z)](#rotação-em-xyx-sequencial-de-90º-simulação-de-rotação-em-z)
-    - [Rotação em Z de 360º (Demonstração de angulo relativo)](#rotação-em-z-de-360º-demonstração-de-angulo-relativo)
-    - [Rotação em Y de 90º (Demonstração de gimbal lock)](#rotação-em-y-de-90º-demonstração-de-gimbal-lock)
   - [Detalhes de implementação](#detalhes-de-implementação)
     - [Fluxograma](#fluxograma)
+    - [Kalman](#kalman)
     - [Leitor](#leitor)
     - [Renderizador](#renderizador)
+    - [Helpers](#helpers)
   - [Referências](#referências)
   
 ## Features
@@ -61,6 +56,9 @@ O script tem por objetivo apresentar de forma simples os dados e cálculos envol
 - Mudar o eixo temporal dos plots para ser medido em segundos e não em número de amostras
 
 ## Como usar
+Nas seções a seguir temos uma breve explicação do uso do script, caso prefira também há um vídeos explicativo:
+TODO - Colocar link aqui
+
 ### Formato de entrada dos dados
 O formato de entrada dos dados é o mesmo para arquivo e porta serial, ele deve conter um demarcador de inicio (podendo conter qualquer dado antes), e um demarcador de final (podendo conter qualquer dado depois), entre o meio dos indicadores se encontram os dados, onde cada linha é uma amostra de todos os sensores separado por ; como segue abaixo
 
@@ -233,19 +231,55 @@ Por fim basta seguir os passos 2 e 3 em [Criação de mais janelas de plotagem](
 Lembrando que cabe ao usuário certificar que a atualização dos dados das variáveis criadas ocorram corretamente, o objeto de renderização somente realiza a plotagem destas variáveis.
 
 ## Análise de dados e exemplos
+Para facilitar a compreenção dos dados, temos gravado um vídeo rápidos apresentando e explicando os gráficos com algums movimentos caractetisticos, o video completo pode ser encontrado em:
+TODO - colocar link aqui
 
-### Dados
-### Rotação em XYZ sequencial de 45º
-### Rotação em XYZ individual de 90º
-### Rotação em XYZ sequencial de 90º
-### Rotação em XYX sequencial de 90º (simulação de rotação em Z)
-### Rotação em Z de 360º (Demonstração de angulo relativo)
-### Rotação em Y de 90º (Demonstração de gimbal lock)
+Neste vídeo são tradados os movimentos de:
+- Rotação em XYZ sequencial de 45º
+- Rotação em XYZ individual de 90º
+- Rotação em XYZ sequencial de 90º
+- Rotação em XYX sequencial de 90º (simulação de rotação em Z)
+- Rotação em Z de 360º (Demonstração de angulo relativo)
+- Rotação em Y de 90º (Demonstração de gimbal lock)
 
 ## Detalhes de implementação
 ### Fluxograma
+Segue o link para o fluxograma do programa principal:
+TODO - link aqui
+
+### Kalman
+Este modulo é uma classe que realiza o filtro de kalman em sua versão mais simples, criado para facilitar o entendimento do funcionamento do filtro, por mais que o matlab possue uma biblioteca nativa que realiza este calculo de forma ainda mais completa.
+
+O modulo possui duas funções seguindo o modelo de kalman, de predição (que estima o valor da próxima amostra) e o de update (que realiza a correção da estimativa com base em amostas lidas).
+
+Este módulo foi construido utilizando como base o conjunto de videos em: https://www.youtube.com/watch?v=urhaoECmCQk
+
 ### Leitor
+O modulo de leitor é uma classe que realiza leituras tanto via porta serial quando via arquivo. Ele possui 5 funções:
+- **set_serial_reader:** Inicializa o cursor para leitura serial, e chama a função '*wait_start_signal*' 
+- **set_file_reader:** Inicializa o cursor para leitura via arquivo, e chama a função '*wait_start_signal*' 
+- **wait_start_signal:** Lê do meio selecionado e escreve na saida do console até encontrar os delimitadores de inicio
+- **read_sample:** Lê do meio selecionado uma amostra dos sensores, se o dado estive no formato incorreto, ou for o fim retorna vazio
+- **delete:** Fecha o cursor de leitura seja ela serial ou arquivo 
+
 ### Renderizador
+O modulo renderizados pe uma classe que realiza a plotagem dos dados em diversos gráficos em uma mesma janela. Cada objeto desta classe criado é uma janela idependente, contando com as features de renderização em 'tempo real' e ajutes de layout.
+
+Ao criar um objeto deste módulo, ele irá calcular as posições dos gráficos seguindo o layout escolhido, por fim abrindo e plotando os gráficos em uma janela.
+
+> Vale resaltar que os gráficos são sempre de 3 eixos seguindo a ordem X, Y e Z
+
+Os objetos deste modulo possuiem 4 funções:
+- **setProperties:** Define propriedades de cada gráfico na janela (titulo, labels e nome das series(linhas X,Y e Z do gráfico))
+- **setSource:** Define qual as variáveis que seram usadas em cada série do gráfico
+- **try_render:** Realiza a atualização dos gráficos tentando respeitar a frequência definida, com a informação das variáveis. Somente executa se o tempo passado for maior ou igual ao periodo da frequencia
+- **force_render:** Realiza a atualização dos gráficos imediatamente, independente da frequência definida
+- **linkAllAxes:** Linka o eixo de todos os gráficos da janela, assim todo zoom aplicado a uma janela é aplicado a todas as outras
+
+> NOTE: a função 'setSource' recebe as variáveis no tipo 'string' e não um ponteiro (padrão do matlab), por isso o algoritmo considera que estas variáveis estão localizadas no modulos executável (main, ou script, o arquivo que é executado). Não tente utilizar este modulo usando outro modulo que não seja o arquivo executado, pois as variáveis não vão estar no escopo.
+
+### Helpers
+Na pasta helpers temos diversas funções, com funcionalidades diferentes, utilizado no script principal com o objetivo de deixar o código mais limpo e objetivo, para saber detalhes de cada fução verifique o arquivo da função em questão.
 
 ## Referências
 **Matriz de rotação em 2d:**

@@ -30,42 +30,42 @@ Acel_G = 'N';                               % Aceleração desconsiderando a gravi
 
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
-read_from_serial=true;      % Set to false to use a file
+read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
-file_full_path='Dados/roll-pitch-roll-90-each.txt';          
+file_full_path='Dados/roll-pitch-roll-90-seq.txt';          
 file_simulated_freq=Inf;    % Simulate a pulling frequence, e.g.: to simulate an freq of 100 samples per second use 100hz
 
 % Amostragem
 max_size=4000;              % Quantidade maxima de amostras exibidas na tela
 freq_sample=100;            % Frequencia da amostragem dos dados
 
-% Media movel parametros 
-window_k = 10;              % Janela da media movel (minimo = 2)
-
 % Plotagem
-plot_in_real_time=true;    % Define se o plot será so no final, ou em tempo real
-freq_render=5;             % Frequencia de atualização do plot
+plot_in_real_time=false;    % Define se o plot será so no final, ou em tempo real
+freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
     
         Acel,       Acel_G,     FusionTilt,     FusionTilt;...
-        Vel,        Space,      CompTilt,       CompTilt;...
-        Gvel,       Gdeg,       KalmanTilt,     KalmanTilt;...
-        Gtilt,      Gtilt,      MadgwickTilt,   MadgwickTilt;...
+        Gvel,       Gdeg,       CompTilt,       CompTilt;...
+        Gtilt,      Gtilt,      KalmanTilt,     KalmanTilt;...
+        Vazio,      Vazio,      MadgwickTilt,   MadgwickTilt;...
         
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
 % Constantes do sensor
 const_g=9.8;                % Constante gravitacional segundo fabricante do MPU
-gx_bias=0.0;                % 
-gy_bias=0.0;                % 
-gz_bias=0.0;                % 
-ax_bias=0.0;                % 
-ay_bias=0.0;                % 
-az_bias=0.0;                % 
+gx_bias=0.895;                % 
+gy_bias=0.91;                % 
+gz_bias=0.67;                % 
+ax_bias=0.035;                % 
+ay_bias=0.04;                % 
+az_bias=0.078;              % 
 esc_ac=2;                   % Vem do Arduino, função que configura escalas de aceleração
 esc_giro=250;               % e giro //+/- 2g e +/-250gr/seg
 
+
+% Media movel parametros 
+window_k = 10;              % Janela da media movel (minimo = 2)
 
 % Variável de ajuste do filtro complementar
 mu=0.02;
@@ -146,7 +146,7 @@ plot_1 = render(freq_render, layout);
 setted_objects_name = plot_1.setted_objects_name;
 
 % Seta as labels de cada gráfico
-	
+plot_1.setProperties(Acel, 'Aceleração em "g"', 'Amostra', 'g', {'vX', 'vY', 'vZ'});
 plot_1.setProperties(Vel, 'Velocidade em m/s', 'Amostra', 'm/s', {'vX', 'vY', 'vZ'});
 plot_1.setProperties(Space, 'Espaço em metros', 'Amostra', 'metros', {'X', 'Y', 'Z'});
 plot_1.setProperties(Gvel, 'Giro em graus/seg', 'Amostra', 'graus/seg', {'gX', 'gY', 'gZ'});
