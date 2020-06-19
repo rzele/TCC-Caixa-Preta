@@ -57,7 +57,7 @@ O script tem por objetivo apresentar de forma simples os dados e cálculos envol
 
 ## Como usar
 Nas seções a seguir temos uma breve explicação do uso do script, caso prefira também há um vídeos explicativo:
-TODO - Colocar link aqui
+[https://youtu.be/1yQjMueZ2hk](https://youtu.be/1yQjMueZ2hk)
 
 ### Formato de entrada dos dados
 O formato de entrada dos dados é o mesmo para arquivo e porta serial, ele deve conter um demarcador de inicio (podendo conter qualquer dado antes), e um demarcador de final (podendo conter qualquer dado depois), entre o meio dos indicadores se encontram os dados, onde cada linha é uma amostra de todos os sensores separado por ; como segue abaixo
@@ -231,21 +231,21 @@ Por fim basta seguir os passos 2 e 3 em [Criação de mais janelas de plotagem](
 Lembrando que cabe ao usuário certificar que a atualização dos dados das variáveis criadas ocorram corretamente, o objeto de renderização somente realiza a plotagem destas variáveis.
 
 ## Análise de dados e exemplos
-Para facilitar a compreenção dos dados, temos gravado um vídeo rápidos apresentando e explicando os gráficos com algums movimentos caractetisticos, o video completo pode ser encontrado em:
-TODO - colocar link aqui
+Para facilitar a compreenção dos dados, temos gravado pequenos vídeos rápidos apresentando e explicando os gráficos com algums movimentos caractetisticos:
 
 Neste vídeo são tradados os movimentos de:
-- Rotação em XYZ sequencial de 45º
-- Rotação em XYZ individual de 90º
-- Rotação em XYZ sequencial de 90º
-- Rotação em XYX sequencial de 90º (simulação de rotação em Z)
-- Rotação em Z de 360º (Demonstração de angulo relativo)
-- Rotação em Y de 90º (Demonstração de gimbal lock)
+- [01 - Rotação em Y de 90º (Demonstração de gimbal lock)](https://youtu.be/pRufs5whhXk):
+- [02 - Rotação em Z de 360º (Demonstração de angulo relativo)](https://youtu.be/KRXk99MYoxg):
+- [03 - Rotação em XYX sequencial de 90º (simulação de rotação em Z com gimbal lock)](https://youtu.be/mzhb0GvGvNE):
+- [04 - Rotação em ZXZ sequencial de 90º (simulação de rotação em Y sem gimbal lock)](https://youtu.be/Q7o0uF25RwI):
+- [05 - Rotação em XYZ sequencial de 45º](https://youtu.be/8XqxGNYAqQc):
+- [06 - Rotação em XYZ individual de 90º](https://youtu.be/cIU1ke1tMoA):
+- [07 - Rotação em XYZ sequencial de 90º](https://youtu.be/vmHbjVKd7Xw):
 
 ## Detalhes de implementação
 ### Fluxograma
 Segue o link para o fluxograma do programa principal:
-TODO - link aqui
+[docs/main-flowchart.pdf](main-flowchart.pdf)
 
 ### Kalman
 Este modulo é uma classe que realiza o filtro de kalman em sua versão mais simples, criado para facilitar o entendimento do funcionamento do filtro, por mais que o matlab possue uma biblioteca nativa que realiza este calculo de forma ainda mais completa.

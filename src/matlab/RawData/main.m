@@ -33,11 +33,11 @@ Acel_G = 'N';                               % Aceleração desconsiderando a gravi
 read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
-file_full_path='Dados/roll-pitch-roll-90-seq.txt';          
+file_full_path='Dados/roll-pitch-yaw-90-seq.txt';          
 file_simulated_freq=Inf;    % Simulate a pulling frequence, e.g.: to simulate an freq of 100 samples per second use 100hz
 
 % Amostragem
-max_size=4000;              % Quantidade maxima de amostras exibidas na tela
+max_size=2500;              % Quantidade maxima de amostras exibidas na tela
 freq_sample=100;            % Frequencia da amostragem dos dados
 
 % Plotagem
