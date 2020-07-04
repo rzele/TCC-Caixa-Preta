@@ -1,4 +1,6 @@
 ~$*
 *.asv
 .vscode
-RawData\Docs\video\**
+*.mp4
+*.sfk
+*.veg

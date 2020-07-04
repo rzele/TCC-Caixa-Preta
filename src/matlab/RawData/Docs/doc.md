@@ -242,6 +242,9 @@ Neste vídeo são tradados os movimentos de:
 - [06 - Rotação em XYZ individual de 90º](https://youtu.be/cIU1ke1tMoA):
 - [07 - Rotação em XYZ sequencial de 90º](https://youtu.be/vmHbjVKd7Xw):
 
+
+Link com todos os videos: https://www.youtube.com/playlist?list=PLfmcfmVTJUNb0hH3pNrTmL_9jIVNoDxA2
+
 ## Detalhes de implementação
 ### Fluxograma
 Segue o link para o fluxograma do programa principal:

@@ -84,10 +84,10 @@ classdef reader < handle
             end
             obj.time = now;
 
-            % Lê até achar quebra de linha
+            % Lï¿½ atï¿½ achar quebra de linha
             data=fgetl(obj.f_pt);
             
-            % Checa se é o final da transmissão
+            % Checa se ï¿½ o final da transmissï¿½o
             if ~isempty(strfind(data,'fim'))
                 data = [];
                 return;
@@ -96,7 +96,7 @@ classdef reader < handle
             % Quebra a string no marcador ';'
             data=strsplit(data,';');
 
-            % Checa se realmente leu todos os dados, se n lê novamente até no maximo 'read_attempts' vezes
+            % Checa se realmente leu todos os dados, se n lï¿½ novamente atï¿½ no maximo 'read_attempts' vezes
             if length(data) < 7
                 fprintf('Erro ao ler dados, tentando novamente - %d\n', obj.read_current_attempts);
                 if (obj.read_current_attempts == obj.read_attempts)
@@ -109,7 +109,7 @@ classdef reader < handle
             end
         end
 
-        % Fecha o arquivo ou conexão com porta serial
+        % Fecha o arquivo ou conexï¿½o com porta serial
         function delete(obj)
             fclose(obj.f_pt);
         end
