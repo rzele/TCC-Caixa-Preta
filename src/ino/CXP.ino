@@ -14,16 +14,43 @@ void setup() {
   gps_config(9600);
   ser_tx_fila_config();   //TX fila serial
   ser_rx_fila_config();   //RX fila serial
+  bt_config(115200);      //BT: Configurar Serial 2
+  bt_tx_EN();             //BT: Habilitar Transmissão
+  bt_tx_int_EN();         //BT: Habilitar interrup por transmissão
+
   timer2_config();
   timer1_config();
   //twi_config_100k();       //Configurar TWI
   twi_config_400k();       //Configurar TWI
   //spi_config(SPI_500K);  //Configurar SPI
   spi_config(SPI_8M);      //Configurar SPI
-  mpu_config();            //Configura MPU +/- 2g    
+  mpu_config();            //Configura MPU +/- 2g
+  //mpu_mag_config();       //Configurar o magnetômetro
+
 }
 
 void loop() {
+
+  /*
+  // - Teste LAT e LONG
+  float f;
+  byte msg[24];
+  byte lat[]="1548.63128";      //12,5761315
+  byte longi[]="04748.655572";  //112,5761315
+  
+  str_lat(lat,'S',msg);
+  ser_str("\nLat = ");
+  ser_str(msg);
+  ser_crlf(1);
+
+  str_long(longi,'E',msg);
+  ser_str("\nLong = ");
+  ser_str(msg);
+  ser_crlf(1);
+
+  while(TRUE);
+  */
+
 
   //teste();  //Forçar a entrada  no modo teste
   if (sw_val < 10)  teste();

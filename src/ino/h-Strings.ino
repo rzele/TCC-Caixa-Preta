@@ -2,6 +2,69 @@
 // CXP - Caixa Preta
 // 10/01/2019
 
+// Retorna String com a LONGITUDE para Googlemaps
+// Recebe = dddmm.mmmmm (degraus and minutes)
+// ns = 'E' ou 'W'
+// msg = +/-ddd.ddddddd
+void str_long(byte *longi, byte ew, byte *msg){
+  byte i;
+  byte g;
+  long m;
+  float f;
+  g=100*(longi[0]-0x30);  //graus Centena
+  g+=10*(longi[1]-0x30);  //graus Dezena
+  g+=   (longi[2]-0x30);  //graus Unidade
+  m=10*(longi[3]-0x30)+(longi[4]-0x30);
+  for (i=0; i<5; i++){
+    m = 10*m;
+    m = m+(longi[6+i]-0x30);
+  }
+  f=g+((float)m/6000000L);
+  if (ew=='W')  f=-f;
+  str_float(f,9,msg);
+
+  /*  
+  ser_str("\n\nstr_longi(): graus=");
+  ser_dec8unz(g);
+  ser_str(" minutos=");
+  ser_dec32unz(m);
+  ser_str(" float=");
+  ser_float(f,8);
+  ser_crlf(1);
+  */
+  
+}
+
+// Retorna String com a LATITUDE para Googlemaps
+// Recebe = ddmm.mmmmm (degraus and minutes)
+// ns = 'N' ou 'S'
+// msg = +/-dd.ddddddd
+void str_lat(byte *lati, byte ns, byte *msg){
+  byte i;
+  byte g;
+  long m;
+  float f;
+  g=10*(lati[0]-0x30)+(lati[1]-0x30);
+  m=10*(lati[2]-0x30)+(lati[3]-0x30);
+  for (i=0; i<5; i++){
+    m = 10*m;
+    m = m+(lati[5+i]-0x30);
+  }
+  f=g+((float)m/6000000L);
+  if (ns=='S')  f=-f;
+  str_float(f,9,msg);
+
+  /*
+  ser_str("\n\n str_lat: graus=");
+  ser_dec8unz(g);
+  ser_str(" minutos=");
+  ser_dec32unz(m);
+  ser_str(" float=");
+  ser_float(f,8);
+  ser_crlf(1);
+  */
+}
+
 // Escala Aceleração (Fundo de Escala) - Retorna string com a escala
 // Precisa de espaço de 8 caracteres incluindo o zero final
 void str_fs_acel(byte esc, char *vt){
@@ -88,6 +151,7 @@ void str_rmvz_s(char *msg){
 ////////////////////////////////////////////////////
 
 // Imprimir float = + xxx xxx xxx , ddd ddd ddd ddd (usar char msg[24])
+// Não imprime zeros à esquerda, exceto para 0.xxxx
 //  9 posições = limite da parte inteira
 // 12 posições = limite da parte fracionária
 // Caso ultrapasse os limites imprime ### , ###
@@ -99,7 +163,7 @@ void str_float(float f, byte prec, char *msg){
   if ((abs(f) >= 1E9) || (prec>12)){  //Ultrapassou limite?
     for (i=0; i<7; i++)
       msg[i]='#';
-    msg[3]=',';
+    msg[3]='.';
     msg[7]='\0'; 
   }
   else{

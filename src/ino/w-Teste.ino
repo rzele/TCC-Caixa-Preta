@@ -274,22 +274,63 @@ char teste_5(char md){
 // 6 - MPU - Magnetômetro
 char teste_6(char md){
   byte who;
-  int vetor[7];
+  int vetor[3];
   char *msg="[6] MPU6050 Magneto";
+
+  // Devo colocar aqui a configuração
+  mpu_mag_config();       //Configurar o magnetômetro
+
   lcd_apaga();
   lcd_str(0,0,msg);
   ser_str(msg);
   ser_crlf(1);
 
+  who = mag_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,11,who);
+  ser_str("MPU MAG retornou Who am I = ");
+  ser_hex8(who);
+  if (who == MAG_WHO){
+    lcd_str(1,13,"h OK");  //MPU respondendo
+    ser_str("h ==> OK!");
+  }
+  else{
+    lcd_str(1,13,"h NOK");  //MPU respondendo
+    ser_str("h ==> NOK! ERRO");
+  }
+  delay(800);
+
+  //print de asax, asay e asaz
+  ser_str("asa:");ser_crlf(1);
+  ser_hex8(mag_asa[0]);ser_crlf(1);
+  ser_hex8(mag_asa[1]);ser_crlf(1);
+  ser_hex8(mag_asa[2]);ser_crlf(1);
+  lcd_str(2,0,"ASA:");
+  lcd_hex8(2,5, mag_asa[0]);
+  lcd_hex8(2,8, mag_asa[1]);
+  lcd_hex8(2,11,mag_asa[2]);
+
+  mpu_sample_rt(SAMPLE_RT_100Hz);
+  mpu_int();
+
+  lcd_str(3,0,"X:hhhh Y:hhhh Z:hhhh");
   while(TRUE){
-    mpu_rd_mg(vetor);
-    lcd_hex16(1,0,vetor[0]);
-    lcd_hex16(1,6,vetor[1]);
-    lcd_hex16(1,12,vetor[2]);
-    ser_str("\nhx=");      ser_hex16(vetor[0]);
-    ser_str("  hy=");      ser_hex16(vetor[1]);
-    ser_str("  hz=");      ser_hex16(vetor[2]);
-    if (sw_tira(&who))     break;
+    if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
+     mpu_dado_ok=FALSE;
+     mpu_rd_mg_out(vetor);
+ 
+     //escreve no LCD   
+     lcd_hex16(3,2, vetor[0]);
+     lcd_hex16(3,9, vetor[1]);
+     lcd_hex16(3,16,vetor[2]); 
+
+     //escreve no serial
+     ser_str("X:");     ser_hex16(vetor[0]);
+     ser_str("   Y:");  ser_hex16(vetor[1]);
+     ser_str("   Z:");  ser_hex16(vetor[2]);
+     ser_crlf(1);
+   }    
+   if (sw_tira(&who))     break;
   }
   ser_str("\n--- Fim ---\n");
   return;

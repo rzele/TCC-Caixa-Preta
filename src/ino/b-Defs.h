@@ -239,7 +239,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define TESTE_17  17     //Livre
 
 // OPERA
-#define OPERA_TOT  8     //Modos de teste: 1, 2 , ..., 8
+#define OPERA_TOT  9     //Modos de teste: 1, 2 , ..., 8
 #define OPERA_0    0     //Não tem
 #define OPERA_1    1     //Livre
 #define OPERA_2    2     //Livre
@@ -249,6 +249,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define OPERA_6    6     //Livre
 #define OPERA_7    7     //Livre
 #define OPERA_8    8     //Livre
+#define OPERA_9    9     //Livre
 
 // TECLADO - Parametros para leitura das chaves
 #define  SW_FILA_TAM  10  // tamanho da fila do teclado
@@ -357,9 +358,19 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define WHO_AM_I         0x75
 
 /////////////// MPU 9250 - Magnetômetro
+#define MAG_I2C_ADDR    0x0C //endereço i2c do magnetometro
+#define MAG_I2C_ADDR_WR 0x18 //0x0c << 1
+#define MAG_I2C_ADDR_RD 0x19 //(0x0c << 1) + 1
+#define MAG_WHO         0x48  //MAG Who am I
+// Registradores
 #define MAG_CNTL_1      0x0A  //Controle 1
-#define MAG_CNTL_2      0x0B  //Controle 2
+#define MAG_CNTL_2      0x0B  //(RSV) Controle 2 
 #define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
+#define MAG_ASAX        0x10 //endereço do registrador ASAX do magnetometro
+#define MAG_ASAY        0x11 //endereço do registrador ASAY do magnetometro  
+#define MAG_ASAZ        0x12 //endereço do registrador ASAZ do magnetometro  
+#define MAG_ST1         0x02 //endereço do registrador ST1 do magnetometro que indica se o dado está pronto
+
 
 //////////////////////////////////////////////////////////////////////////////////
 ////////////// CONSTANTES DE BAIXO NÍVEL /////////////////////////////////////////
