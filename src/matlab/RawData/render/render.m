@@ -7,6 +7,7 @@ classdef render < handle
         time
         freq_render
         setted_objects_name = {}
+        plots = CustomPlot.empty()
         layout = struct()
         layout_default_struct = struct(    ...
             'subplot', [],                 ...
@@ -52,17 +53,21 @@ classdef render < handle
             obj.fig = figure('units','normalized','outerposition',[0 0 1 1]);
         end
 
-        function objType = setItemType(obj, obj_name, type_name)
+        function new_plot = setItemType(obj, obj_name, type_name)
             if ~isfield(obj.layout, obj_name)
-                objType = EmptyPlot();
+                new_plot = EmptyPlot();
                 return
             end
 
             if strcmp(type_name, 'plotline')
-                objType = PlotLine(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+                new_plot = PlotLine(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
             elseif strcmp(type_name, 'plot3dcar')
-                objType = Plot3DCar(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+                new_plot = Plot3DCar(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+            else
+                error('type_name is invalid');
             end
+
+            obj.plots(length(obj.plots)+1) = new_plot;
         end
 
         % Tenta redesenhar o plot, se deu o tempo da frequencia
@@ -77,6 +82,7 @@ classdef render < handle
 
         % Rendereza mesmo se n?o deu o tempo da frequencia
         function force_render(obj)
+            figure(1)
             refreshdata
             drawnow
             obj.time = now;

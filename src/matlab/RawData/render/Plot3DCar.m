@@ -1,4 +1,4 @@
-classdef Plot3DCar < handle
+classdef Plot3DCar < CustomPlot
     %Plot3DCar Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -52,7 +52,7 @@ classdef Plot3DCar < handle
             faces = [1   2   3   4   5   6   7   8   ; ... % Lateral esquerda
                     9   10  11  12  13  14  15  16  ; ... % Lateral direita
                     1   2   10  9   nan nan nan nan ; ... % Para choque dianteiro
-                    2   3   11  10  nan nan nan nan ; ... % Capô
+                    2   3   11  10  nan nan nan nan ; ... % Capï¿½
                     3   4   12  11  nan nan nan nan ; ... % Vidro dianteiro
                     4   5   13  12  nan nan nan nan ; ... % Teto
                     5   6   14  13  nan nan nan nan ; ... % Vidro traseiro
@@ -64,7 +64,7 @@ classdef Plot3DCar < handle
             colors = [[1    0    0    ] ; ... % Lateral esquerda
                     [1    0    0    ] ; ... % Lateral direita
                     [0.1  0.1  0.1  ] ; ... % Para choque dianteiro
-                    [1    0    0    ] ; ... % Capô
+                    [1    0    0    ] ; ... % Capï¿½
                     [0.85 0.85 0.85 ] ; ... % Vidro dianteiro
                     [1    0    0    ] ; ... % Teto
                     [0.85 0.85 0.85 ] ; ... % Vidro traseiro

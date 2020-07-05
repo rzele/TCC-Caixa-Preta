@@ -1,4 +1,4 @@
-classdef EmptyPlot
+classdef EmptyPlot < CustomPlot
     % Esta classe é usada para mocar os items não definidos no layout, descartando a necessidade de verificação ao usar os items
     
     properties

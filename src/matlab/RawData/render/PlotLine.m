@@ -1,4 +1,4 @@
-classdef PlotLine < handle
+classdef PlotLine < CustomPlot
     %PLOTLINE Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -7,6 +7,8 @@ classdef PlotLine < handle
         subplot
         n_rows
         n_columns
+        series = []
+        sources = []
     end
     
     methods

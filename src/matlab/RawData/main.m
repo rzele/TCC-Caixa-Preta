@@ -38,7 +38,7 @@ Space3D = 'U';                              % Posição em um espaço 3D
 
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
-read_from_serial=true;     % Set to false to use a file
+read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
 file_full_path='Dados/roll-pitch-roll-90-seq.txt';          
