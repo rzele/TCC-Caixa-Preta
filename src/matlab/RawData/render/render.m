@@ -80,7 +80,7 @@ classdef render < handle
             end
         end
 
-        % Rendereza mesmo se n?o deu o tempo da frequencia
+        % Rendereza mesmo se nã0o deu o tempo da frequencia
         function force_render(obj)
             figure(1)
             refreshdata
