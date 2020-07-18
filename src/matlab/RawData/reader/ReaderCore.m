@@ -1,65 +1,18 @@
-classdef reader < handle
-    %READER Summary of this class goes here
+classdef ReaderCore < handle
+    %READERCORE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
-        read_from_serial
         f_pt
-        serial_com
-        serial_baudrate
-        file_full_path
-        file_simulated_freq
         stop_wait = false
         read_attempts = 5
+        file_simulated_freq
         read_current_attempts = 0
         time
     end
     
     methods
-        function obj = reader()
-
-            % Se a porta serial ja estiver aberta tenta fechar
-            try
-                fclose(instrfind);
-            catch ME
-            end    
-        end
-
-        function set_serial_reader(obj, serial_com, serial_baudrate)
-            obj.read_from_serial = true;
-            obj.serial_com = serial_com;
-            obj.serial_baudrate = serial_baudrate;
-            obj.file_simulated_freq = Inf;
-
-            obj.f_pt = serial(serial_com, 'Baudrate', serial_baudrate);
-            fopen(obj.f_pt);
-
-            if (obj.f_pt==-1)
-                fprintf(1,'Nao abriu COM3.\n');
-                return
-            end
-            fprintf('Pronto para receber dados!\n');
-            fprintf('Por favor, selecione Teste 12 na Caixa Preta.\n');
-
-            obj.wait_start_signal();
-        end
-
-        function set_file_reader(obj, file_full_path, file_simulated_freq)
-            obj.read_from_serial = false;
-            obj.file_full_path = file_full_path;
-            obj.file_simulated_freq = file_simulated_freq;
-            obj.time = now;
-
-            [obj.f_pt, err] = fopen(file_full_path, 'r', 'n', 'UTF-8');
-
-            if (obj.f_pt==-1)
-                fprintf(1,'Nao abriu arquivo de nome: %s.\n', file_full_path);
-                fprintf(1,'%s.\n', err);
-                return
-            end
-            fprintf('Buscando sinal de start\n');
-
-            obj.wait_start_signal();
+        function obj = ReaderCore()
         end
 
         function wait_start_signal(obj)

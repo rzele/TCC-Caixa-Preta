@@ -86,8 +86,12 @@ classdef Plot3DCar < CustomPlot
             x = xAng * pi / 180;
             y = yAng * pi / 180;
             z = zAng * pi / 180;
+            
+            Rx = makehgtform('xrotate',x);
+            Ry = makehgtform('yrotate',y);
+            Rz = makehgtform('zrotate',z);
 
-            obj.g.Matrix = makehgtform('xrotate',x,'yrotate',y,'zrotate',z);
+            obj.g.Matrix = Rz * Ry * Rx;
         end
 
         function rotateWithQuaternion(obj, q)

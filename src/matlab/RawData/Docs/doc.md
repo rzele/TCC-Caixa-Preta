@@ -57,7 +57,7 @@ O script tem por objetivo apresentar de forma simples os dados e cálculos envol
 
 ## Como usar
 Nas seções a seguir temos uma breve explicação do uso do script, caso prefira também há um vídeos explicativo:
-[https://youtu.be/1yQjMueZ2hk](https://youtu.be/1yQjMueZ2hk)
+[https://youtu.be/tczm7vK41us](https://youtu.be/tczm7vK41us)
 
 ### Formato de entrada dos dados
 O formato de entrada dos dados é o mesmo para arquivo e porta serial, ele deve conter um demarcador de inicio (podendo conter qualquer dado antes), e um demarcador de final (podendo conter qualquer dado depois), entre o meio dos indicadores se encontram os dados, onde cada linha é uma amostra de todos os sensores separado por ; como segue abaixo
@@ -234,13 +234,14 @@ Lembrando que cabe ao usuário certificar que a atualização dos dados das vari
 Para facilitar a compreenção dos dados, temos gravado pequenos vídeos rápidos apresentando e explicando os gráficos com algums movimentos caractetisticos:
 
 Neste vídeo são tradados os movimentos de:
-- [01 - Rotação em Y de 90º (Demonstração de gimbal lock)](https://youtu.be/pRufs5whhXk):
-- [02 - Rotação em Z de 360º (Demonstração de angulo relativo)](https://youtu.be/KRXk99MYoxg):
-- [03 - Rotação em XYX sequencial de 90º (simulação de rotação em Z com gimbal lock)](https://youtu.be/mzhb0GvGvNE):
-- [04 - Rotação em ZXZ sequencial de 90º (simulação de rotação em Y sem gimbal lock)](https://youtu.be/Q7o0uF25RwI):
-- [05 - Rotação em XYZ sequencial de 45º](https://youtu.be/8XqxGNYAqQc):
-- [06 - Rotação em XYZ individual de 90º](https://youtu.be/cIU1ke1tMoA):
-- [07 - Rotação em XYZ sequencial de 90º](https://youtu.be/vmHbjVKd7Xw):
+- [01 - Rotação em Y de 90º (Demonstração de gimbal lock)](https://youtu.be/8xyNOZJKFkw):
+- [02 - Rotação em Z de 360º (Demonstração de angulo relativo)](https://youtu.be/J2QXxI8baL4):
+- [03 - Rotação em XYX sequencial de 90º (simulação de rotação em Z com gimbal lock)](https://youtu.be/91p0657zZo0):
+- [04 - Rotação em XZX sequencial de 90º (simulação de rotação em Y sem gimbal lock)](https://youtu.be/dAieWHo6C8w):
+- [05 - Rotação em XYZ individual de 45º](https://youtu.be/7_JKSZZgf8M):
+- [06 - Rotação em XYZ individual de 90º](https://youtu.be/CTevqCP8td4):
+- [07 - Rotação em XYZ sequencial de 90º](https://youtu.be/IniGX-qZm-A):
+- [08 - Drift: Sem Filtro vs Kalman vs Madgwick](https://youtu.be/jVnZYY9hkPY):
 
 
 Link com todos os videos: https://www.youtube.com/playlist?list=PLfmcfmVTJUNb0hH3pNrTmL_9jIVNoDxA2
@@ -258,9 +259,7 @@ O modulo possui duas funções seguindo o modelo de kalman, de predição (que e
 Este módulo foi construido utilizando como base o conjunto de videos em: https://www.youtube.com/watch?v=urhaoECmCQk
 
 ### Leitor
-O modulo de leitor é uma classe que realiza leituras tanto via porta serial quando via arquivo. Ele possui 5 funções:
-- **set_serial_reader:** Inicializa o cursor para leitura serial, e chama a função '*wait_start_signal*' 
-- **set_file_reader:** Inicializa o cursor para leitura via arquivo, e chama a função '*wait_start_signal*' 
+O modulo de leitor é um conjunto de classes que realizam leituras tanto via porta serial quando via arquivo. Ele possui 3 funções, além do construtor de cada classe, que inicializa o cursor para leitura serial ou arquivo (dependendo de qual classe for criada), e chama a função '*wait_start_signal*':
 - **wait_start_signal:** Lê do meio selecionado e escreve na saida do console até encontrar os delimitadores de inicio
 - **read_sample:** Lê do meio selecionado uma amostra dos sensores, se o dado estive no formato incorreto, ou for o fim retorna vazio
 - **delete:** Fecha o cursor de leitura seja ela serial ou arquivo 

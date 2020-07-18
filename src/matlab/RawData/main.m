@@ -4,7 +4,8 @@
 % - file_simulated_freq ainda não funciona muito bem
 
 addpath('quaternion_library');      % include quaternion library
-addpath('render');                  % include quaternion library
+addpath('render');                  % include plot library
+addpath('reader');                  % include reader library
 addpath('helpers');                 % include some useful functions
 close all;                          % close all figures
 clear;                              % clear all variables
@@ -12,14 +13,14 @@ clc;                                % clear the command terminal
 
 % layout Macros
 Vazio = '';                                 % Deixa a celula vazia
-Acel = 'A';                                 % Aceleração x,y,z
-Vel = 'B';                                  % Velocidade x,y,z
-Space = 'C';                                % Espaço percorrido x,y,z
-Gvel = 'D';                                 % Velocidade angular em x,y,z
-Gdeg = 'E';                                 % Posição angular em x,y,z relativo (em relação a posição anterior)
-Gtilt = 'F';                                % Posição angular em x,y,z absoluto (em relação aos eixos iniciais)
+Acel = 'A';                                 % Aceleração X,Y,Z
+Vel = 'B';                                  % Velocidade X,Y,Z
+Space = 'C';                                % Espaço percorrido X,Y,Z
+Gvel = 'D';                                 % Velocidade angular em X,Y,Z
+Gdeg = 'E';                                 % Posição angular em Z,Y,X relativo (em relação a posição anterior)
+Gtilt = 'F';                                % Posição angular em Z,Y,X absoluto (em relação aos eixos iniciais)
 Mag = 'G';                                  % Magnetometro
-FusionTilt = 'H';                           % Posição angular em x,y,z absoluto, usando aceleração e magnetometro
+FusionTilt = 'H';                           % Posição angular em Z,Y,X absoluto, usando aceleração e magnetometro
 CompTilt = 'I';                             % Posição angular usando o filtro complementar
 KalmanTilt = 'J';                           % Posição angular usando o filtro de kalman
 MadgwickTilt = 'K';                         % Posição angular usando o filtro de madgwick
@@ -41,21 +42,22 @@ Space3D = 'U';                              % Posição em um espaço 3D
 read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
-file_full_path='Dados/roll-yaw-roll-90-seq.txt';          
+file_full_path='Dados/roll-pitch-yaw-90-seq.txt';          
 file_simulated_freq=Inf;    % Simulate a pulling frequence, e.g.: to simulate an freq of 100 samples per second use 100hz
 
 % Amostragem
-max_size=2500;              % Quantidade maxima de amostras exibidas na tela
+max_size=4000;              % Quantidade maxima de amostras exibidas na tela
 freq_sample=100;            % Frequencia da amostragem dos dados
 
 % Plotagem
-plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo real
+plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
+
         Acel,       Acel_G,     FusionTilt,     FusionTilt;...
         Gvel,       Gdeg,       CompTilt,       CompTilt;...
         Gtilt,      Gtilt,      KalmanTilt,     KalmanTilt;...
-        Vazio,      Vazio,      MadgwickTilt,   MadgwickTilt;...
+        Quat,      Quat,      MadgwickTilt,   MadgwickTilt;...
      
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -228,13 +230,11 @@ kalmanFilterYaw = kalman(A,B,C,Q,R);
 %% Iniciaaliza o filtro de madgwick
 madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
 
-%% Abre porta serial
+%% Abre porta serial / arquivo
 if read_from_serial
-    reader_1 = reader();
-    reader_1.set_serial_reader(serial_COM, serial_baudrate);
+    reader = ReaderSerial(serial_COM, serial_baudrate);
 else
-    reader_1 = reader();
-    reader_1.set_file_reader(file_full_path, file_simulated_freq);
+    reader = ReaderFile(file_full_path, file_simulated_freq);
 end
 
 %% Obtem os dados e plota em tempo real
@@ -243,7 +243,7 @@ end
 while true
     
     %% Lê uma amostra de cada da porta serial/arquivo
-    data = reader_1.read_sample();
+    data = reader.read_sample();
 
     % Se é o fim do arquivo ou deu algum erro finaliza
     if isempty(data)
@@ -297,7 +297,7 @@ while true
         gYaw    = [gYaw(2:max_size)   newYaw];
     end
     
-    %% Calcula a matriz de rotação (X,Y,Z) que foi responsável por mover o corpo da posição da amostra anterior para a atual
+    %% Calcula a matriz de rotação (Z,Y,X) que foi responsável por mover o corpo da posição da amostra anterior para a atual
     % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
     if isOneIn(setted_objects_name, {Gtilt, FusionTilt, CompTilt, Card3DGtilt, Card3DFusion, Card3DComp})
         delta_gPitch = gPitch(max_size) - gPitch(max_size-1);
@@ -318,13 +318,13 @@ while true
             [sind(delta_gYaw),         cosd(delta_gYaw),       0];...
             [0,                         0,                      1]
         ];
-        temp_R = temp_Rx * temp_Ry * temp_Rz;
+        temp_R = temp_Rz * temp_Ry * temp_Rx;
 
-        % Calcula a matriz de rotação (X,Y,Z) que move o corpo da posição inicial para a posição atual
+        % Calcula a matriz de rotação (Z,Y,X) que move o corpo da posição inicial para a posição atual
         Rot = Rot * temp_R;
 
 
-        %% Extrai Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando a atual matriz de rotação (X,Y,Z)
+        %% Extrai Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando a atual matriz de rotação (Z,Y,X)
         % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
         newRoll = atan2(Rot(3,2), Rot(3,3)) * 180/pi;
         newYaw = atan2(Rot(2,1), Rot(1,1)) * 180/pi;
@@ -342,7 +342,7 @@ while true
     %% Calcula Yaw, Pitch e Roll absolutos(em relação a posição inicial do corpo) p/ a nova amostra usando aceleração
     % Usando a aceleração, usamos o vetor de gravidade que deve sempre
     % estar presente p/ determinar a posição do corpo
-    % assim temos que p/ a order de rotação X,Y,Z
+    % assim temos que p/ a order de rotação Z,Y,X
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {FusionTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space, Card3DFusion, Card3DKalman, Card3DComp})
         newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
@@ -494,5 +494,5 @@ plot_1.force_render();
 
 %% Aqui acaba o script
 fprintf(1,'Recebidos %d amostras\n\n',cont);
-reader_1.delete();
+reader.delete();
 return;
