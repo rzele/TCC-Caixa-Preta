@@ -72,7 +72,7 @@ classdef ReaderCore < handle
             data=strsplit(data, obj.data_delimiter);
 
             % Checa se realmente leu todos os dados, se n le novamente ate no maximo 'read_attempts' vezes
-            if length(data) < 7
+            if length(data) < 6
                 if (obj.read_current_attempts == obj.read_attempts)
                     data = [];
                     return;

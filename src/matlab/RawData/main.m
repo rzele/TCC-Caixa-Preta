@@ -6,7 +6,10 @@
 addpath('quaternion_library');      % include quaternion library
 addpath('render');                  % include plot library
 addpath('reader');                  % include reader library
+addpath('kalman');                  % include kalman filter class
+addpath('madgwick');                % include madgwick filter class
 addpath('helpers');                 % include some useful functions
+
 close all;                          % close all figures
 clear;                              % clear all variables
 clc;                                % clear the command terminal
@@ -36,13 +39,12 @@ Card3DMadgwick = 'T';                       % Posição angular atual usando um ob
 Space3D = 'U';                              % Posição em um espaço 3D
                                             % pois é necessário saber bem a posição angular p/ isso)
 
-
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
 read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
-file_full_path='Dados/teste.txt';
+file_full_path='Dados/roll-yaw-roll-90-seq.txt';
 
 % Amostragem
 max_size=4000;              % Quantidade maxima de amostras exibidas na tela
@@ -50,8 +52,8 @@ freq_sample=100;            % Frequencia da amostragem dos dados
 
 % Plotagem
 plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
-freq_render=5;              % Frequencia de atualização do plot
-layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
+freq_render=5;               % Frequencia de atualização do plot
+layout= {...                 % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
         Acel,       Acel_G,     FusionTilt,     FusionTilt;...
         Gvel,       Gdeg,       CompTilt,       CompTilt;...
@@ -107,12 +109,11 @@ beta=0.1;
 
 %% Variáveis de dados
 vazios=zeros(1,max_size); 
-count=0;                                 % counta quantas amostras foram lidas
+count=0;                                 % conta quantas amostras foram lidas
 
 ax=vazios;                              % Aceleração eixo X
 ay=ax;                                  % Aceleração eixo Y
 az=ax;                                  % Aceleração eixo Z
-tp=ax;                                  % Temperatura do MPU
 gx=ax;                                  % Giro/s eixo X
 gy=ax;                                  % Giro/s eixo Y
 gz=ax;                                  % Giro/s eixo Z
@@ -135,7 +136,7 @@ pz=ax;                                  % Posição no eixo Z
 ax_without_gravity=ax;                  % Aceleração eixo X removido a gravidade
 ay_without_gravity=ax;                  % Aceleração eixo Y removido a gravidade
 az_without_gravity=ax;                  % Aceleração eixo Z removido a gravidade
-r_data=zeros(window_k,7);               % Dados não modificados (sem filtro ou media)
+r_data=zeros(window_k,6);               % Dados não modificados (sem filtro ou media)
 compl_Roll=ax;                          % Movimento de Roll usando filtro complementar
 compl_Pitch=ax;                         % Movimento de Pitch usando filtro complementar
 compl_Yaw=ax;                           % Movimento de Yaw usando filtro complementar
@@ -149,10 +150,9 @@ q1=ax;                                  % Quaternio 1 do filtro de madgwick
 q2=ax;                                  % Quaternio 2 do filtro de madgwick
 q3=ax;                                  % Quaternio 3 do filtro de madgwick
 q4=ax;                                  % Quaternio 4 do filtro de madgwick
-t = 0:max_size;                         % Eixo temporal do gráfico
 
 %% Define uma janela p/ plot
-plot_1 = render(freq_render, layout);
+plot_1 = Render(freq_render, layout);
 
 
 % Obtem a lista de itens unicos definidos no layout
@@ -178,6 +178,7 @@ plotCard3DGtilt = plot_1.setItemType(Card3DGtilt, 'plot3dcar');
 plotCard3DFusion = plot_1.setItemType(Card3DFusion, 'plot3dcar');
 plotCard3DKalman = plot_1.setItemType(Card3DKalman, 'plot3dcar');
 plotCard3DComp = plot_1.setItemType(Card3DComp, 'plot3dcar');
+plotSpace3D = plot_1.setItemType(Space3D, 'plot3dline');
 
 % Seta a fonte de dados de cada gráfico
 plotAcel.setSource({'ax', 'ay', 'az'}, {'r', 'g', 'b'});
@@ -198,6 +199,7 @@ plotCard3DGtilt.setCar();
 plotCard3DFusion.setCar();
 plotCard3DKalman.setCar();
 plotCard3DComp.setCar();
+plotSpace3D.setSource({'px', 'py', 'pz'});
 
 % Seta as labels de cada gráfico
 plotAcel.setProperties('Aceleração em "g"', 'Amostra', 'g', {'vX', 'vY', 'vZ'});
@@ -218,13 +220,14 @@ plotCard3DGtilt.setProperties('Rotação 3D usando posição angular absoluta');
 plotCard3DFusion.setProperties('Rotação 3D usando acel e mag');
 plotCard3DComp.setProperties('Rotação 3D usando filtro complementar');
 plotCard3DKalman.setProperties('Rotação 3D usando filtro de kalman');
+plotSpace3D.setProperties('Posição 3D (usando filtro de kalman)');
 
 %% Inicializa os filtros de kalman, um para cada eixo,
 % podemos fazer tudo com um filtro só, entretanto os parâmetros ficariam
 % bem grandes e de dificil visualização
-kalmanFilterRoll = kalman(A,B,C,Q,R);
-kalmanFilterPitch = kalman(A,B,C,Q,R);
-kalmanFilterYaw = kalman(A,B,C,Q,R);
+kalmanFilterRoll = Kalman(A,B,C,Q,R);
+kalmanFilterPitch = Kalman(A,B,C,Q,R);
+kalmanFilterYaw = Kalman(A,B,C,Q,R);
 
 %% Iniciaaliza o filtro de madgwick
 madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
@@ -259,15 +262,12 @@ while true
     data(3)=esc_ac*(data(3)/32767) - az_bias;
 
     %% Converter giros em "graus/seg"
-    data(5)=esc_giro*(data(5)/32767) - gx_bias;
-    data(6)=esc_giro*(data(6)/32767) - gy_bias;
-    data(7)=esc_giro*(data(7)/32767) - gz_bias;
-
-    %% Converter temperatura para Celsius
-    data(4)=(data(4)/340)+36.53;
+    data(4)=esc_giro*(data(4)/32767) - gx_bias;
+    data(5)=esc_giro*(data(5)/32767) - gy_bias;
+    data(6)=esc_giro*(data(6)/32767) - gz_bias;
 
     %% Salva os dados sem alteração p/ poder aplicar a media movel mais a frente
-    r_data = [r_data(2:window_k,:) ; data(1:7)];
+    r_data = [r_data(2:window_k,:) ; data(1:6)];
 
     %% Faz a media movel dos dados lidos
     data = sum(r_data) / window_k;
@@ -276,10 +276,9 @@ while true
     ax = [ax(2:max_size) data(1)];
     ay = [ay(2:max_size) data(2)];
     az = [az(2:max_size) data(3)];
-    tp = [tp(2:max_size) data(4)];
-    gx = [gx(2:max_size) data(5)];
-    gy = [gy(2:max_size) data(6)];
-    gz = [gz(2:max_size) data(7)];
+    gx = [gx(2:max_size) data(4)];
+    gy = [gy(2:max_size) data(5)];
+    gz = [gz(2:max_size) data(6)];
 
     %% Calcula Yaw, Pitch e Roll realtivos(em relação a ultima rotação do corpo) p/ a nova amostra usando giro
     % Usando o giro, fazemos a integral discreta (área do trapézio aculmulado)
@@ -343,7 +342,7 @@ while true
     % estar presente p/ determinar a posição do corpo
     % assim temos que p/ a order de rotação Z,Y,X
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
-    if isOneIn(setted_objects_name, {FusionTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space, Card3DFusion, Card3DKalman, Card3DComp})
+    if isOneIn(setted_objects_name, {FusionTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space, Card3DFusion, Card3DKalman, Card3DComp, Space3D})
         newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
         if (az(max_size)>=0)
             sign = 1;
@@ -372,7 +371,7 @@ while true
     %% Calcula rotação usando filtro de Kalman
     % Ref do calculo: https://www.youtube.com/watch?v=urhaoECmCQk
     % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
-    if isOneIn(setted_objects_name, {KalmanTilt, Acel_G, Vel, Space, Card3DKalman})
+    if isOneIn(setted_objects_name, {KalmanTilt, Acel_G, Vel, Space, Card3DKalman, Space3D})
         % Calcula a predição p/ cada eixo individualmente
         kalmanFilterRoll.predict(gx(max_size));
         kalmanFilterPitch.predict(gy(max_size));
@@ -414,7 +413,7 @@ while true
     % Obtem o vetor gravidade atual rotacionando em sentido countrário realizado pelo corpo, considerando gravidade = 1g
     % e usando os dados do filtro de kalman p/ roll e pitch e do giroscópio p/ yaw
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
-    if isOneIn(setted_objects_name, {Acel_G, Vel, Space})
+    if isOneIn(setted_objects_name, {Acel_G, Vel, Space, Space3D})
         gravity_vector =   [-sind(kalman_Pitch(max_size)),...
                              cosd(kalman_Pitch(max_size))*sind(kalman_Roll(max_size)),...
                              cosd(kalman_Pitch(max_size))*cosd(kalman_Roll(max_size))
@@ -429,7 +428,7 @@ while true
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    if isOneIn(setted_objects_name, {Vel, Space})
+    if isOneIn(setted_objects_name, {Vel, Space, Space3D})
         newVx = (vx(max_size) + ((ax_without_gravity(max_size-1) + ax_without_gravity(max_size)) / (2 * freq_sample) ));
         newVy = (vy(max_size) + ((ay_without_gravity(max_size-1) + ay_without_gravity(max_size)) / (2 * freq_sample) ));
         newVz = (vz(max_size) + ((az_without_gravity(max_size-1) + az_without_gravity(max_size)) / (2 * freq_sample) ));
@@ -444,7 +443,7 @@ while true
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    if isOneIn(setted_objects_name, Space)
+    if isOneIn(setted_objects_name, {Space, Space3D})
         newPx = (px(max_size) + ((vx(max_size-1) + vx(max_size)) / (2 * freq_sample) ));
         newPy = (py(max_size) + ((vy(max_size-1) + vy(max_size)) / (2 * freq_sample) ));
         newPz = (pz(max_size) + ((vz(max_size-1) + vz(max_size)) / (2 * freq_sample) ));

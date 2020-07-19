@@ -1,4 +1,4 @@
-classdef kalman < handle
+classdef Kalman < handle
     %KALMAN Summary of this class goes here
     %   Model:
     %   x[k] = A*x[k-1] + B*u[k] + w[k]
@@ -23,7 +23,7 @@ classdef kalman < handle
     end
     
     methods
-        function obj = kalman(A,B,C,Q,R)
+        function obj = Kalman(A,B,C,Q,R)
            obj.A = A;
            obj.B = B;
            obj.C = C;

@@ -4,6 +4,8 @@ Este script em matlab realiza a leitura de dados do MPU e permite a exibição d
 
 O script tem por objetivo apresentar de forma simples os dados e cálculos envolvidos na leitura e fusão de dados do MPU, por isso possui bastante cálculos redundântes e não otimizados, sendo que muitos deles são implementação própria no lugar do uso de bibliotecas nativas, para deixar o mais claro possível os cálculos realizados.
 
+Para um bom entendimento dos tratamentos feitos com os dados do MPU basta seguir o arquivo main, ignorando os demais que são arquivos secundários, e estudando as referências deixadas no meio do código do script main.
+
 ## Sumário
 - [MPU - Raw data](#mpu---raw-data)
   - [Sumário](#sumário)

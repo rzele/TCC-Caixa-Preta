@@ -1,4 +1,4 @@
-classdef render < handle
+classdef Render < handle
     %PLOT Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -21,7 +21,7 @@ classdef render < handle
     methods
         % Constructor: inicializa o plot seguindo o layout, e inicializa a
         % contagem do render
-        function obj = render(freq, layout)
+        function obj = Render(freq, layout)
             addpath('quaternion_library');      % include quaternion library
             aux_setted_objects_name = struct();
 
@@ -63,6 +63,8 @@ classdef render < handle
                 new_plot = PlotLine(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
             elseif strcmp(type_name, 'plot3dcar')
                 new_plot = Plot3DCar(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+            elseif strcmp(type_name, 'plot3dline')
+                new_plot = Plot3DLine(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
             else
                 error('type_name is invalid');
             end

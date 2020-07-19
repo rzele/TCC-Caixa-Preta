@@ -783,7 +783,6 @@ char teste_12(char md){
     ser_dec16(vt[0]);   ser_str(";");           //ax
     ser_dec16(vt[1]);   ser_str(";");           //ay
     ser_dec16(vt[2]);   ser_str(";");           //az
-    ser_dec16(vt[3]);   ser_str(";");           //temperatura
     ser_dec16(vt[4]);   ser_str(";");           //gx
     ser_dec16(vt[5]);   ser_str(";");           //gy
     ser_dec16(vt[6]);   ser_str(";");           //gz

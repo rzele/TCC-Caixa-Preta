@@ -43,6 +43,7 @@ classdef ReaderFile < ReaderCore
              if length(data) < 11
                  if (obj.read_current_attempts == obj.read_attempts)
                      data = [];
+                     error('Error at read data, was not possible to read some datas. check if the file have the correct format')
                      return;
                  end
                  obj.read_current_attempts = obj.read_current_attempts + 1;
@@ -50,7 +51,7 @@ classdef ReaderFile < ReaderCore
                  obj.read_current_attempts = 0;
              else
                 % Retorna somente os dados de acelerometro e giro, adicionado de um placeholder de temperatura=0
-                data = [data(3:5) '0' data(6:8)];
+                data = data(3:8);
              end
 
         end
