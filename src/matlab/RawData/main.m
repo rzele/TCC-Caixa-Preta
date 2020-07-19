@@ -42,8 +42,7 @@ Space3D = 'U';                              % Posição em um espaço 3D
 read_from_serial=false;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
-file_full_path='Dados/roll-pitch-yaw-90-seq.txt';          
-file_simulated_freq=Inf;    % Simulate a pulling frequence, e.g.: to simulate an freq of 100 samples per second use 100hz
+file_full_path='Dados/teste.txt';
 
 % Amostragem
 max_size=4000;              % Quantidade maxima de amostras exibidas na tela
@@ -57,7 +56,7 @@ layout= {...                % Layout dos plots, as visualizações possíveis estão
         Acel,       Acel_G,     FusionTilt,     FusionTilt;...
         Gvel,       Gdeg,       CompTilt,       CompTilt;...
         Gtilt,      Gtilt,      KalmanTilt,     KalmanTilt;...
-        Quat,      Quat,      MadgwickTilt,   MadgwickTilt;...
+        Quat,       Quat,       MadgwickTilt,   MadgwickTilt;...
      
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -80,7 +79,7 @@ window_k = 10;              % Janela da media movel (minimo = 2)
 mu=0.02;
 
 % Variável de ajuste do filtro de kalman, os valores iniciais de X e P são por padrão 0s
-% Nosso modelo contem:
+% Nosso modelo countem:
 % - 1 entrada (uk = delta Giro/s)
 % - 2 estados (x1 = Tilt usando Giro e  x2 = Drift)
 % - 1 saida (yk = Tilt do acelerometro)
@@ -108,7 +107,7 @@ beta=0.1;
 
 %% Variáveis de dados
 vazios=zeros(1,max_size); 
-cont=0;                                 % Conta quantas amostras foram lidas
+count=0;                                 % counta quantas amostras foram lidas
 
 ax=vazios;                              % Aceleração eixo X
 ay=ax;                                  % Aceleração eixo Y
@@ -234,7 +233,7 @@ madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
 if read_from_serial
     reader = ReaderSerial(serial_COM, serial_baudrate);
 else
-    reader = ReaderFile(file_full_path, file_simulated_freq);
+    reader = ReaderFile(file_full_path);
 end
 
 %% Obtem os dados e plota em tempo real
@@ -250,7 +249,7 @@ while true
         break;
     end
 
-    cont=cont+1;
+    count=count+1;
     
     data = str2double(data);
     
@@ -412,7 +411,7 @@ while true
     end
     
     %% Calcula a aceleração removendo a gravidade
-    % Obtem o vetor gravidade atual rotacionando em sentido contrário realizado pelo corpo, considerando gravidade = 1g
+    % Obtem o vetor gravidade atual rotacionando em sentido countrário realizado pelo corpo, considerando gravidade = 1g
     % e usando os dados do filtro de kalman p/ roll e pitch e do giroscópio p/ yaw
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {Acel_G, Vel, Space})
@@ -493,6 +492,6 @@ plot_1.force_render();
 % plot_1.linkAllAxes();
 
 %% Aqui acaba o script
-fprintf(1,'Recebidos %d amostras\n\n',cont);
+fprintf(1,'Recebidos %d amostras\n\n',count);
 reader.delete();
 return;

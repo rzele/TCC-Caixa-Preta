@@ -18,7 +18,9 @@ classdef ReaderSerial < ReaderCore
             
             obj.serial_com = serial_com;
             obj.serial_baudrate = serial_baudrate;
-            obj.file_simulated_freq = Inf;
+            obj.start_delimiter = 'start';
+            obj.end_delimiter = 'fim';
+            obj.data_delimiter = ';';
 
             obj.f_pt = serial(serial_com, 'Baudrate', serial_baudrate);
             fopen(obj.f_pt);
