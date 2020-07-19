@@ -41,7 +41,7 @@ Space3D = 'U';                              % Posição em um espaço 3D
 
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
-read_from_serial=false;     % Set to false to use a file
+read_from_serial=true;     % Set to false to use a file
 serial_COM='COM4';          
 serial_baudrate=115200;     
 file_full_path='Dados/roll-yaw-roll-90-seq.txt';
@@ -51,14 +51,11 @@ max_size=4000;              % Quantidade maxima de amostras exibidas na tela
 freq_sample=100;            % Frequencia da amostragem dos dados
 
 % Plotagem
-plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
-freq_render=5;               % Frequencia de atualização do plot
+plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo real
+freq_render=20;               % Frequencia de atualização do plot
 layout= {...                 % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-        Acel,       Acel_G,     FusionTilt,     FusionTilt;...
-        Gvel,       Gdeg,       CompTilt,       CompTilt;...
-        Gtilt,      Gtilt,      KalmanTilt,     KalmanTilt;...
-        Quat,       Quat,       MadgwickTilt,   MadgwickTilt;...
+        Card3DMadgwick;...
      
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
