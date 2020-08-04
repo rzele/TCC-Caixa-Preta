@@ -366,11 +366,11 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define MAG_CNTL_1      0x0A  //Controle 1
 #define MAG_CNTL_2      0x0B  //(RSV) Controle 2 
 #define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
-#define MAG_ASAX        0x10 //endereço do registrador ASAX do magnetometro
-#define MAG_ASAY        0x11 //endereço do registrador ASAY do magnetometro  
-#define MAG_ASAZ        0x12 //endereço do registrador ASAZ do magnetometro  
-#define MAG_ST1         0x02 //endereço do registrador ST1 do magnetometro que indica se o dado está pronto
-
+#define MAG_ASAX        0x10 //end. reg. ASAX do magnetometro
+#define MAG_ASAY        0x11 //end. reg. ASAY do magnetometro  
+#define MAG_ASAZ        0x12 //end. reg. ASAZ do magnetometro  
+#define MAG_ST1         0x02 //end. reg. ST1 do magnetometro (DRDY)
+#define MAG_ST2         0x09 //end. reg. ST2 do magnetometro (HOFL)
 
 //////////////////////////////////////////////////////////////////////////////////
 ////////////// CONSTANTES DE BAIXO NÍVEL /////////////////////////////////////////

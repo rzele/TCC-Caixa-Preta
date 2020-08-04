@@ -2,14 +2,11 @@
 // CXP - Caixa Preta
 // 22/01/2019
 
-
-
-
 // Ler Aceleração, Giro e Mag
 // Retorna vetor de 18 bytes
 // [axh axl ayh ayl azh azl gxh gxl gyh gyl gzh gzl hxh hxl hyh hyl hzh hzl]
 void mpu_rd_ac_gi_mg(byte *vetor){
-  byte i,vet[14];
+  byte x,vet[14];
   // Acel e Giro
   mpu_rd_blk(ACCEL_XOUT_H, vet, 14);
   vetor[ 0] = vet[ 0];  //axh
@@ -25,105 +22,121 @@ void mpu_rd_ac_gi_mg(byte *vetor){
   vetor[ 9] = vet[11];  //gyl
   vetor[10] = vet[12];  //gzh
   vetor[11] = vet[13];  //gzl
-  // Mag
-  mpu_rd_blk(MAG_XOUT_L, vet, 6);
-  vetor[12] = vet[ 0];  //hxh
-  vetor[13] = vet[ 1];  //hxl
-  vetor[14] = vet[ 2];  //hyh
-  vetor[15] = vet[ 3];  //hyl
-  vetor[16] = vet[ 4];  //hzh
-  vetor[17] = vet[ 5];  //hzl
+
+  // Magnetômetro
+  mpu_rd_mg_blk(MAG_ST1, vet, 8);
+  if ( (vet[7]&8) == 8){    //HOFL=1? Overflow
+    vet[12]=vet[14]=vet[16] = 9999>>8;   //MSB(9.999)
+    vet[13]=vet[15]=vet[17] = 9999&0xFF; //LSB(9.999)
+  }
+  else{
+    vetor[12] = vet[2];  //hxh - Ordem
+    vetor[13] = vet[1];  //hxl - foi
+    vetor[14] = vet[4];  //hyh - trocada
+    vetor[15] = vet[3];  //hyl - Fica
+    vetor[16] = vet[6];  //hzh - igual
+    vetor[17] = vet[5];  //hzl - Acel e Giro
+    vetor[17] &= 0xFE;   //Apagar último bit de hzl
+    vetor[17] |= vet[0]&1;  //LSbit de hzl contém DRDY (dado pronto)      
+  }
 }
-
-
 
 ////////////////////////////////////////////////////
 /////////////// Magnetômetro   /////////////////////
 ////////////////////////////////////////////////////
 
-/*
+// Inicializar Magnetômetro
+void mpu_mg_config(void){
+  mpu_wr(USER_CTRL, 0x00);          //Desab. modo mestre no mpu
+  mpu_wr(INT_PIN_CFG, 0x02);        //Hab.o bypass I2C
+  mpu_wr_mg_reg(MAG_CNTL_1, 0x00);  //Magnetometo Power Down
+  delay(100);                       //Espera trocar de modo
+  mpu_wr_mg_reg(MAG_CNTL_1, 0x16);  //??? Mag. Modo Continuo, 100Hz e 16 bits
+  delay(100);                       //espera trocar de modo
+}
+
+// Ler Fuse ROM Magnetômetro
+// vet = vetor de 3 posições
+void mpu_rd_mg_rom(byte *vet){
+  mpu_mg_config();                 //Inicializar Mag   
+  mpu_wr_mg_reg(MAG_CNTL_1, 0x1F);  //Modo FUSE ROM
+  delay(100);                       //Esperar trocar de modo
+  mpu_rd_mg_blk(MAG_ASAX, vet, 3);  //Ler ajustes sensiblidade ASAX, ASAY, ASAZ
+  mpu_mg_config();                 //Inicializar Mag  
+}
+
+//Mag Who am I, deve retornar 0x48
+byte mpu_mg_whoami(void){
+  byte who = 0;
+  who = mpu_rd_mg_reg(0x00);
+  return who;
+}
+
 // Ler Magnetômetro
 // Retorna vetor de 3 words [hx hy hz]
-void mpu_rd_mg(word *vetor){
-  byte i,vet[6];
-  mpu_rd_blk(MAG_XOUT_L, vet, 6);
-  vetor[0] = (int)((vet [0] << 8) | vet[1]);    //Montar Mag X
-  vetor[1] = (int)((vet [2] << 8) | vet[3]);    //Montar Mag Y
-  vetor[2] = (int)((vet [4] << 8) | vet[5]);    //Montar Mag Z
-}
+// Faz leitura de tudo junto ST1-HX-HY-HZ-ST2
+// retorna 0: dado não pronto (DRDY = 0)
+// retorna 1: Tudo bem
+// retorna 2: overflow (HOFL)
+byte mpu_rd_mg(int *vetor){
+  static int hx=0,hy=0,hz=0;
+  byte vet[8],st1,st2;
 
-// Inicializar Magnetômetro
-void mpu_mag_config(void){
-  // Despertar MAG, Modo 1 continuo e 16 bits
-  mpu_wr(MAG_CNTL_1, 0x12);
-  delay(200);       //200ms  
-}
-*/
-
-// Inicializar Magnetômetro
-void mpu_mag_config(void){
   
-  //desabilita modo mestre no mpu
-  mpu_wr(USER_CTRL, 0x00);
+  st1 = mpu_rd_mg_reg(MAG_ST1);
+  
+  if ( (st1&1) == 0){
+     st1 = mpu_rd_mg_reg(MAG_ST1);
+     if ( (st1&1) == 0){
+      return 0;
+     }
+  }
 
-  //habilita o bypass mode para acessarmos o magnetometro diretamente
-  mpu_wr(INT_PIN_CFG, 0x02); 
+  
+  
+  mpu_rd_mg_blk(MAG_XOUT_L, vet, 7);
+  st2 = vet[6];
+  hx=vetor[0] = (int)((int)(vet [1] << 8) | vet[0]);    //Montar Mag X
+  hy=vetor[1] = (int)((int)(vet [3] << 8) | vet[2]);    //Montar Mag Y
+  hz=vetor[2] = (int)((int)(vet [5] << 8) | vet[4]);    //Montar Mag Z
 
-  //configurar modo FUSE ROM para magnetometro
-  mpu_wr_mg_reg(MAG_CNTL_1, 0x1F);
-  delay(100); //espera trocar de modo
+  //if ( (vet[1]&1) == 0)  return 0;   //0=Dado Não pronto
+  if ( (st2&8) == 8)  return 2;   //2=Sensor overflow
+  return TRUE;                       //1=Tudo certo
 
-  //lê os ajustes de sensiblidade nos registradores do magnetometro asax, asay e asaz
-  mpu_rd_mg_blk(MAG_ASAX, mag_asa, 3);
-
-  //magnetometro no modo power down
-  mpu_wr_mg_reg(MAG_CNTL_1, 0x00);
-  delay(100); //espera trocar de modo
-
-  //magnetometro no modo continuo, 100hz e output de 16 bits
-  mpu_wr_mg_reg(MAG_CNTL_1, 0x16);
-  delay(100); //espera trocar de modo
+  st1 = mpu_rd_mg_reg(MAG_ST1);
+  
 }
 
-// (50) lê registrador do magnetometro
+
+// (50) Ler registrador do magnetometro
 byte mpu_rd_mg_reg(byte reg){
-
   byte dado;
-  
-  twi_start(50);                         //START
-  twi_er(MAG_I2C_ADDR_WR, 51);           //Endereçar Magnetometro para escrita
-  //twi_er(MAG_I2C_ADDR << 1, 51); 
-  
-
-  twi_dado_er(reg, 52);                  //Informar registrador
-  twi_start_rep(53);                     //START Repetido
-  twi_et(MAG_I2C_ADDR_RD, 54);           //Endereçar Magnetometro para leitura
-  dado = twi_dado_et_nack(55);           //Receber dado do magnetometro com NACK
-  
-  twi_stop();                    //Gerar STOP para finalizar
-
+  twi_start(50);                //START
+  twi_er(MAG_I2C_ADDR_WR, 51);  //Endereçar Magnetometro para escrita
+  twi_dado_er(reg, 52);         //Informar registrador
+  twi_start_rep(53);            //START Repetido
+  twi_et(MAG_I2C_ADDR_RD, 54);  //Endereçar Magnetometro para leitura
+  dado = twi_dado_et_nack(55);  //Receber dado do magnetometro com NACK
+  twi_stop();                   //Gerar STOP para finalizar
   return dado;
 }
-
 
 //(60) lê em bloco os registradores do magnetometro
 void mpu_rd_mg_blk(byte reg, byte *dado, byte qtd){
   byte i;
-  twi_start(60);                  //START
-  twi_er(MAG_I2C_ADDR_WR, 61);    //Endereçar MPU para escrita
-  twi_dado_er(reg, 62);           //Informar registrador
-  twi_start_rep(63);              //START Repetido
-  twi_et(MAG_I2C_ADDR_RD, 64);     //Endereçar Magnetometro para leitura
+  twi_start(60);                    //START
+  twi_er(MAG_I2C_ADDR_WR, 61);      //Endereçar MPU para escrita
+  twi_dado_er(reg, 62);             //Informar registrador
+  twi_start_rep(63);                //START Repetido
+  twi_et(MAG_I2C_ADDR_RD, 64);      //Endereçar Magnetometro para leitura
 
   for (i=0; i<qtd; i++)
     dado[i] = twi_dado_et_ack(65);  //Receber dados e gerar ACK
     
-  dado = twi_dado_et_nack(66);  //Receber último dado e gerar NACK
-  twi_stop();                   //Gerar STOP para finalizar
-
+  dado = twi_dado_et_nack(66);      //Receber último dado e gerar NACK
+  twi_stop();                       //Gerar STOP para finalizar
 }
-
-
 
 // (70) escreve no magnetometro
 byte mpu_wr_mg_reg(byte reg, byte dado){
@@ -132,26 +145,6 @@ byte mpu_wr_mg_reg(byte reg, byte dado){
   twi_dado_er(reg, 72);         //informa o registrador
   twi_dado_er(dado, 73);        //informa o dado
   twi_stop();                   //stop
-}
-
-//deve retornar 0x48
-byte mag_whoami(){
-  byte who = 0;
-  who = mpu_rd_mg_reg(0x00);
-  return who;
-}
-
-// Ler Magnetômetro
-// Retorna vetor de 3 words [hx hy hz]
-void mpu_rd_mg_out(word *vetor){
-  byte i,vet[6];
-
-  mpu_rd_mg_blk(MAG_XOUT_L, vet, 6);
-
-  vetor[0] = (int)((int)(vet [1] << 8) | vet[0]);    //Montar Mag X
-  vetor[1] = (int)((int)(vet [3] << 8) | vet[2]);    //Montar Mag Y
-  vetor[2] = (int)((int)(vet [5] << 8) | vet[4]);    //Montar Mag Z
-
 }
 
 

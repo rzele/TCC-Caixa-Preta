@@ -273,19 +273,20 @@ char teste_5(char md){
 
 // 6 - MPU - Magnetômetro
 char teste_6(char md){
-  byte who;
+  byte mag_st,who,asa[3];
   int vetor[3];
   char *msg="[6] MPU6050 Magneto";
+  word cont=0,drdy_l=0,drdy_h=0;
+  float perc;
 
-  // Devo colocar aqui a configuração
-  mpu_mag_config();       //Configurar o magnetômetro
+  mpu_mg_config();       //Configurar o magnetômetro
 
   lcd_apaga();
   lcd_str(0,0,msg);
   ser_str(msg);
   ser_crlf(1);
 
-  who = mag_whoami();
+  who = mpu_mg_whoami();
   lcd_str(1,0,"Who am I = ");
   lcd_hex8(1,11,who);
   ser_str("MPU MAG retornou Who am I = ");
@@ -300,35 +301,60 @@ char teste_6(char md){
   }
   delay(800);
 
-  //print de asax, asay e asaz
-  ser_str("asa:");ser_crlf(1);
-  ser_hex8(mag_asa[0]);ser_crlf(1);
-  ser_hex8(mag_asa[1]);ser_crlf(1);
-  ser_hex8(mag_asa[2]);ser_crlf(1);
-  lcd_str(2,0,"ASA:");
-  lcd_hex8(2,5, mag_asa[0]);
-  lcd_hex8(2,8, mag_asa[1]);
-  lcd_hex8(2,11,mag_asa[2]);
+  //Ler e imprimir asax, asay e asaz
+  mpu_rd_mg_rom(asa);
+  ser_str("\nASA: ");
+  ser_hex8(asa[0]);   ser_spc(2);
+  ser_hex8(asa[1]);   ser_spc(2);
+  ser_hex8(asa[2]);   ser_crlf(1);
 
   mpu_sample_rt(SAMPLE_RT_100Hz);
   mpu_int();
 
+  lcd_str(2,0,"DRDY=X    HOFL=X");
   lcd_str(3,0,"X:hhhh Y:hhhh Z:hhhh");
   while(TRUE){
     if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
      mpu_dado_ok=FALSE;
-     mpu_rd_mg_out(vetor);
+     cont++;
+     mag_st=mpu_rd_mg(vetor);     //Ler  ST1-hx-hy-hz-ST2
  
      //escreve no LCD   
      lcd_hex16(3,2, vetor[0]);
      lcd_hex16(3,9, vetor[1]);
-     lcd_hex16(3,16,vetor[2]); 
+     lcd_hex16(3,16,vetor[2]);
 
      //escreve no serial
      ser_str("X:");     ser_hex16(vetor[0]);
      ser_str("   Y:");  ser_hex16(vetor[1]);
      ser_str("   Z:");  ser_hex16(vetor[2]);
-     ser_crlf(1);
+
+     if (mag_st==1){        //Tudo certo
+       lcd_char(2, 5,'1');  
+       lcd_char(2,15,'0');
+       ser_str("    OK ");
+       drdy_h++;
+     }
+     else if(mag_st==0){    //Dado não pronto
+       lcd_char(2, 5,'0');  
+       lcd_char(2,15,'0');
+       ser_str("   NOK ");
+       drdy_l++;
+     }
+     else if(mag_st==2){    //Sensor Overflow
+       lcd_char(2, 5,'1');  
+       lcd_char(2,15,'1');  
+       ser_str("  Sensor Overflow");      
+     }
+     ser_dec16unz(cont);
+     ser_str(": ");
+     ser_dec16unz(drdy_h);
+     ser_str(" / ");
+     ser_dec16unz(drdy_l);
+     ser_str(" ==> ");
+     perc=(100.*drdy_h)/cont;
+     ser_float(perc,1);
+     ser_str("%\n");
    }    
    if (sw_tira(&who))     break;
   }
@@ -977,11 +1003,92 @@ char teste_16(char md){
   return md;
 }
 
-// 17 - Vazio
+// 17 - MAG ==> Matlab
+// Testar magnetômetro com o Matlab
 char teste_17(char md){
-  lcd_str(0,0,teste_msg[md]);
-  ser_str(teste_msg[md]);
-  sw_qq_tecla();
+  char *msg="[17] MPU --> Matlab";
+  byte mag_st,who,asa[3];
+  int vetor[3],hx,hy,hz;
+  float vtf[7];
+  word ac_esc, giro_esc;
+  lcd_apaga();
+  lcd_str(0,0,msg);
+  ser_str(msg);
+  ser_crlf(1);
+
+  mpu_config();         //MPU configurar
+  mpu_mg_config();      //MAG configurar
+
+  who = mpu_mg_whoami();
+  lcd_str(1,0,"Who am I = ");
+  lcd_hex8(1,11,who);
+  ser_str("MPU MAG retornou Who am I = ");
+  ser_hex8(who);
+  if (who == MAG_WHO){
+    lcd_str(1,13,"h OK");  //MPU respondendo
+    ser_str("h ==> OK!");
+  }
+  else{
+    lcd_str(1,13,"h NOK");  //MPU respondendo
+    ser_str("h ==> NOK! ERRO");
+  }
+  delay(1000);
+  lcd_str(3,0,"Inicia em 1 seg.");
+  ser_str("\nInicia em 1 segundo.\n");
+  
+  // Iniciar transmissão
+  //delay(1000);
+  ser_str("#[");      //Avisar Matlab
+  mpu_rd_mg_rom(asa);
+  ser_dec8(asa[0]);   ser_crlf(1);
+  ser_dec8(asa[1]);   ser_crlf(1);
+  ser_dec8(asa[2]);   ser_crlf(1);
+  
+  // Habilitar interrupção MPU (Dado Pronto)
+  mpu_sample_rt(SAMPLE_RT_100Hz);
+  mpu_int();
+
+  lcd_str(2,0,"DRDY=X    HOFL=X");
+  lcd_str(3,0,"X:hhhh Y:hhhh Z:hhhh");
+  while(TRUE){
+    while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
+    mpu_dado_ok=FALSE;
+    mag_st=mpu_rd_mg(vetor);
+
+    if (mag_st==1){        //Tudo certo
+     lcd_char(2, 5,'1');  
+     lcd_char(2,15,'0');  
+   }
+   else if(mag_st==0){    //Dado não pronto
+     lcd_char(2, 5,'0');  
+     lcd_char(2,15,'0');  
+     //vetor[0]=vetor[1]=vetor[2]=0;
+     //vetor[0]=hx;
+     //vetor[1]=hy;
+     //vetor[2]=hz;
+   }
+   else if(mag_st==2){    //Sensor Overflow
+     lcd_char(2, 5,'1');  
+     lcd_char(2,15,'1');  
+   }
+    ser_dec16(vetor[0]);    ser_crlf(1);    //hx
+    ser_dec16(vetor[1]);    ser_crlf(1);    //hy
+    ser_dec16(vetor[2]);    ser_crlf(1);    //hz
+
+    //escreve no LCD   
+    lcd_hex16(3,2, vetor[0]);
+    lcd_hex16(3,9, vetor[1]);
+    lcd_hex16(3,16,vetor[2]);
+    hx=vetor[0];
+    hy=vetor[1];
+    hz=vetor[2];
+
+    if (sw_tira(&who))     break;    
+  }
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
+  ser_str("\n--- Fim ---\n");
   return md;
 }
 
