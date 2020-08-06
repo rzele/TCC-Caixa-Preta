@@ -18,7 +18,8 @@ void teste(void){
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     //modo=13;
-    modo=sel_modo(teste_msg, TESTE_TOT);
+    modo=TESTE_12;
+    // modo=sel_modo(teste_msg, TESTE_TOT);
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
@@ -780,7 +781,7 @@ char teste_11(char md){
 char teste_12(char md){
   char *msg="[12] MPU --> Matlab";
   byte who;
-  word vt[7];
+  word vt[7], vt_mag[3];
   word count = 0;
   float vtf[7];
   word ac_esc, giro_esc;
@@ -788,6 +789,10 @@ char teste_12(char md){
   lcd_str(0,0,msg);
   ser_str(msg);
   ser_crlf(1);
+
+  mpu_config();         //MPU configurar
+  mpu_mg_config();       //Configurar o magnetômetro
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
 
   mpu_acorda();     //Acordar MPU
   who=mpu_whoami();
@@ -799,11 +804,13 @@ char teste_12(char md){
     return  FALSE;
   }
 
-  //lcd_cursor_lc(1,0);
-  //lcd_str(2,0,"Qq tecla inicia TX");
-  //while(sw_tira(&who)==FALSE);
-  mpu_config();         //MPU configurar
-  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
+  who = mpu_mg_whoami();
+  if (who != MAG_WHO){
+    lcd_str(1,0,"h NOK");  //MPU respondendo
+    ser_str("MAG nao repsonde!");
+  }
+  delay(800);
+
   ac_esc=2;
   giro_esc=250;
   delay(500);
@@ -824,6 +831,7 @@ char teste_12(char md){
     while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
     mpu_dado_ok=FALSE;
     mpu_rd_ac_tp_gi(vt);  //Ler MPU
+    mpu_rd_mg(vt_mag);     //Ler  ST1-hx-hy-hz-ST2
 
     // Calcular acelerações e giros
     vtf[0]=ac_esc*((float)vt[0]/32767);
@@ -848,12 +856,15 @@ char teste_12(char md){
     lcd_dec16nz(3,15,vtf[6]);
 
     //Enviar pela porta serial
-    ser_dec16(vt[0]);   ser_str(";");           //ax
-    ser_dec16(vt[1]);   ser_str(";");           //ay
-    ser_dec16(vt[2]);   ser_str(";");           //az
-    ser_dec16(vt[4]);   ser_str(";");           //gx
-    ser_dec16(vt[5]);   ser_str(";");           //gy
-    ser_dec16(vt[6]);   ser_str(";");           //gz
+    ser_dec16(vt[0]);       ser_str(";");           //ax
+    ser_dec16(vt[1]);       ser_str(";");           //ay
+    ser_dec16(vt[2]);       ser_str(";");           //az
+    ser_dec16(vt[4]);       ser_str(";");           //gx
+    ser_dec16(vt[5]);       ser_str(";");           //gy
+    ser_dec16(vt[6]);       ser_str(";");           //gz
+    ser_dec16(vt_mag[0]);   ser_str(";");           //hx
+    ser_dec16(vt_mag[1]);   ser_str(";");           //hy
+    ser_dec16(vt_mag[2]);                           //hz
     ser_crlf(1);
 
     count = count + 1;

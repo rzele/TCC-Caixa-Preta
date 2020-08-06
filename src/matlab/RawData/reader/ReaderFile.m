@@ -50,8 +50,8 @@ classdef ReaderFile < ReaderCore
                  data = obj.read_sample();
                  obj.read_current_attempts = 0;
              else
-                % Retorna somente os dados de acelerometro e giro, adicionado de um placeholder de temperatura=0
-                data = data(3:8);
+                % Retorna somente os dados de acelerometro, giro e magnetometro
+                data = data(3:11);
              end
 
         end

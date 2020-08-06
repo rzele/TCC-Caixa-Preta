@@ -237,7 +237,7 @@ Para facilitar a compreenção dos dados, temos gravado pequenos vídeos rápido
 
 Neste vídeo são tradados os movimentos de:
 - [01 - Rotação em Y de 90º (Demonstração de gimbal lock)](https://youtu.be/8xyNOZJKFkw):
-- [02 - Rotação em Z de 360º (Demonstração de angulo relativo)](https://youtu.be/J2QXxI8baL4):
+- [02 - Rotação em X de 360º (Demonstração de angulo relativo)](https://youtu.be/J2QXxI8baL4):
 - [03 - Rotação em XYX sequencial de 90º (simulação de rotação em Z com gimbal lock)](https://youtu.be/91p0657zZo0):
 - [04 - Rotação em XZX sequencial de 90º (simulação de rotação em Y sem gimbal lock)](https://youtu.be/dAieWHo6C8w):
 - [05 - Rotação em XYZ individual de 45º](https://youtu.be/7_JKSZZgf8M):
