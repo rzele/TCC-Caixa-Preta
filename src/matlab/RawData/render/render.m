@@ -65,6 +65,8 @@ classdef Render < handle
                 new_plot = Plot3DCar(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
             elseif strcmp(type_name, 'plot3dline')
                 new_plot = Plot3DLine(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
+            elseif strcmp(type_name, 'plotcompass')
+                new_plot = PlotCompass(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(obj_name).grid);
             else
                 error('type_name is invalid');
             end
