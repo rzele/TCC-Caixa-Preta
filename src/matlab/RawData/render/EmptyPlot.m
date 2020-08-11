@@ -19,6 +19,12 @@ classdef EmptyPlot < CustomPlot
         
         function rotateWithQuaternion(obj)
         end
+
+        function setCompass(obj)
+        end
+
+        function rotateCompass(obj)
+        end
         
     end
     

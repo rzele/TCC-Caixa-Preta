@@ -20,8 +20,8 @@ Acel = 'A';                                 % Aceleração X,Y,Z
 Vel = 'B';                                  % Velocidade X,Y,Z
 Space = 'C';                                % Espaço percorrido X,Y,Z
 Gvel = 'D';                                 % Velocidade angular em X,Y,Z
-Gdeg = 'E';                                 % Posição angular em Z,Y,X relativo (em rela??o a Posição anterior)
-Gtilt = 'F';                                % Posição angular em Z,Y,X absoluto (em rela??o aos eixos iniciais)
+Gdeg = 'E';                                 % Posição angular em Z,Y,X relativo (em relação a Posição anterior)
+Gtilt = 'F';                                % Posição angular em Z,Y,X absoluto (em relação aos eixos iniciais)
 Mag = 'G';                                  % Magnetometro
 FusionTilt = 'H';                           % Posição angular em Z,Y,X absoluto, usando Aceleração e magnetometro
 CompTilt = 'I';                             % Posição angular usando o filtro complementar
@@ -30,11 +30,11 @@ MadgwickTilt = 'K';                         % Posição angular usando o filtro de
 Quat = 'L';                                 % Plot dos valores de quaternions obtidos pno filtro de madgwick
 Acel_G = 'M';                               % Aceleração desconsiderando a gravidade (utilizando o melhor filtro p/ remove-la)
 Quat = 'N';                                 % Plot com os valore de quaternion extraidos do filtro de madgwick
-Card3DGdeg = 'O';                           % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rota??o (Gdeg)
-Card3DGtilt = 'P';                          % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rota??o (Gtilt)
-Card3DFusion = 'Q';                         % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rota??o (FusionTilt)
-Card3DComp = 'R';                           % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rota??o (CompTilt)
-Card3DKalman = 'S';                         % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rota??o (KalmanTilt)
+Card3DGdeg = 'O';                           % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (Gdeg)
+Card3DGtilt = 'P';                          % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (Gtilt)
+Card3DFusion = 'Q';                         % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (FusionTilt)
+Card3DComp = 'R';                           % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (CompTilt)
+Card3DKalman = 'S';                         % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (KalmanTilt)
 Card3DMadgwick = 'T';                       % Posição angular atual usando um objeto 3D rotacionando utilizando quaternios advindos do filtro de Madgwick
 CompassLine = 'U';                          % Angulo de yaw estraido do magnetometro sem compensação de tilt plotado em plano cartesiano
 Compass = 'V';                              % Angulo de yaw estraido do magnetometro sem compensação de tilt plotado em plano polar
@@ -57,7 +57,9 @@ plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo rea
 freq_render=5;               % Frequencia de atualização do plot
 layout= {...                 % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-        Compass, CompassLine
+        CompassLine,   CompassLine;...
+        MadgwickTilt, MadgwickTilt;...
+        Card3DMadgwick, Vazio;...
      
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -125,13 +127,13 @@ gz=ax;                                  % Giro/s eixo Z
 hx=ax;                                  % Leitura do magnetometro X
 hy=ax;                                  % Leitura do magnetometro Y
 hz=ax;                                  % Leitura do magnetometro Z
-gPitch=ax;                              % Movimento de Pitch usando giro/s (relativo a ultima Rota??o do corpo)
-gRoll=ax;                               % Movimento de Roll usando giro/s (relativo a ultima Rota??o do corpo)
-gYaw=ax;                                % Movimento de Yaw usando giro/s (relativo a ultima Rota??o do corpo)
-gPitch_abs=ax;                          % Movimento de Pitch usando giro/s e matriz de Rota??o (em rela??o a Posição inicial do corpo)
-gRoll_abs=ax;                           % Movimento de Roll usando giro/s e matriz de Rota??o (em rela??o a Posição inicial do corpo)
-gYaw_abs=ax;                            % Movimento de Yaw usando giro/s e matriz de Rota??o (em rela??o a Posição inicial do corpo)
-Rot=[[1,0,0];[0,1,0];[0,0,1]];          % Matriz de Rota??o que move o corpo da Posição inicial p/ a atual
+gPitch=ax;                              % Movimento de Pitch usando giro/s (relativo a ultima Rotação do corpo)
+gRoll=ax;                               % Movimento de Roll usando giro/s (relativo a ultima Rotação do corpo)
+gYaw=ax;                                % Movimento de Yaw usando giro/s (relativo a ultima Rotação do corpo)
+gPitch_abs=ax;                          % Movimento de Pitch usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
+gRoll_abs=ax;                           % Movimento de Roll usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
+gYaw_abs=ax;                            % Movimento de Yaw usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
+Rot=[[1,0,0];[0,1,0];[0,0,1]];          % Matriz de Rotação que move o corpo da Posição inicial p/ a atual
 aPitch=ax;                              % Movimento de Pitch usando Aceleração
 aRoll=ax;                               % Movimento de Roll usando Aceleração
 mYaw=ax;                                % Movimento de Yaw usando Magnetômetro
@@ -230,12 +232,12 @@ plotKalmanTilt.setProperties('Filtro de Kalman', 'Amostra', 'graus', {'Roll', 'P
 plotMadgwickTilt.setProperties('Filtro de Madgwick', 'Amostra', 'graus', {'Roll', 'Pitch', 'Yaw'});
 plotQuat.setProperties('Quaterions do filtro de Madgwick', 'Amostra', 'val', {'q1', 'q2', 'q3', 'q4'});
 plotAcel_G.setProperties('Aceleração em g sem gravidade', 'Amostra', 'g', {'aX', 'aY', 'aZ'});
-plotCard3DGdeg.setProperties('Rota??o 3D usando Posição angular relativa');
-plotCard3DMadgwick.setProperties('Rota??o 3D usando quaternions (filtro Madgwick)');
-plotCard3DGtilt.setProperties('Rota??o 3D usando Posição angular absoluta');
-plotCard3DFusion.setProperties('Rota??o 3D usando acel e mag');
-plotCard3DComp.setProperties('Rota??o 3D usando filtro complementar');
-plotCard3DKalman.setProperties('Rota??o 3D usando filtro de kalman');
+plotCard3DGdeg.setProperties('Rotação 3D usando Posição angular relativa');
+plotCard3DMadgwick.setProperties('Rotação 3D usando quaternions (filtro Madgwick)');
+plotCard3DGtilt.setProperties('Rotação 3D usando Posição angular absoluta');
+plotCard3DFusion.setProperties('Rotação 3D usando acel e mag');
+plotCard3DComp.setProperties('Rotação 3D usando filtro complementar');
+plotCard3DKalman.setProperties('Rotação 3D usando filtro de kalman');
 plotSpace3D.setProperties('Posição 3D (usando filtro de kalman)');
 plotCompassLine.setProperties('Magnetic Heading sem compensação de tilt', 'Amostra', 'graus', {'Yaw'});
 plotCompass.setProperties('Magnetic Heading sem compensação de tilt');
@@ -311,7 +313,7 @@ while true
     hy = [hy(2:max_size) data(8)];
     hz = [hz(2:max_size) data(9)];
 
-    %% Calcula Yaw, Pitch e Roll realtivos(em rela??o a ultima Rota??o do corpo) p/ a nova amostra usando giro
+    %% Calcula Yaw, Pitch e Roll realtivos(em relação a ultima Rotação do corpo) p/ a nova amostra usando giro
     % Usando o giro, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
@@ -326,7 +328,7 @@ while true
         gYaw    = [gYaw(2:max_size)   newYaw];
     end
     
-    %% Calcula a matriz de Rota??o (Z,Y,X) que foi responsável por mover o corpo da Posição da amostra anterior para a atual
+    %% Calcula a matriz de Rotação (Z,Y,X) que foi responsável por mover o corpo da Posição da amostra anterior para a atual
     % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
     if isOneIn(setted_objects_name, {Gtilt, FusionTilt, CompTilt, Card3DGtilt, Card3DFusion, Card3DComp})
         delta_gPitch = gPitch(max_size) - gPitch(max_size-1);
@@ -349,11 +351,11 @@ while true
         ];
         temp_R = temp_Rz * temp_Ry * temp_Rx;
 
-        % Calcula a matriz de Rota??o (Z,Y,X) que move o corpo da Posição inicial para a Posição atual
+        % Calcula a matriz de Rotação (Z,Y,X) que move o corpo da Posição inicial para a Posição atual
         Rot = Rot * temp_R;
 
 
-        %% Extrai Yaw, Pitch e Roll absolutos(em rela??o a Posição inicial do corpo) p/ a nova amostra usando a atual matriz de Rota??o (Z,Y,X)
+        %% Extrai Yaw, Pitch e Roll absolutos(em relação a Posição inicial do corpo) p/ a nova amostra usando a atual matriz de Rotação (Z,Y,X)
         % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
         newRoll = atan2(Rot(3,2), Rot(3,3)) * 180/pi;
         newYaw = atan2(Rot(2,1), Rot(1,1)) * 180/pi;
@@ -387,10 +389,10 @@ while true
         plotCompass.rotateCompass(compass_ang(max_size));
     end
 
-    %% Calcula Yaw, Pitch e Roll absolutos(em rela??o a Posição inicial do corpo) p/ a nova amostra usando Aceleração
+    %% Calcula Yaw, Pitch e Roll absolutos(em relação a Posição inicial do corpo) p/ a nova amostra usando Aceleração
     % Usando a Aceleração, usamos o vetor de gravidade que deve sempre
     % estar presente p/ determinar a Posição do corpo
-    % assim temos que p/ a order de Rota??o Z,Y,X
+    % assim temos que p/ a orderm de Rotação Z,Y,X
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {FusionTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space, Card3DFusion, Card3DKalman, Card3DComp, Space3D})
         newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
@@ -406,7 +408,7 @@ while true
         aRoll   = [aRoll(2:max_size)   newRoll];
     end
 
-    %% Calcula Rota??o usando filtro complementar
+    %% Calcula Rotação usando filtro complementar
     % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
     if isOneIn(setted_objects_name, {CompTilt, Card3DComp})
         newRoll = (1-mu)*(compl_Roll(max_size) + delta_gRoll) + mu*aRoll(max_size);
@@ -418,7 +420,7 @@ while true
         % compl_Yaw = [compl_Yaw(2:max_size) newYaw]
     end
 
-    %% Calcula Rota??o usando filtro de Kalman
+    %% Calcula Rotação usando filtro de Kalman
     % Ref do calculo: https://www.youtube.com/watch?v=urhaoECmCQk
     % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
     if isOneIn(setted_objects_name, {KalmanTilt, Acel_G, Vel, Space, Card3DKalman, Space3D})
@@ -435,13 +437,14 @@ while true
         kalman_Pitch = [kalman_Pitch(2:max_size)  pitch_and_bias(1)];
     end
     
-    %% Calcula Rota??o usando filtro de madgwick
+    %% Calcula Rotação usando filtro de madgwick
     % Ref do calculo: https://nitinjsanket.github.io/tutorials/attitudeest/madgwick
     % e https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
     if isOneIn(setted_objects_name, {MadgwickTilt, Card3DMadgwick, Quat})
         gyroscope = [gx(max_size), gy(max_size), gz(max_size)] * (pi/180) ;
         accelerometer = [ax(max_size), ay(max_size), az(max_size)];
-        madgwickFilter.UpdateIMU(gyroscope, accelerometer);
+        magnetometer = [hx(max_size), hy(max_size), hz(max_size)];
+        madgwickFilter.Update(gyroscope, accelerometer, magnetometer);
 
         % Converte o resultado do filtro de quaternion para angulos absolutos (relativo a terra) em euler
 
@@ -503,7 +506,7 @@ while true
         pz = [pz(2:max_size)  newPz];
     end
 
-    %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rota??o absoluta, relativa, filtro de kalman ...)
+    %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
     if isOneIn(setted_objects_name, Card3DGdeg)
         plotCard3DGdeg.rotateWithEuler(gRoll(max_size), gPitch(max_size), gYaw(max_size));
     end

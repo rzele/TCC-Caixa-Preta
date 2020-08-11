@@ -6,6 +6,8 @@ O script tem por objetivo apresentar de forma simples os dados e cálculos envol
 
 Para um bom entendimento dos tratamentos feitos com os dados do MPU basta seguir o arquivo main, ignorando os demais que são arquivos secundários, e estudando as referências deixadas no meio do código do script main.
 
+> Ao analisar as contas, leve em consideração os eixos de cada sensor que compõem o MPU (MPU9250 datasheet - seção 9.1)
+
 ## Sumário
 - [MPU - Raw data](#mpu---raw-data)
   - [Sumário](#sumário)
