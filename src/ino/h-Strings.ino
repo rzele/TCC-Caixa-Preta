@@ -210,6 +210,17 @@ void str_float(float f, byte prec, char *msg){
 //////////////// 32 bits ///////////////////////////
 ////////////////////////////////////////////////////
 
+// Transforma uma string em long
+long str_to_dec32(char *vt){
+  long nr=0,sinal;
+  char c,i=0;
+  if (vt[i]=='+') {sinal=1;   i++;}
+  if (vt[i]=='-') {sinal=-1;  i++;}
+  while(vt[i] != '\0')
+    nr = 10*nr+vt[i++]-0x30;    
+  return sinal*nr;
+}
+
 // dec32 - Decinal 32 bits com sinal e com zeros à esquerda
 // msg = +4 294 967 295 \0 - 12 posições
 void str_dec32(long c, char *msg){

@@ -36,87 +36,36 @@ void sram_op_dados(void){
   long xl;
   byte msg[20];
 
-  // Bateu?
-  x=sram_rd_16b(OP_BATEU);    //Bateu?
-  ser_dec16unz(x);    ser_crlf(1);
-  
-  x=sram_rd_16b(OP_ST_OK);  // Sef-Test?
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OP_CF_OK);  // Calibração de Fábrica?
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_FREQ_AG);  // Calibração - Freq
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_BW_AG);  // Calibração - BW
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_ESC_AC);  // Calibração - Escala Acelerômetro
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_ESC_GI);  // Calibração - Escala Giroscópio
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_QTD_AG);  // Qtd de medidas Acel e Giro
-  ser_dec16unz(x);    ser_crlf(1);
-
-  sram_rd_blk(OPC_AX,msg,14);  //Médias = Erro intrínseco
+  ser_dec16unz(sram_rd_16b(OP_OK));         ser_crlf(1);  //Fez Calibração ao ligar?
+  ser_dec16unz(sram_rd_16b(OP_BATEU));      ser_crlf(1);  //Bateu?
+  ser_dec16unz(sram_rd_16b(OP_ST_OK));      ser_crlf(1);  //Passou MPU Self-Test?
+  ser_dec16unz(sram_rd_16b(OP_STH_OK));     ser_crlf(1);  //Passou MAG Self-Test?
+  ser_dec16unz(sram_rd_16b(OP_CF_OK));      ser_crlf(1);  //Fez Calibração de Fábrica (acel e giro)?
+  ser_dec16unz(sram_rd_16b(OP_CFH_OK));     ser_crlf(1);  //Fez Calibração do Magnetômetro?
+  ser_dec16unz(sram_rd_16b(OPC_FREQ_AG));   ser_crlf(1);  //Calibração ao ligar - Freq Hz
+  ser_dec16unz(sram_rd_16b(OPC_BW_AG));     ser_crlf(1);  //Calibração ao ligar - BW
+  ser_dec16unz(sram_rd_16b(OPC_ESC_AC));    ser_crlf(1);  //Calibração ao ligar - Escala Acelerômetro
+  ser_dec16unz(sram_rd_16b(OPC_ESC_GI));    ser_crlf(1);  //Calibração ao ligar - Escala Giroscópio
+  ser_dec16unz(sram_rd_16b(OPC_QTD_AG));    ser_crlf(1);  //Calibração ao ligar - Qtd de medidas Acel e Giro
+  sram_rd_blk(OPC_AX,msg,14);                             //Médias = Erro intrínseco
   ser_lin_ac_tp_gi(msg); 
-
-  x=sram_rd_16b(OPC_QTD_MG);  // Qtd de medidas Mag
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OPC_ESC_MG);  //Escala MG
-  ser_dec16unz(x);    ser_crlf(1);
-  
-  x=sram_rd_16b(OPC_HX);  //Média HX
-  ser_dec16unz(x);    ser_spc(1);
-  x=sram_rd_16b(OPC_HY);  //Média HY
-  ser_dec16unz(x);    ser_spc(1);
-  x=sram_rd_16b(OPC_HZ);  //Média HZ
-  ser_dec16unz(x);    ser_crlf(1);
-
-  //Operação
-  x=sram_rd_16b(OP_FREQ_AG);  //Operação - Freq
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OP_BW_AG);  //Operação - BW
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OP_ESC_AC);  //Operação - Escala Acelerômetro
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OP_ESC_GI);  //Operação - Escala Giroscópio
-  ser_dec16unz(x);    ser_crlf(1);
-
-  x=sram_rd_16b(OP_ESC_MG); //Opera Escala Mag 
-  ser_dec16unz(x);    ser_crlf(1);
-
-  sram_rd_blk(OP_LIM_AX,msg,14);  //Limiares para disparo
+  ser_dec16unz(sram_rd_16b(OP_FREQ_AG));    ser_crlf(1);  //Operação - Freq Hz
+  ser_dec16unz(sram_rd_16b(OP_BW_AG));      ser_crlf(1);  //Operação - BW
+  ser_dec16unz(sram_rd_16b(OP_ESC_AC));     ser_crlf(1);  //Operação - Escala Acelerômetro
+  ser_dec16unz(sram_rd_16b(OP_ESC_GI));     ser_crlf(1);  //Operação - Escala Giroscópio
+  sram_rd_blk(OP_LIM_AX,msg,14);                          //Limiares para disparo
   ser_lin_ac_gi(msg); 
-
-  ser_dec32unz(sram_rd_32b(OP_MPU_ADR));    ser_crlf(1);  //Enderço MPU no disparo
-  
-  ser_dec32unz(sram_rd_32b(OP_GPS_ADR));    ser_crlf(1);  //Enderço GPS no disparo
-
-  x=sram_rd_16b(OP_DISP_TP); //Temperatura no momento do disparo
-  ser_dec16unz(x);    ser_crlf(1);
-
-  sram_rd_blk(OP_DISP_AX,msg,14);  //Quem disparou?
+  ser_dec32unz(sram_rd_32b(OP_MPU_ADR));    ser_crlf(1);  //Endereço MPU no disparo
+  ser_dec32unz(sram_rd_32b(OP_GPS_ADR));    ser_crlf(1);  //Endereço GPS no disparo
+  ser_dec16unz(sram_rd_16b(OP_DISP_TP));    ser_crlf(1);  //Temperatura no momento do disparo
+  sram_rd_blk(OP_DISP_AX,msg,14);                         //Quem disparou?
   ser_lin_ac_gi(msg); 
-
-  ser_dec32unz(sram_rd_32b(OP_ULT_ADR));  //Último endereço usado
-
-  x=sram_rd_16b(OP_BRK);
-  ser_dec16unz(x);    ser_crlf(1);
-
-  sram_rd_str(OP_AC_DATA, msg, 14); //Data do acidente
+  ser_dec16unz(sram_rd_16b(OP_BRK));        ser_crlf(1);  //Aquisição interrompida?
+  ser_dec32unz(sram_rd_32b(OP_ULT_ADR));    ser_crlf(1);  //Último endereço usado
+  sram_rd_str(OP_AC_DATA, msg, 14);                       //Data do acidente
   ser_str(msg);   ser_crlf(1);
-  
-  sram_rd_str(OP_AC_HORA, msg, 14); //Hora do acidente
+  sram_rd_str(OP_AC_HORA, msg, 14);                       //Hora do acidente
   ser_str(msg);   ser_crlf(1);
-
 }
 
 
@@ -383,8 +332,8 @@ void sram_zera(void){
 void sram_wr_blk(long adr, byte *vet, word qtd){
   word cont,aux;
   long adrf;
-  adrf=adr+qtd;
-  if ( (adr&0xFE0000L) == (adrf&0xFE0000L) ){ //Verificar pag de 128K
+  adrf=adr+qtd-1;
+  if ( (adr&0xFE0000L) == (adrf&0xFE0000L) ){ //Verificar fronteira de 128K
     //ser_str("\nWR Pag1\n");
     if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0
     else                          spi_cs1();  //Selecionar SRAM1
@@ -442,7 +391,7 @@ void sram_wr_blk(long adr, byte *vet, word qtd){
 void sram_rd_blk(long adr, byte *vet, word qtd){
   word cont,aux;
   long adrf;
-  adrf=adr+qtd;
+  adrf=adr+qtd-1;
   if ( (adr&0xFE0000L) == (adrf&0xFE0000L) ){ //Verificar pag de 128K
     //ser_str("\nRD Pag1\n");
     if ((adr&0xF0000L)<0x20000L)  spi_cs0();  //Selecionar SRAM0

@@ -97,6 +97,14 @@ ISR(TIMER1_COMPA_vect){
   }
   lcd_rr = (lcd_rr+1)&3;
 
+  //Verificar fila sero (saída UART0 e UART2)
+  if (sero_parou == TRUE){
+    if (sero_tira(&i) == TRUE){
+      UDR0=i;
+      UDR2=i;
+      sero_parou=FALSE;
+    }
+  }
 
   // Demais tarefas do Timer 1
   switch(timer1_cont){

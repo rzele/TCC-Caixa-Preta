@@ -3,6 +3,7 @@
 // 10/01/2019
 
 
+
 // MPU
 volatile byte mpu_dado_ok;    //Indicar que MPU tem novo dado
 
@@ -19,14 +20,15 @@ volatile byte lcd_rr;                //Timer1 - Round Robin para descobrir qual 
 // Teclas - Nome das teclas com apenas 3 letras
 //                  0     1      2     3     4      5      6      7      8      9      10
 char *sw_nome[]={"SEL","?1?", "ESQ","SUP","DIR", "?5?", "INF", "NAD", "SQ1", "SQ2", "???"};
-volatile char sw_fila[SER_TX_FILA_TAM]; //Espaço para a fila teclado
+//volatile char sw_fila[SER_TX_FILA_TAM]; //Espaço para a fila teclado
+volatile char sw_fila[SW_FILA_TAM]; //Espaço para a fila teclado
 volatile byte sw_pin, sw_pout;          //Ponteiros para usar a fila
 volatile byte sw_1,sw_2,sw_n,sw_v;      //Variáveis para detectar teclas acionadas
 volatile byte sw_st_seq1,sw_st_seq2;    //Maq Estados para buscar sequências
 
 
 // TESTE - Mensagens do modo de teste
-char *teste_msg[]={ "ERRO",               //0
+char *teste_msg[]={ "0-Vai para Opera",        //0
                     "1-LEDs",             //1
                     "2-LCD",              //2
                     "3-Teclado",          //3
@@ -46,30 +48,22 @@ char *teste_msg[]={ "ERRO",               //0
                     "17-Vazio"};          //17
                     
 // OPERA - Mensagens do modo de Operação
-char *opera_msg[]={ "ERRO",     //0
-                    "1-Vazio",  //1
-                    "2-Vazio",  //2
-                    "3-vazio",  //3
-                    "4-Vazio",  //4
-                    "5-Ensaio", //5
-                    "6-Caixa Preta Alfa", //6
-                    "7-Calibra Fab",      //7
-                    "8-Adquirir Dados",  //8
-                    "9-Adquirir com BT"};  //9
+char *opera_msg[]={ "0-Vai para Teste",   //0
+                    "1-Adquirir Dados",   //1
+                    "2-Vazio",            //2
+                    "3-vazio",            //3
+                    "4-Vazio",            //4
+                    "5-Calibra Fab",      //5
+                    "6-Calibra Mag",      //6
+                    "7-Vazio",            //7
+                    "8-Vazio",            //8
+                    "9-Vazio"};           //9
                     
 
 // Aleat - Gerador pseudo-aleatório
 volatile word rrand_m ;  //multiplicador
 volatile word rrand_d;   //divisor
 volatile word rrand_u;   //semente
-
-// Bluetooth
-volatile byte bt_rx_ok;                    //Indica que terminou recepção
-volatile byte bt_tx_ok;                    //Indica que terminou transmissão
-volatile char bt_rx_fila[BT_RX_FILA_TAM];  //Espaço para a fila serial de RX
-volatile byte bt_rx_pin, bt_rx_pout;       //Ponteiros para usar a fila
-volatile char bt_tx_fila[BT_TX_FILA_TAM];  //Espaço para a fila serial de RX
-volatile byte bt_tx_pin, bt_tx_pout;       //Ponteiros para usar a fila
 
 //GPS
 volatile byte gps_dados[GPS_DADOS_TAM];     //Vetor para guardar dados extraídos das msg do GPS
@@ -91,21 +85,18 @@ byte *gps_t="$GPRMC,083559.00,A,4717.11437,N,00833.91522,E,0.004,77.52,091202,,,
 volatile byte timer1_cont;       //(0, ..., 49) Contar estados do Timer 1 para ativar ADC
 volatile byte flag_10ms;         //Marca 10 mseg
 
-//////////////////////////////////////////////////////////////////////////////////
-/////////////////////// 06/04/2020 ///////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+/////////////////////// FILAS //////////////////////////////
+////////////////////////////////////////////////////////////
 
-// GPS - Tentei esta mensagem mas parece que não funcionou
-char msg_gll_off[]={0xB5,0x62,0x06,0x01,0x08,0x00,0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x2B,'\0'};
-
-
-// Serial 0
-volatile char ser_tx_fila[SER_TX_FILA_TAM]; //Espaço para a fila serial de TX
-volatile byte ser_tx_pin, ser_tx_pout;      //Ponteiros para usar a fila
-volatile byte ser_tx_ok;                    //Indica que terminou transmissão 
-volatile char ser_rx_fila[SER_RX_FILA_TAM]; //Espaço para a fila serial de RX
-volatile byte ser_rx_pin, ser_rx_pout;      //Ponteiros para usar a fila
-volatile byte ser_rx_ok;                    //Indica que terminou recepção
+// SERI e SERO: UART0(Arduino) e UART2(Bluetooth) integradas
+volatile char seri_fila[SERI_FILA_TAM]; //Espaço para a fila serial de entrada
+volatile word seri_pin, seri_pout;      //Ponteiros para usar a fila
+volatile char sero_fila[SERO_FILA_TAM]; //Espaço para a fila serial de saída
+volatile word sero_pin, sero_pout;      //Ponteiros para usar a fila
+volatile byte sero_seg;                 //Segundo sero - garantir que uART0 e UART2 transmitam (interrupção)
+volatile byte sero_parou;               //Indica que fila sero passou pelo estado vazia (recomeçar interrupções)
+volatile byte sero_schnell;             //Bloqueia a fila e imprimi direto na porta serial (grandes qtd de dados)
 
 //ADC
 volatile word adc_val;    //Valor lido pelo ADC (em 16 bits porque tem contas)
