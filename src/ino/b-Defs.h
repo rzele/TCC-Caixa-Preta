@@ -25,7 +25,8 @@
 #define CXP_ADR_INI 0x37E60L  //Início área de conficuração da Caixa Preta (sobra 416 bytes)
 #define CXP_ADR_FIM 0x38000L  //Fim    área de conficuração da Caixa Preta
 #define GPS_ADR_INI 0x38000L  //Início área GPS (256 msg x 128 = 32.768) = 25,6 seg
-#define GPS_ADR_FIM 0x40000L  //Fim    área GPS
+//#define GPS_ADR_FIM 0x40000L  //Fim    área GPS
+#define GPS_ADR_FIM 0x40000L-GPS_PASSO  //Fim    área GPS
 #define MPU_PASSO   18        //Tamanho de uma mensagem do MPU (Acel, Giro, Mag)
 #define GPS_PASSO   128       //Tamanho da mensagem do GPS (gps_dados[])
 
@@ -50,11 +51,15 @@
 #define LIMIAR_GZ  1000 //1.000 gr/s
 
 // SRAM (FLASH) - Uso na Operação - Posições para guardar parâmetros
-#define OP_BATEU   CXP_ADR_INI  //Bateu? 0x4E4E=NN=Não (pronta) 0x5353=SS=Sim - Repetição do ASCII
+#define OP_OK      CXP_ADR_INI  //Fez calibração ao ligar? 0x4E4E=NN=Não (pronta) 0x5353=SS=Sim - Repetição do ASCII
+#define OP_BATEU   OP_OK+2      //Bateu? 0x4E4E=NN=Não (pronta) 0x5353=SS=Sim - Repetição do ASCII
 #define OP_ST_OK   OP_BATEU+2   //Passou no Self Test 0x4E4E=não e 0x5353=sim
-#define OP_CF_OK   OP_ST_OK+2   //Existe calibração de Fábrica (CF) 0x4E4E=não e 0x5353=sim
+#define OP_STH_OK  OP_ST_OK+2   //Magnetômetro Passou no Self Test 0x4E4E=não e 0x5353=sim
+#define OP_CF_OK   OP_STH_OK+2  //Existe calibração de Fábrica (CF) 0x4E4E=não e 0x5353=sim
+#define OP_CFH_OK  OP_CF_OK+2   //Magentômetro fez calibração de Fábrica (CF) 0x4E4E=não e 0x5353=sim
+
 // Calibração Aceleração e Giro ao ligar o carro
-#define OPC_FREQ_AG OP_CF_OK+2    //Freq de amostragem usada na calibração Acel e Giro
+#define OPC_FREQ_AG OP_CFH_OK+2   //Freq de amostragem usada na calibração Acel e Giro
 #define OPC_BW_AG   OPC_FREQ_AG+2 //Banda passante usada na calibração Acel e Giro
 #define OPC_ESC_AC  OPC_BW_AG+2   //Escala do Acelerômetro usada na calibração
 #define OPC_ESC_GI  OPC_ESC_AC+2  //Escala do Giroscópio usada na calibração
@@ -104,13 +109,13 @@
 #define OP_VAZIO    OP_AC_HORA+12   //Vazio
 
 // CALIBRAÇÃO DE FÁBRICA
-const char *CF_HOJE = "26/05/20"; //Data para Configuração de Fábrica
+const char *CF_HOJE = "24/07/20"; //Data para Configuração de Fábrica
 const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define G_PADRAO    9.80665       //1g padrão
 #define G_BSB       9.7808439     //Ac. gravidade em Brasília
-#define CF_ESPERA   3          //Tempo de espera (seg) antes de calibrar o MPU
+#define CF_ESPERA   10          //Tempo de espera (seg) antes de calibrar o MPU
 #define CF_FREQ     100           //Calibração de Fábrica: Freq de amostragem do MPU
-#define CF_QTD_MED  16         //Calibração de Fábrica: quantidade de medidas por eixo
+#define CF_QTD_MED  256         //Calibração de Fábrica: quantidade de medidas por eixo
 
 // Endereços da EEPROM
 // Usada para guardar Calibraçao de Fábrica
@@ -192,6 +197,21 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define CF_ST_TOL_GY   CF_ST_TOL_GX+2   //gy - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
 #define CF_ST_TOL_GZ   CF_ST_TOL_GY+2   //gz - Resultado self-test (<14%) (16 bits mas usa apenas 8 bits)
 
+#define CF_MAG_OK     CF_ST_TOL_GZ+2   //Já fez calibração do Magnetômetro? COD_SIM ou COD_NAO
+#define CF_STH_OK     CF_MAG_OK+2      //Magnetômetro passou no Self Test?
+#define CF_STH_HX     CF_STH_OK+2      //Leitura de HX durante o Self Test?
+#define CF_STH_HY     CF_STH_HX+2      //Leitura de HY durante o Self Test?
+#define CF_STH_HZ     CF_STH_HY+2      //Leitura de HZ durante o Self Test?
+#define CF_HX_ASA     CF_STH_HZ+2      //hx - ASA = Ajuste gravado na ROM (16 bits mas usa apenas 8 bits) Negativo?
+#define CF_HY_ASA     CF_HX_ASA+2      //hy - ASA = Ajuste gravado na ROM (16 bits mas usa apenas 8 bits) Negativo?
+#define CF_HZ_ASA     CF_HY_ASA+2      //hz - ASA = Ajuste gravado na ROM (16 bits mas usa apenas 8 bits) Negativo?
+#define CF_HX_OFF     CF_HZ_ASA+2      //hx - Offset multiplicado por 10, para dar precisão
+#define CF_HY_OFF     CF_HX_OFF+2      //hy - Offset multiplicado por 10, para dar precisão
+#define CF_HZ_OFF     CF_HY_OFF+2      //hz - Offset multiplicado por 10, para dar precisão
+#define CF_HX_ESC     CF_HZ_OFF+2      //hx - Escala multiplicada por 10, para dar precisão
+#define CF_HY_ESC     CF_HX_ESC+2      //hx - Escala multiplicada por 10, para dar precisão
+#define CF_HZ_ESC     CF_HY_ESC+2      //hx - Escala multiplicada por 10, para dar precisão
+
 
 // LCD Constantes para os bits de controle
 #define LCD_BL  8 //Back Light
@@ -219,7 +239,7 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 
 // TESTE
 #define TESTE_TOT 17     //Modos de teste: 1, 2 , ..., 17
-#define TESTE_0    0     //Não tem
+#define TESTE_0    0     //Opera
 #define TESTE_1    1     //LEDs
 #define TESTE_2    2     //LCD
 #define TESTE_3    3     //Teclado
@@ -239,14 +259,14 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define TESTE_17  17     //Livre
 
 // OPERA
-#define OPERA_TOT  9     //Modos de teste: 1, 2 , ..., 8
-#define OPERA_0    0     //Não tem
-#define OPERA_1    1     //Livre
+#define OPERA_TOT  9     //Modos de teste: 1, 2 , ..., 9
+#define OPERA_0    0     //Teste
+#define OPERA_1    1     //Aqusição de Dados
 #define OPERA_2    2     //Livre
 #define OPERA_3    3     //Livre
 #define OPERA_4    4     //Livre
-#define OPERA_5    5     //Livre
-#define OPERA_6    6     //Livre
+#define OPERA_5    5     //Calibração de Fábrica
+#define OPERA_6    6     //Calibração do Magnetômetro
 #define OPERA_7    7     //Livre
 #define OPERA_8    8     //Livre
 #define OPERA_9    9     //Livre
@@ -364,7 +384,8 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define MAG_WHO         0x48  //MAG Who am I
 // Registradores
 #define MAG_CNTL_1      0x0A  //Controle 1
-#define MAG_CNTL_2      0x0B  //(RSV) Controle 2 
+#define MAG_CNTL_2      0x0B  //(RSV) Controle 2
+#define MAG_ASTC        0x0C  //Self Test
 #define MAG_XOUT_L      0x03  //MAG XL seq:[XL XH YL YH ZL ZH]
 #define MAG_ASAX        0x10 //end. reg. ASAX do magnetometro
 #define MAG_ASAY        0x11 //end. reg. ASAY do magnetometro  
@@ -412,18 +433,18 @@ const char *CF_BSB = "Brasilia";  //Data para Configuração de Fábrica
 #define NRL 4   //Qtd de linhas do LCD
 #define NRC 20  //Qtd de colunas do LCD
 
+
+////////////////////////////////////////////////////////////
+/////////////////////// FILAS //////////////////////////////
+////////////////////////////////////////////////////////////
+
+// UART0(Arduini) e UART2(Bluetooth) integradas
+#define SERI_FILA_TAM 50   //Tamanho da fila circular de entrada serial
+#define SERO_FILA_TAM 200   //Tamanho da fila circular de saída
+
 // GPS - Serial 3
 #define GPS_TX_FILA_TAM 10 //Tamanho da fila circular de TX
 #define GPS_RX_FILA_TAM 300 //Tamanho da fila circular de RX
-
-// Bluetooth - Serial 2
-#define BT_TX_FILA_TAM  50 //BT - Tamanho da fila circular de TX
-#define BT_RX_FILA_TAM  50 //BT - Tamanho da fila circular de RX
-
-// Serial 0
-#define SER_TX_FILA_TAM 100 //Tamanho da fila circular de TX
-#define SER_RX_FILA_TAM 100 //Tamanho da fila circular de RX
-
 
 // Endereços da FLASH 24LC1025 (128 KB) TWI
 #define FLASH1_ADR     0x50  //FLASH1

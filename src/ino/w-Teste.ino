@@ -4,25 +4,32 @@
 
 byte linha[21];
 
-void teste(void){
+byte teste(void){
   byte modo;    //Modo selecionado
   byte i;
   word w;
   long z;
   float f;
+
   while(TRUE){
     lcd_apaga();
     lcd_str(0,0,"TESTE");
-    ser_str("\nModo Teste\n");
+    ser_str("\n==> Modo Teste <==\n");
+    //eeprom_cf_mostra();
+    //eeprom_cf_dados();
+
     while(sw_val<0x10);  //Esperar soltar tecla SEL
     lcd_str(0,5," - Selecionar");
     ser_str("Selecionar com LCD\n");
     //modo=13;
-    modo=TESTE_12;
-    // modo=sel_modo(teste_msg, TESTE_TOT);
+    modo=sel_modo(teste_msg, TESTE_TOT);
+
     lcd_apaga();
     ser_crlf(1);
     switch(modo){
+      case 'O':
+      case 'o':
+      case TESTE_0:  return modo;
       case TESTE_1:  teste_1(modo);  break;
       case TESTE_2:  teste_2(modo);  break;
       case TESTE_3:  teste_3(modo);  break;
@@ -40,11 +47,26 @@ void teste(void){
       case TESTE_15: teste_15(modo); break;
       case TESTE_16: teste_16(modo); break;
       case TESTE_17: teste_17(modo); break;
-      
+      case '?':   teste_mostra();    break;
+      case 't':
+      case 'T': break;
+      default:  break;
     }
   }
   while(1);
 }
+
+// Mostrar as opções do Modo Teste
+void teste_mostra(void){
+  byte i;
+  ser_str("TESTES:\n");
+  for (i=0; i<=TESTE_TOT; i++){
+    ser_str(teste_msg[i]);
+    ser_crlf(1);
+  }
+}
+
+
 
 // 1 - LEDs
 char teste_1(char md){
@@ -54,7 +76,8 @@ char teste_1(char md){
   ser_str(msg); ser_crlf(1);
   while(TRUE){
     leds_cont(cont++);
-    if (sw_tira(&x))     break;
+    if (fim_qqtec_x() == TRUE)  break;
+    //if (sw_tira(&x))     break;
     delay(500);
   }
   led_amo();
@@ -83,13 +106,14 @@ char teste_2(char md){
     }
     base+=16;
     delay(1000);
-    if (sw_tira(&ct) == TRUE) break;
+    if (fim_qqtec_x() == TRUE)  break;
   }
   ser_str("\n--- Fim ---\n");
   return md;
 }
 
 // 3 - Teclado
+// Só sai com Reset
 char teste_3(char md){
   byte i;   //Para repetições com for
   byte x;   //Último valor lido pela ADC
@@ -177,7 +201,7 @@ byte teste_4(char md){
   lcd_str(3,0,"FLASH 2 =  ");
   if (twi_er_ok(FLASH2_ADR)) lcd_str(3,10,"OK "); 
   else                       lcd_str(3,10,"NOK");
-  sw_qq_tecla();
+  while (fim_qqtec_x() == FALSE);
   ser_str("\n--- Fim ---\n");
   return;
 }
@@ -262,8 +286,8 @@ char teste_5(char md){
     ser_str("gr/s)  gz="); ser_hex16(vt[6]);  //gz
     ser_char('(');      ser_float(vtf[6],2);
     ser_str("gr/s)");
-    
-    if (sw_tira(&who)){
+
+    if (fim_qqtec_x() == TRUE){
       ser_str("\n--- Fim ---\n");
       return md;
     }
@@ -277,17 +301,16 @@ char teste_6(char md){
   byte mag_st,who,asa[3];
   int vetor[3];
   char *msg="[6] MPU6050 Magneto";
-  word cont=0,drdy_l=0,drdy_h=0;
-  float perc;
-
-  mpu_mg_config();       //Configurar o magnetômetro
+  unsigned int cont=0;
+  // Devo colocar aqui a configuração
+  mpu_mag_config();       //Configurar o magnetômetro
 
   lcd_apaga();
   lcd_str(0,0,msg);
   ser_str(msg);
   ser_crlf(1);
 
-  who = mpu_mg_whoami();
+  who = mag_whoami();
   lcd_str(1,0,"Who am I = ");
   lcd_hex8(1,11,who);
   ser_str("MPU MAG retornou Who am I = ");
@@ -303,7 +326,7 @@ char teste_6(char md){
   delay(800);
 
   //Ler e imprimir asax, asay e asaz
-  mpu_rd_mg_rom(asa);
+  mpu_mag_rd_rom(asa);
   ser_str("\nASA: ");
   ser_hex8(asa[0]);   ser_spc(2);
   ser_hex8(asa[1]);   ser_spc(2);
@@ -317,8 +340,7 @@ char teste_6(char md){
   while(TRUE){
     if (mpu_dado_ok == TRUE){   //MPU a 100 Hz (10 ms)
      mpu_dado_ok=FALSE;
-     cont++;
-     mag_st=mpu_rd_mg(vetor);     //Ler  ST1-hx-hy-hz-ST2
+     mag_st=mpu_rd_mg_out(vetor);
  
      //escreve no LCD   
      lcd_hex16(3,2, vetor[0]);
@@ -333,31 +355,24 @@ char teste_6(char md){
      if (mag_st==1){        //Tudo certo
        lcd_char(2, 5,'1');  
        lcd_char(2,15,'0');
-       ser_str("    OK ");
-       drdy_h++;
+       cont=0;  
+       ser_str("  OK");
      }
      else if(mag_st==0){    //Dado não pronto
        lcd_char(2, 5,'0');  
        lcd_char(2,15,'0');
-       ser_str("   NOK ");
-       drdy_l++;
+       cont++;
+       ser_str("  Dado Nao Pronto ");
+       ser_dec16unz(cont);
      }
      else if(mag_st==2){    //Sensor Overflow
        lcd_char(2, 5,'1');  
        lcd_char(2,15,'1');  
        ser_str("  Sensor Overflow");      
      }
-     ser_dec16unz(cont);
-     ser_str(": ");
-     ser_dec16unz(drdy_h);
-     ser_str(" / ");
-     ser_dec16unz(drdy_l);
-     ser_str(" ==> ");
-     perc=(100.*drdy_h)/cont;
-     ser_float(perc,1);
-     ser_str("%\n");
-   }    
-   if (sw_tira(&who))     break;
+     ser_crlf(1);
+   }
+   if (fim_qqtec_x() == TRUE)  break;
   }
   ser_str("\n--- Fim ---\n");
   return;
@@ -374,9 +389,13 @@ char teste_7(char md){
   ser_str(msg);
   ser_crlf(1);
   ser_str("(23LC1024) U7 = SRAM0, PAG0 = 0x0 0000 --> 0x0 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(23LC1024) U7 = SRAM0, PAG1 = 0x1 0000 --> 0x1 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(23LC1024) U5 = SRAM1, PAG0 = 0x2 0000 --> 0x2 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(23LC1024) U5 = SRAM1, PAG1 = 0x3 0000 --> 0x3 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   x=TCNT0;  x=x^TCNT1;  x=x^TCNT2;
   x=x&0xF;
   if (x==0) x=13; //Semente
@@ -391,22 +410,31 @@ char teste_7(char md){
     ser_str("Ensaio = ");   ser_dec16unz(cont); ser_crlf(1);
     if (teste_7_8_byte(0,0))  lcd_str(2, 5," OK");
     else                       lcd_str(2, 5,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(0,1))  lcd_str(2, 9," OK");
     else                       lcd_str(2, 9,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(0,2))  lcd_str(2,13," OK");
     else                       lcd_str(2,13,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(0,3))  lcd_str(2,17," OK");
     else                       lcd_str(2,17,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(0,0)) lcd_str(3, 5," OK");
     else                       lcd_str(3, 5,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(0,1)) lcd_str(3, 9," OK");
     else                       lcd_str(3, 9,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(0,2)) lcd_str(3,13," OK");
     else                       lcd_str(3,13,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(0,3)) lcd_str(3,17," OK");
     else                       lcd_str(3,17,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     lcd_hex16(1,0,cont);
-    if (sw_tira(&y))     break;        
+    if (fim_qqtec_x() == TRUE)  break;
+    //if (sw_tira(&y))     break;        
     delay(1000);
   }
   ser_str("\n--- Fim ---\n");
@@ -423,9 +451,13 @@ char teste_8(char md){
   ser_str(msg);
   ser_crlf(1);
   ser_str("(24LC1025) U4 = FLASH0, PAG0 = 0x0 0000 --> 0x0 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(24LC1025) U4 = FLASH0, PAG1 = 0x1 0000 --> 0x1 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(24LC1025) U6 = FLASH1, PAG0 = 0x2 0000 --> 0x2 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   ser_str("(24LC1025) U6 = FLASH1, PAG1 = 0x3 0000 --> 0x3 FFFF\n");
+  //delay(20);   //Evitar fila SERO encher
   x=TCNT0;  x=x^TCNT1;  x=x^TCNT2;
   x=x&0xF;
   if (x==0) x=13; //Semente
@@ -440,25 +472,34 @@ char teste_8(char md){
     ser_str("Ensaio = ");   ser_dec16unz(cont); ser_crlf(1);
     if (teste_7_8_byte(1,0))  lcd_str(2, 5," OK");
     else                       lcd_str(2, 5,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(1,1))  lcd_str(2, 9," OK");
     else                       lcd_str(2, 9,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(1,2))  lcd_str(2,13," OK");
     else                       lcd_str(2,13,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_byte(1,3))  lcd_str(2,17," OK");
     else                       lcd_str(2,17,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(1,0)) lcd_str(3, 5," OK");
     else                       lcd_str(3, 5,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(1,1)) lcd_str(3, 9," OK");
     else                       lcd_str(3, 9,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(1,2)) lcd_str(3,13," OK");
     else                       lcd_str(3,13,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     if (teste_7_8_bloco(1,3)) lcd_str(3,17," OK");
     else                       lcd_str(3,17,"NOK");
+    //delay(20);   //Evitar fila SERO encher
     lcd_hex16(1,0,cont);
-    if (sw_tira(&y))     break;        
+    //if (sw_tira(&y))     break;        
+    if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
     delay(1000);
   }
-  sw_qq_tecla(); //Remover
+  //sw_qq_tecla(); //Remover
 
   ser_str("\n--- Fim ---\n");
   return;
@@ -602,7 +643,8 @@ char teste_9(char md){
     lcd_dec16u(3,0,tipos[4]);
     lcd_dec16u(3,7,tipos[5]);
     lcd_dec16u(3,14,tipos[6]);
-    if (sw_tira(&dado))   break;
+    //if (sw_tira(&dado))   break;
+    if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
  }
   ser_str("\n--- Fim ---\n");
   return;
@@ -665,7 +707,7 @@ byte teste_9_gps_msg(char letra){
   }
 }
 
-// Extrair e interpretar as mensagens do GPS
+// 10 - Extrair e interpretar as mensagens do GPS
 char teste_10(char md){
   char *msg="[10] GPS Interpreta";
   byte i,dado;
@@ -711,13 +753,12 @@ char teste_10(char md){
     lcd_gps_dado(3,11,GPS_CURSO);
     lcd_gps_dado(3,19,GPS_STATUS);
 
-    if (sw_tira(&dado))     break;    
+    //if (sw_tira(&dado))     break;    
+    if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
 
   }
   // RX3: Desabilitar recepção e sua interrupção
   UCSR3B &= ~((1<<RXCIE3) | (1<<RXEN3));  //RXIE=0, RXEN=0
-
-  sw_qq_tecla();
   return md;
 }
 
@@ -769,7 +810,10 @@ char teste_11(char md){
       lcd_dec16u(3,12,cgps);
     }
   
-    if (sw_tira(&dado))     break;    
+    if (sw_tira(&dado))     break;
+
+    // Naõ funciona, as interrup estão desabilitadas
+    //if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
   }
   // Voltar habilitar interrupções
   UCSR0B = (1<<RXCIE0) | (1<<TXCIE0) | (1<<RXEN0) | (1<<TXEN0);  //RXIE=TXIE=1, hab TX e RX
@@ -781,19 +825,15 @@ char teste_11(char md){
 char teste_12(char md){
   char *msg="[12] MPU --> Matlab";
   byte who;
-  word vt[7], vt_mag[3];
-  word count = 0;
+  word vt[7];
+  word cont;    //Contador de linhas
   float vtf[7];
-  word ac_esc, giro_esc;
   lcd_apaga();
   lcd_str(0,0,msg);
   ser_str(msg);
   ser_crlf(1);
 
-  mpu_config();         //MPU configurar
-  mpu_mg_config();       //Configurar o magnetômetro
-  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
-
+/*
   mpu_acorda();     //Acordar MPU
   who=mpu_whoami();
   if (who != 0x73){
@@ -804,86 +844,158 @@ char teste_12(char md){
     return  FALSE;
   }
 
-  who = mpu_mg_whoami();
-  if (who != MAG_WHO){
-    lcd_str(1,0,"h NOK");  //MPU respondendo
-    ser_str("MAG nao repsonde!");
-  }
-  delay(800);
-
-  ac_esc=2;
-  giro_esc=250;
-  delay(500);
-  lcd_apaga();
-  lcd_str(0,0,"Acel");
-  lcd_str(1,3,"g");
-  lcd_str(2,0,"Giro ");
-  lcd_str(3,0,"gr/s ");
-
-  // Enviar p/ matlab instrução p/ inicio de leitura dos dados
-  ser_str("\nstart\n");
-  // Habilitar interrupção MPU (Dado Pronto)
+  lcd_str(3,0,"Inicia em 1 seg.");
+  ser_str("Inicia em 1 segundo.\n");
+  delay(1000);
+  
+  mpu_config();         //MPU configurar
+  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
   mpu_sample_rt(SAMPLE_RT_100Hz);
   //mpu_sample_rt(SAMPLE_RT_200Hz);
+  */
+  teste12_prepara();
+  mpu_mag_config();
 
+  lcd_str(3,0,"Inicia em 1 seg.");
+  ser_str("Inicia em 1 segundo.\n");
+  delay(1000);
+
+
+  lcd_apaga_lin(1);
+  lcd_apaga_lin(2);
+  lcd_apaga_lin(3);
+  lcd_str(1,0,"Acel: ");
+  lcd_str(2,0,"Giro:");
+  lcd_str(3,0,"Mag:");
+  ser_str("#[m");      //Avisar Matlab
+  ser_cab('t');       //Cabeçalho modo Teste
+
+  ser_dec16nz(12345);  ser_crlf(1);   //Simular qtd de linhas (dados)
+      
+  // Habilitar interrupção MPU (Dado Pronto)
   mpu_int();
+  cont=0;
   while(TRUE){
     while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
     mpu_dado_ok=FALSE;
-    mpu_rd_ac_tp_gi(vt);  //Ler MPU
-    mpu_rd_mg(vt_mag);     //Ler  ST1-hx-hy-hz-ST2
 
-    // Calcular acelerações e giros
-    vtf[0]=ac_esc*((float)vt[0]/32767);
-    vtf[1]=ac_esc*((float)vt[1]/32767);
-    vtf[2]=ac_esc*((float)vt[2]/32767);
-    vtf[3]=36.53+(vt[3]/340);
-    vtf[4]=giro_esc*((float)vt[4]/32767);
-    vtf[5]=giro_esc*((float)vt[5]/32767);
-    vtf[6]=giro_esc*((float)vt[6]/32767);
+    mpu_rd_ac_tp_gi(vt);  //Ler MPU
 
     // LCD
-    lcd_hex16(0,5,vt[0]);  lcd_hex16(0,10,vt[1]);  lcd_hex16(0,15,vt[2]);
-    lcd_float(1,5,vtf[0],1);
-    lcd_float(1,10,vtf[1],1);
-    lcd_float(1,15,vtf[2],1);
+    lcd_hex16(1,5,vt[0]);
+    lcd_hex16(1,10,vt[1]);
+    lcd_hex16(1,15,vt[2]);
     
-    lcd_hex16(2,5,vt[4]);  lcd_hex16(2,10,vt[5]);  lcd_hex16(2,15,vt[6]);
-    lcd_apaga_lin(3);
-    lcd_str(3,0,"gr/s");
-    lcd_dec16nz(3,5,vtf[4]);
-    lcd_dec16nz(3,10,vtf[5]);
-    lcd_dec16nz(3,15,vtf[6]);
-
+    lcd_hex16(2,5,vt[4]);
+    lcd_hex16(2,10,vt[5]);
+    lcd_hex16(2,15,vt[6]);
+    
     //Enviar pela porta serial
-    ser_dec16(vt[0]);       ser_str(";");           //ax
-    ser_dec16(vt[1]);       ser_str(";");           //ay
-    ser_dec16(vt[2]);       ser_str(";");           //az
-    ser_dec16(vt[4]);       ser_str(";");           //gx
-    ser_dec16(vt[5]);       ser_str(";");           //gy
-    ser_dec16(vt[6]);       ser_str(";");           //gz
-    ser_dec16(vt_mag[0]);   ser_str(";");           //hx
-    ser_dec16(vt_mag[1]);   ser_str(";");           //hy
-    ser_dec16(vt_mag[2]);                           //hz
-    ser_crlf(1);
-
-    count = count + 1;
+    ser_dec16(cont);   ser_spc(1);           //contador
+    ser_dec16(cont++); ser_spc(1);           //simular endereço
     
-    if (sw_tira(&who))     break;    
+    ser_dec16(vt[0]);   ser_spc(1);           //ax
+    ser_dec16(vt[1]);   ser_spc(1);           //ay
+    ser_dec16(vt[2]);   ser_spc(1);           //az
+    //ser_dec16(vt[3]);   ser_spc(1);           //temperatura
+    ser_dec16(vt[4]);   ser_spc(1);           //gx
+    ser_dec16(vt[5]);   ser_spc(1);           //gy
+    ser_dec16(vt[6]);   ser_spc(1);           //gz
+
+    mpu_rd_mg_out(vt);
+    lcd_hex16(3,5,vt[0]);
+    lcd_hex16(3,10,vt[1]);
+    lcd_hex16(3,15,vt[2]);
+    ser_dec16(vt[0]);   ser_spc(1);           //hx
+    ser_dec16(vt[1]);   ser_spc(1);           //hy
+    ser_dec16(vt[2]);   ser_crlf(1);          //hz
+    //if (sw_tira(&who))     break;    
+    if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
+  }
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_spc(1);           //Finalizar com Matlab
+  ser_dec16(22222);      ser_crlf(1);          //Finalizar com Matlab
+  ser_str("m]#\n--- Fim ---\n");
+  return md;
+}
+
+// Preparação para o Teste 12
+void teste12_prepara(void){
+  char *msg1="Erro Who am I = ";
+  char *msg2="MPU Self Test Falhou";
+  char *msg3="MAG Self Test Falhou";
+  byte x;
+  byte st;        //Resultado do Self Test
+  int st_vet[24]; //Receber resultados do Self Test
+  byte esc_ac,esc_gi,esc_mg;   //Guardar Escalas de acel, giro e mag
+  int aux[7];
+
+  mpu_acorda();
+  mpu_config();
+  x=mpu_whoami();                     //Who am I
+  if (x != MPU9250_WHO){
+    lcd_str(1,0,msg1); lcd_dec16unz(1,16,x);
+    ser_str(msg1);     ser_dec16unz(x);  ser_crlf(1);
+    delay(1000);
+  }
+  sram_wr_16b(OP_OK,COD_SIM);         //Marcar que fez Calibração ao ligar
+  
+  // Self test acel e giro
+  st=mpu_self_test(st_vet,FALSE);     //Self Test
+  if (st==TRUE)
+    sram_wr_16b(OP_ST_OK,COD_SIM);
+  else{
+    sram_wr_16b(OP_ST_OK,COD_NAO);
+    lcd_str(1,0,msg2);
+    ser_str(msg2);  ser_crlf(1);
+    delay(200);
   }
 
-   // Enviar p/ matlab instrução p/ finalizar leitura dos dados
-  ser_str("fim\n");
+  // Self test mag
+  st=mpu_mag_self_test(st_vet,FALSE);     //Self Test
+  if (st==TRUE)
+    sram_wr_16b(OP_STH_OK,COD_SIM);
+  else{
+    sram_wr_16b(OP_STH_OK,COD_NAO);
+    lcd_str(1,0,msg3);
+    ser_str(msg3);  ser_crlf(1);
+    delay(200);
+  }
+  
+  x=eeprom_rd_16b(CF_OK);   //Calibração de Fábrica
+  sram_wr_16b(OP_CF_OK,x);  //Gravar código de Calibr de Fábrica
 
-  ser_str("\n--- Fim ---\n");
+  //Calibração ao ligar o carro Acel e Giro 
+  esc_ac=ACEL_FS_2G;    //Escala acel para calibrar ao ligar
+  esc_gi=GIRO_FS_250;   //Escala giro para calibrar ao ligar
+  mpu_calibra(aux, OP_QTD_MED_AG, esc_ac, esc_gi);  //Função de calibração
+  sram_wr_16b(OP_OK,COD_SIM);                       //Fez Calibração ao ligar
+  x=mpu_rd_freq();      sram_wr_16b(OPC_FREQ_AG,x); //Freq de amostragem
+  x=mpu_rd_bw();        sram_wr_16b(OPC_BW_AG,x);   //Banda Passante
+  x=mpu_rd_esc_acel();  sram_wr_16b(OPC_ESC_AC,x);  //Escala do Acelerômetro
+  x=mpu_rd_esc_giro();  sram_wr_16b(OPC_ESC_GI,x);  //Escala do Giroscópio
+  sram_wr_16b(OPC_QTD_AG,OP_QTD_MED_AG);            //Qtd de medidas para calibração ao ligar
+  for (x=0; x<7; x++)   sram_wr_16b(OPC_AX+(2*x),aux[x]);
 
-  lcd_apaga();
-  lcd_str(0,0,"Total de amostras: ");
-  lcd_dec16u(1,0, count);
-
-  sw_qq_tecla();
-
-  return md;
+  //Configuração de Acel e Giro para a Operação
+  mpu_config();         //Novamente inicializa MPU
+  esc_ac=ACEL_FS_2G;    //Escala acel para calibrar ao ligar
+  esc_gi=GIRO_FS_250;   //Escala giro para calibrar ao ligar
+  mpu_escalas(esc_gi,esc_ac);       //Programar escalas
+  mpu_sample_rt(SAMPLE_RT_100Hz);   //Programar taxa de amostragem
+  x=mpu_rd_freq();      sram_wr_16b(OP_FREQ_AG,x); //Freq de amostragem
+  x=mpu_rd_bw();        sram_wr_16b(OP_BW_AG,x);   //Banda Passante
+  x=mpu_rd_esc_acel();  sram_wr_16b(OP_ESC_AC,x);  //Escala do Acelerômetro
+  x=mpu_rd_esc_giro();  sram_wr_16b(OP_ESC_GI,x);  //Escala do Giroscópio
+  mpu_mag_config();                 //Configurar Magnetômetro
 }
 
 // 13 - BlueTooth
@@ -893,13 +1005,13 @@ char teste_13(char md){
   lcd_str(1,0,"Qq tecla termina");
   ser_str(teste_msg[md]);
   ser_crlf(1);
-  bt_config(115200);
-  bt_tx_EN(); //Habilitar Transmissão
   x='A';
   i=0;
   while(TRUE){
     //Finalizar
-    if (sw_tira(&j)==TRUE)  break;
+    //if (sw_tira(&j)==TRUE)  break;
+    if (fim_qqtec_x() == TRUE)  break;  //qq Tecla o letra x para finalizar
+
     lcd_char(3,i++,x);
     ser_char(x);
     UDR2=x++;
@@ -913,6 +1025,9 @@ char teste_13(char md){
   return md;
 }
 
+char teste_14(char md){;}
+
+/*
 // 14 - Bluetooth - AT Command 
 // PC <==> Arduino (COM0) opera em 115.200 bps
 // Arduino (COM2) <==> HC-05 opera em 38.400 bps
@@ -923,7 +1038,7 @@ char teste_13(char md){
 // 4) Led pisca lentamente
 //
 // AT+UART=115200,0,0
-//
+// ARRUMAR depois que unificou UART0 e UART2
 char teste_14(char md){
   byte cmdo[50];  //Comando para HC-05
   byte b,i,j,cmdo_ok;
@@ -940,8 +1055,8 @@ char teste_14(char md){
   bt_rx_int_EN(); //BT Habilitar Interrup RX
   bt_tx_int_EN(); //BT Habilitar Interrup TX
 
-  bt_rx_fila_config();
-  bt_tx_fila_config();
+  //bt_rx_fila_config();
+  //bt_tx_fila_config();
   cont_tx=cont_rx=0;  //Contador de colunas para linhas 1 e 2
   bt_tx_ok=TRUE;
   cmdo_ok=FALSE;
@@ -997,6 +1112,8 @@ char teste_14(char md){
   }
   return md;
 }
+*/
+
 
 // 15 - Vazio
 char teste_15(char md){
@@ -1014,95 +1131,13 @@ char teste_16(char md){
   return md;
 }
 
-// 17 - MAG ==> Matlab
-// Testar magnetômetro com o Matlab
+// 17 - Vazio
 char teste_17(char md){
-  char *msg="[17] MPU --> Matlab";
-  byte mag_st,who,asa[3];
-  int vetor[3],hx,hy,hz;
-  float vtf[7];
-  word ac_esc, giro_esc;
-  lcd_apaga();
-  lcd_str(0,0,msg);
-  ser_str(msg);
-  ser_crlf(1);
-
-  mpu_config();         //MPU configurar
-  mpu_mg_config();      //MAG configurar
-
-  who = mpu_mg_whoami();
-  lcd_str(1,0,"Who am I = ");
-  lcd_hex8(1,11,who);
-  ser_str("MPU MAG retornou Who am I = ");
-  ser_hex8(who);
-  if (who == MAG_WHO){
-    lcd_str(1,13,"h OK");  //MPU respondendo
-    ser_str("h ==> OK!");
-  }
-  else{
-    lcd_str(1,13,"h NOK");  //MPU respondendo
-    ser_str("h ==> NOK! ERRO");
-  }
-  delay(1000);
-  lcd_str(3,0,"Inicia em 1 seg.");
-  ser_str("\nInicia em 1 segundo.\n");
-  
-  // Iniciar transmissão
-  //delay(1000);
-  ser_str("#[");      //Avisar Matlab
-  mpu_rd_mg_rom(asa);
-  ser_dec8(asa[0]);   ser_crlf(1);
-  ser_dec8(asa[1]);   ser_crlf(1);
-  ser_dec8(asa[2]);   ser_crlf(1);
-  
-  // Habilitar interrupção MPU (Dado Pronto)
-  mpu_sample_rt(SAMPLE_RT_100Hz);
-  mpu_int();
-
-  lcd_str(2,0,"DRDY=X    HOFL=X");
-  lcd_str(3,0,"X:hhhh Y:hhhh Z:hhhh");
-  while(TRUE){
-    while (mpu_dado_ok == FALSE);   //Agaurdar MPU a 100 Hz (10 ms)
-    mpu_dado_ok=FALSE;
-    mag_st=mpu_rd_mg(vetor);
-
-    if (mag_st==1){        //Tudo certo
-     lcd_char(2, 5,'1');  
-     lcd_char(2,15,'0');  
-   }
-   else if(mag_st==0){    //Dado não pronto
-     lcd_char(2, 5,'0');  
-     lcd_char(2,15,'0');  
-     //vetor[0]=vetor[1]=vetor[2]=0;
-     //vetor[0]=hx;
-     //vetor[1]=hy;
-     //vetor[2]=hz;
-   }
-   else if(mag_st==2){    //Sensor Overflow
-     lcd_char(2, 5,'1');  
-     lcd_char(2,15,'1');  
-   }
-    ser_dec16(vetor[0]);    ser_crlf(1);    //hx
-    ser_dec16(vetor[1]);    ser_crlf(1);    //hy
-    ser_dec16(vetor[2]);    ser_crlf(1);    //hz
-
-    //escreve no LCD   
-    lcd_hex16(3,2, vetor[0]);
-    lcd_hex16(3,9, vetor[1]);
-    lcd_hex16(3,16,vetor[2]);
-    hx=vetor[0];
-    hy=vetor[1];
-    hz=vetor[2];
-
-    if (sw_tira(&who))     break;    
-  }
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_dec16(22222);      ser_crlf(1);           //Finalizar com Matlab
-  ser_str("\n--- Fim ---\n");
+  lcd_str(0,0,teste_msg[md]);
+  ser_str(teste_msg[md]);
+  sw_qq_tecla();
   return md;
 }
-
 
 // Selecionar o modo de operação
 byte teste_sel(void){
@@ -1131,4 +1166,20 @@ byte teste_sel(void){
     if (prov>TESTE_TOT)  prov=1;
     if (prov==0)         prov=TESTE_TOT;
   }
+}
+
+// Opção para terminar um dos modos de teste
+// Vai retirando letras da fila até achar x
+// Opções para terminar:
+// 1) qq tecla
+// 2)letra x  ou X
+byte fim_qqtec_x(void){
+  byte x;
+
+  // Esvaziar fila procurando x
+  while (TRUE){
+    if (seri_tira(&x)==FALSE)   break;
+    if (x=='x' || x=='X')       return TRUE; 
+  }
+  return sw_tira(&x); 
 }
