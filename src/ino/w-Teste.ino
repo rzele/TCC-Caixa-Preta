@@ -867,10 +867,10 @@ char teste_12(char md){
   lcd_str(1,0,"Acel: ");
   lcd_str(2,0,"Giro:");
   lcd_str(3,0,"Mag:");
-  ser_str("#[m");      //Avisar Matlab
+  ser_str("#[m\n");      //Avisar Matlab
   ser_cab('t');       //Cabeçalho modo Teste
 
-  ser_dec16nz(12345);  ser_crlf(1);   //Simular qtd de linhas (dados)
+  ser_dec16unz(55555);  ser_crlf(1);   //Simular qtd de linhas (dados)
       
   // Habilitar interrupção MPU (Dado Pronto)
   mpu_int();

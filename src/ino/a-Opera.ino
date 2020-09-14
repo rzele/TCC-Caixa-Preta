@@ -319,9 +319,16 @@ void opera1_serial(void){
   ser_str("\n\n#[m\n");                       //Marcar início TX MPU
   ser_cab('o');                             //Imprimir cabecalho MPU modo operação
 
-  adri=sram_rd_32b(OP_MPU_ADR);                //Endereço qdo SEL foi acionada
-  adrf=sram_rd_32b(OP_ULT_ADR);                //Último Endereço usado pelo MPU
-  
+  /*
+  ser_str("imprimir\n");
+  ser_dec32unz(sram_rd_32b(OP_MPU_ADR));    //Ponteiro MPU na hora do disparo
+  ser_crlf(1);
+  ser_dec32unz(sram_rd_32b(OP_GPS_ADR));    //Ponteiro GPS na hora do disparo
+  ser_crlf(1);
+  */
+
+  adri=MPU_ADR_INI;
+  adrf=sram_rd_32b(OP_MPU_ADR);
   adrf+=MPU_PASSO;                             //Avançar para o próximo (mais velho)
   if (adrf==MPU_ADR_FIM) adrf=MPU_ADR_INI;
   qtd=(MPU_ADR_FIM - MPU_ADR_INI)/MPU_PASSO;  //Qtd de linhas do MPU
@@ -334,6 +341,16 @@ void opera1_serial(void){
     qtd=dif/MPU_PASSO;  //Qtd de linhas do MPU até interrupção
     adr=adri;
   }
+
+  /*
+  ser_str("debug\n");
+  ser_str("adri="); ser_dec32unz(adri);  ser_spc(1);
+  ser_str("adrf="); ser_dec32unz(adrf);  ser_spc(1);
+  ser_str("dif="); ser_dec32unz(dif);  ser_spc(1);
+  ser_str("qtd="); ser_dec16unz(qtd);  ser_crlf(1);
+  */
+  
+
 
   ser_dec16unz(qtd);  ser_crlf(1);    //Qtd de linhas do MPU
 
