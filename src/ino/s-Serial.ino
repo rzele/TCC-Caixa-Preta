@@ -25,27 +25,31 @@ void ser_cab(char qual){
     //aux=sram_rd_16b(OP_DISP_TP);            //Temperatura instante acidente
     ser_dec16unz(sram_rd_16b(OP_DISP_TP));                      
     ser_crlf(1);
+
+      /*
     //aux=sram_rd_16b(OP_ST_OK);              //Self test de acel e giro
     ser_dec16unz(aux=sram_rd_16b(OP_ST_OK));
     ser_crlf(1);
     //aux=sram_rd_16b(OP_STH_OK);             //Self test de Magnetômetro
     ser_dec16unz(sram_rd_16b(OP_STH_OK));
     ser_crlf(1);
+    */
+    
     //adri=sram_rd_32b(OP_MPU_ADR);           //Endereço 32 bits do MPU qdo SEL foi acionada
     ser_dec32unz(sram_rd_32b(OP_MPU_ADR));                     
     ser_crlf(1);
+    
     //adri=sram_rd_32b(OP_GPS_ADR);           //Endereço 32 bits GPS qdo SEL foi acionada
     ser_dec32unz(sram_rd_32b(OP_GPS_ADR));
     ser_crlf(1);
+
   }
-  if (qual=='t'){   //Para o modo Teste 12
-    ser_str("010420");      ser_crlf(1);  //ddmmyy    data do acidente
-    ser_str("123456.78");   ser_crlf(1);  //hhmmss.ss hora do acidente
-    ser_dec16unz(1234);     ser_crlf(1);  //temperatura
-    ser_dec16unz(COD_SIM);  ser_crlf(1);  //st_op
-    ser_dec16unz(COD_SIM);  ser_crlf(1);  //sth_op
-    ser_dec16unz(1234);     ser_crlf(1);  //adr_mpu
-    ser_dec16unz(5678);     ser_crlf(1);  //adr_gps
+  if (qual=='t'){   //Cabeçalho falso para o Teste 12
+    ser_str("010420\n");      //ddmmyy    data do acidente (falso)
+    ser_str("111111.11\n");   //hhmmss.ss hora do acidente(falso)
+    ser_dec16unz(2222);     ser_crlf(1);  //temperatura(falso)
+    ser_dec32unz(33333L);  ser_crlf(1);  //adr ponteiro MPU (falso)
+    ser_dec32unz(44444L);  ser_crlf(1);  //adr ponteiro GPS (falso)
   }
 
   // Linha 1
