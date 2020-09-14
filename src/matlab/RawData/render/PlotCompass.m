@@ -33,7 +33,7 @@ classdef PlotCompass < CustomPlot
             obj.compass = polarplot([0,0], [0,1]);
             ax = gca;
             ax.ThetaTick = [0 22.5 45 67.5 90 112.5 135 157.5 180 202.5 225 247.5 270 292.5 315 337.25];
-            ax.ThetaTickLabel = {'W', '', 'NW', '', 'N', '', 'NE', '', 'E', '', 'SE', '', 'S', '', 'SW', ''};
+            ax.ThetaTickLabel = {'E', '', 'NE', '', 'N', '', 'NW', '', 'W', '', 'SW', '', 'S', '', 'SE', ''};
             ax.ThetaGrid = 'off';
             ax.RTick = [0, 1];
             ax.RTickLabel = {'', ''};

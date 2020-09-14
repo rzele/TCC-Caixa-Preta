@@ -833,31 +833,11 @@ char teste_12(char md){
   ser_str(msg);
   ser_crlf(1);
 
-/*
-  mpu_acorda();     //Acordar MPU
-  who=mpu_whoami();
-  if (who != 0x73){
-    lcd_str(1,0,"MPU nao responde!");  //MPU Não responde
-    ser_str("MPU nao responde!");  //MPU Não responde
-    sw_qq_tecla();
-    ser_str("\n--- Fim ---\n");
-    return  FALSE;
-  }
-
-  lcd_str(3,0,"Inicia em 1 seg.");
-  ser_str("Inicia em 1 segundo.\n");
-  delay(1000);
-  
-  mpu_config();         //MPU configurar
-  mpu_escalas(0,0);     //+/- 2g e +/-250gr/seg
-  mpu_sample_rt(SAMPLE_RT_100Hz);
-  //mpu_sample_rt(SAMPLE_RT_200Hz);
-  */
   teste12_prepara();
   mpu_mag_config();
 
   lcd_str(3,0,"Inicia em 1 seg.");
-  ser_str("Inicia em 1 segundo.\n");
+  ser_str("Inicia em 1 segundo.");  ser_crlf(1);
   delay(1000);
 
 
@@ -868,6 +848,7 @@ char teste_12(char md){
   lcd_str(2,0,"Giro:");
   lcd_str(3,0,"Mag:");
   ser_str("#[m");      //Avisar Matlab
+  ser_crlf(1);
   ser_cab('t');       //Cabeçalho modo Teste
 
   ser_dec16nz(12345);  ser_crlf(1);   //Simular qtd de linhas (dados)

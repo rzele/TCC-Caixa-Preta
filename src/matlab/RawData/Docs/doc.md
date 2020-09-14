@@ -146,7 +146,7 @@ Por fim, também é possível ajustar a janela de amostras visiveis, sendo este 
 - **Gdeg**                                 - Posição angular em x,y,z relativo (em relação a posição anterior)
 - **Gtilt**                                - Posição angular em x,y,z absoluto (em relação aos eixos iniciais)
 - **Mag**                                  - Magnetometro
-- **FusionTilt**                           - Posição angular em x,y,z absoluto, usando aceleração e magnetometro
+- **AcelMagTilt**                           - Posição angular em x,y,z absoluto, usando aceleração e magnetometro
 - **CompTilt**                             - Posição angular usando o filtro complementar
 - **KalmanTilt**                           - Posição angular usando o filtro de kalman
 - **MadgwickTilt**                         - Posição angular usando o filtro de madgwick

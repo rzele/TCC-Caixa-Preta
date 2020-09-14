@@ -18,9 +18,9 @@ classdef ReaderSerial < ReaderCore
             
             obj.serial_com = serial_com;
             obj.serial_baudrate = serial_baudrate;
-            obj.start_delimiter = 'start';
-            obj.end_delimiter = 'fim';
-            obj.data_delimiter = ';';
+            obj.start_delimiter = '#[m';
+            obj.end_delimiter = 'm]#';
+            obj.data_delimiter = ' ';
 
             obj.f_pt = serial(serial_com, 'Baudrate', serial_baudrate);
             fopen(obj.f_pt);
@@ -29,10 +29,18 @@ classdef ReaderSerial < ReaderCore
                 fprintf(1,'Nao abriu COM3.\n');
                 return
             end
-            fprintf('Pronto para receber dados!\n');
-            fprintf('Por favor, selecione Teste 12 na Caixa Preta.\n');
+
+            % Manda sinal p/ o arduino iniciar a leitura no teste12
+            pause(2)
+            fprintf(obj.f_pt, 't12\r\n');
 
             obj.wait_start_signal();
+            obj.get_and_set_metadatas();
+        end
+
+        function delete(obj)
+            % Manda sinal p/ o arduino parar a leitura no teste12
+            fprintf(obj.f_pt, 'x\r\n');
         end
     end
     

@@ -39,8 +39,8 @@ void ser_cab(char qual){
     ser_crlf(1);
   }
   if (qual=='t'){   //Para o modo Teste 12
-    ser_str("010420\n");      //ddmmyy    data do acidente
-    ser_str("123456.78\n");   //hhmmss.ss hora do acidente
+    ser_str("010420");      ser_crlf(1);  //ddmmyy    data do acidente
+    ser_str("123456.78");   ser_crlf(1);  //hhmmss.ss hora do acidente
     ser_dec16unz(1234);     ser_crlf(1);  //temperatura
     ser_dec16unz(COD_SIM);  ser_crlf(1);  //st_op
     ser_dec16unz(COD_SIM);  ser_crlf(1);  //sth_op
