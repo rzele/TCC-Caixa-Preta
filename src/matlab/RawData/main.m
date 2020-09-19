@@ -482,16 +482,17 @@ while true
         q4 = [q4(2:max_size)    madgwickFilter.Quaternion(4)];
     end
     
-    %% Calcula a Aceleração removendo a gravidade
-    % Obtem os vetores de aceleração atual rotacionando em sentido countrário realizado pelo corpo
+    %% Calcula a Aceleração absoluta (relativo a terra) removendo a gravidade
+    % Obtem os vetores de aceleração atual rotacionando NO MESMO SENTIDO realizado pelo corpo
+    % (uma vez que os queremos os vetores que não rotacionam com o corpo, como a gravidade que sempre aponta p/ baixo)
+    % (seria o equivalente a desrotacionar a plataforma e ver para onde os vetores de aceleração apontam agora)
     % e subtraindo a gravidade = 1g do eixo Z
     % Usando os dados do filtro de kalman desrotacionar os vetores
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {Acel_G, Vel, Space, Space3D})
         Rot_M = ang2rotZYX(gYaw(max_size), gPitch(max_size), gRoll(max_size));
-        T_Rot = Rot_M;
 
-        unrotated_a = T_Rot * [ax(max_size); ay(max_size); az(max_size)];
+        unrotated_a = Rot_M * [ax(max_size); ay(max_size); az(max_size)];
 
         ax_without_gravity = [ax_without_gravity(2:max_size) unrotated_a(1)];
         ay_without_gravity = [ay_without_gravity(2:max_size) unrotated_a(2)];

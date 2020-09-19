@@ -9,6 +9,6 @@ function ret = rot2angZYX(Rot)
         pitch = atan2(-Rot(3,1), Rot(1,1)/cosd(yaw)) * 180/pi;
     end
 
-    ret = [yaw; pitch; roll]
+    ret = [yaw; pitch; roll];
 end
 
