@@ -26,7 +26,7 @@ classdef ReaderSerial < ReaderCore
             fopen(obj.f_pt);
 
             if (obj.f_pt==-1)
-                fprintf(1,'Nao abriu COM3.\n');
+                fprintf(1,'Nao abriu COM.\n');
                 return
             end
 
@@ -35,7 +35,7 @@ classdef ReaderSerial < ReaderCore
             fprintf(obj.f_pt, 't12\r\n');
 
             obj.wait_start_signal();
-            obj.get_and_set_metadatas();
+            obj.set_metadatas();
         end
 
         function delete(obj)

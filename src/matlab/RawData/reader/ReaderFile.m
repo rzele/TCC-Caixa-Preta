@@ -22,7 +22,7 @@ classdef ReaderFile < ReaderCore
             end
 
             obj.wait_start_signal();
-            obj.get_and_set_metadatas();
+            obj.set_metadatas();
         end
     end
     

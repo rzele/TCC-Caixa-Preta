@@ -57,8 +57,8 @@ plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo rea
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-    Gdeg, AcelMagTilt, CompTilt;...
-    KalmanTilt, MadgwickTilt, Vazio;...
+    Gtilt, AcelMagTilt, CompTilt;...
+    MadgwickTilt, Vazio, Vazio;...
     
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -76,8 +76,6 @@ hz_offset=10;               %
 hx_scale=1.020833;          % 
 hy_scale=0.940048;          % 
 hz_scale=1.045333;          % 
-esc_ac=2;                   % Vem do Arduino, função que configura escalas de Aceleração
-esc_giro=250;               % e giro //+/- 2g e +/-250gr/seg
 
 
 % Media movel parametros 
@@ -257,6 +255,10 @@ else
     reader = ReaderFile(file_full_path);
 end
 
+%% Configura as variáveis do MPU
+esc_ac = str2int16(reader.metadatas.aesc_op);                   % Vem do Arduino, função que configura escalas de Aceleração
+esc_giro = str2int16(reader.metadatas.gesc_op);                 % e giro //+/- 2g e +/-250gr/seg
+
 %% Obtem os dados e plota em tempo real
 % NOTA: Se o buffer do serial encher (> 512 bytes) o programa pode explodir ou apresentar erros, caso isso ocorra
 % abaixe a taxa de renderização do gráfico. Para verificar se erros ocorreram, compare a quantidade de amostras enviadas com a quantidade lida
@@ -397,12 +399,6 @@ while true
 
         newYaw = -atan2(-y, x) * 180/pi;
 
-        if newYaw > 180
-            newYaw = newYaw - 360;
-        elseif newYaw < -180
-            newYaw = newYaw + 360;
-        end
-
         aPitch  = [aPitch(2:max_size) newPitch];
         aRoll   = [aRoll(2:max_size)   newRoll];
         mYaw    = [mYaw(2:max_size) newYaw];
@@ -432,9 +428,9 @@ while true
     %% Calcula Rotação usando filtro complementar
     % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
     if isOneIn(setted_objects_name, {CompTilt, Car3DComp})
-        newRoll = (1-mu)*(compl_Roll(max_size) + delta_gRoll) + mu*aRoll(max_size);
-        newPitch = (1-mu)*(compl_Pitch(max_size) + delta_gPitch) + mu*aPitch(max_size);
-        newYaw = (1-mu)*(compl_Yaw(max_size) + delta_gYaw) + mu*mYaw(max_size);
+        newRoll = weightedMeanAngle(compl_Roll(max_size) + delta_gRoll, aRoll(max_size), mu);
+        newPitch = weightedMeanAngle(compl_Pitch(max_size) + delta_gPitch, aPitch(max_size), mu);
+        newYaw = weightedMeanAngle(compl_Yaw(max_size) + delta_gYaw, mYaw(max_size), mu);
 
         compl_Roll = [compl_Roll(2:max_size) newRoll];
         compl_Pitch = [compl_Pitch(2:max_size) newPitch];
