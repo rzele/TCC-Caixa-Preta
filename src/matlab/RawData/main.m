@@ -57,9 +57,9 @@ plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo rea
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-    Gtilt, AcelMagTilt, CompTilt;...
-    MadgwickTilt, Vazio, Vazio;...
-    
+    Acel, CompTilt;...
+    Acel_G,  Vel;...
+
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
 % Constantes do sensor
@@ -323,7 +323,7 @@ while true
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
-    if isOneIn(setted_objects_name, {Gdeg, Gtilt, AcelMagTilt, CompTilt, Car3DGdeg, Car3DGtilt, Car3DAcelMag, Car3DComp})
+    if isOneIn(setted_objects_name, {Gdeg, Gtilt, AcelMagTilt, CompTilt, Car3DGdeg, Car3DGtilt, Car3DAcelMag, Car3DComp, Acel_G, Vel, Space, Space3D})
         newPitch = (gPitch(max_size) + ((gy(max_size-1) + gy(max_size)) / (2 * freq_sample) ));
         newRoll = (gRoll(max_size) + ((gx(max_size-1) + gx(max_size)) / (2 * freq_sample) ));
         newYaw = (gYaw(max_size) + ((gz(max_size-1) + gz(max_size)) / (2 * freq_sample) ));
@@ -440,7 +440,7 @@ while true
     %% Calcula Rotação usando filtro de Kalman
     % Ref do calculo: https://www.youtube.com/watch?v=urhaoECmCQk
     % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
-    if isOneIn(setted_objects_name, {KalmanTilt, Acel_G, Vel, Space, Car3DKalman, Space3D})
+    if isOneIn(setted_objects_name, {KalmanTilt, Car3DKalman})
         % Calcula a predição p/ cada eixo individualmente
         kalmanFilterRoll.predict(gx(max_size));
         kalmanFilterPitch.predict(gy(max_size));
@@ -483,17 +483,19 @@ while true
     end
     
     %% Calcula a Aceleração removendo a gravidade
-    % Obtem o vetor gravidade atual rotacionando em sentido countrário realizado pelo corpo, considerando gravidade = 1g
-    % e usando os dados do filtro de kalman p/ roll e pitch e do giroscópio p/ yaw
+    % Obtem os vetores de aceleração atual rotacionando em sentido countrário realizado pelo corpo
+    % e subtraindo a gravidade = 1g do eixo Z
+    % Usando os dados do filtro de kalman desrotacionar os vetores
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {Acel_G, Vel, Space, Space3D})
-        gravity_vector =   [-sind(kalman_Pitch(max_size)),...
-                             cosd(kalman_Pitch(max_size))*sind(kalman_Roll(max_size)),...
-                             cosd(kalman_Pitch(max_size))*cosd(kalman_Roll(max_size))
-                           ];
-        ax_without_gravity = [ax_without_gravity(2:max_size) (ax(max_size) - gravity_vector(1))];
-        ay_without_gravity = [ay_without_gravity(2:max_size) (ay(max_size) - gravity_vector(2))];
-        az_without_gravity = [az_without_gravity(2:max_size) (az(max_size) - gravity_vector(3))];
+        Rot_M = ang2rotZYX(gYaw(max_size), gPitch(max_size), gRoll(max_size));
+        T_Rot = Rot_M;
+
+        unrotated_a = T_Rot * [ax(max_size); ay(max_size); az(max_size)];
+
+        ax_without_gravity = [ax_without_gravity(2:max_size) unrotated_a(1)];
+        ay_without_gravity = [ay_without_gravity(2:max_size) unrotated_a(2)];
+        az_without_gravity = [az_without_gravity(2:max_size) unrotated_a(3) - 1];
     end
 
     %% Calcula Velocidade integrando a Aceleração
