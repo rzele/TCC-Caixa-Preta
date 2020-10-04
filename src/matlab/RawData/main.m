@@ -6,8 +6,6 @@
 addpath('quaternion_library');      % include quaternion library
 addpath('render');                  % include plot library
 addpath('reader');                  % include reader library
-addpath('kalman');                  % include kalman filter class
-addpath('madgwick');                % include madgwick filter class
 addpath('helpers');                 % include some useful functions
 
 close all;                          % close all figures
@@ -43,10 +41,10 @@ Space3D = 'X';                      % Posição em um Espaço 3D
 
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
-read_from_serial=true;     % Set to false to use a file
-serial_COM='COM4';          
-serial_baudrate=115200;     
-file_full_path='Dados/pitch-90.txt';
+read_from_serial=false;     % Set to false to use a file
+serial_COM='COM4';
+serial_baudrate=115200;
+file_full_path='Dados/teste1.txt';
 
 % Amostragem
 max_size=4000;              % Quantidade maxima de amostras exibidas na tela
@@ -57,8 +55,10 @@ plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo rea
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-    Acel, CompTilt;...
-    Acel_G,  Vel;...
+    Acel, Vel, CompTilt, Acel_G;...
+    Space,  Gvel, KalmanTilt, Vazio;...
+    Gdeg,  Gtilt, MadgwickTilt, Vazio;...
+    Mag,  AcelMagTilt, Quat, Vazio;...
 
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -143,7 +143,6 @@ pz=ax;                                  % Posição no eixo Z
 ax_without_gravity=ax;                  % Aceleração eixo X removido a gravidade
 ay_without_gravity=ax;                  % Aceleração eixo Y removido a gravidade
 az_without_gravity=ax;                  % Aceleração eixo Z removido a gravidade
-r_data=zeros(window_k,9);               % Dados não modificados (sem filtro ou media)
 compl_Roll=ax;                          % Movimento de Roll usando filtro complementar
 compl_Pitch=ax;                         % Movimento de Pitch usando filtro complementar
 compl_Yaw=ax;                           % Movimento de Yaw usando filtro complementar
@@ -245,6 +244,9 @@ kalmanFilterRoll = Kalman(A,B,C,Q,R);
 kalmanFilterPitch = Kalman(A,B,C,Q,R);
 kalmanFilterYaw = Kalman(A,B,C,Q,R);
 
+%% Inicializa a classe que irá fazer média movel, com tamanho 'window_k' p/ 9 elementos
+moving_average = MovingAverage(window_k, 9);
+
 %% Iniciaaliza o filtro de madgwick
 madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
 
@@ -276,47 +278,27 @@ while true
     
     data = str2int16(data);
     
-    %% Converter aceleração em "g"
-    data(1)=esc_ac*(data(1)/32767) - ax_bias;
-    data(2)=esc_ac*(data(2)/32767) - ay_bias;
-    data(3)=esc_ac*(data(3)/32767) - az_bias;
+    acel = calculate_aceleration(data(1:3), [ax_bias, ay_bias, az_bias], esc_ac);
+    gyro = calculate_gyro(data(4:6), [gx_bias, gy_bias, gz_bias], esc_giro);
+    mag = calculate_mag(data(7:9), [hx_offset, hy_offset, hz_offset], [hx_scale, hy_scale, hz_scale]);
 
-    %% Converter giros em "graus/seg"
-    data(4)=esc_giro*(data(4)/32767) - gx_bias;
-    data(5)=esc_giro*(data(5)/32767) - gy_bias;
-    data(6)=esc_giro*(data(6)/32767) - gz_bias;
+    %% Aplica media movel
+    filtered = moving_average.update([acel gyro mag]);
 
-    %% Remove hard and soft iron dos dados do magnetometro
-    data(7) = (data(7) - hx_offset) * hx_scale;
-    data(8) = (data(8) - hy_offset) * hy_scale;
-    data(9) = (data(9) - hz_offset) * hz_scale;
-
-    %% Converter leitura do magnetometro em micro Testla p/ mili Gaus
-    % Trocando a ordem, porque os eixos do mag são X p/ Y do giro, Y p/ X
-    % do giro e -Z p/ Z do giro
-    temp_x = data(8);
-    temp_y = data(7);
-    temp_z = -data(9);
-    data(7) = (4912 * temp_x/32767) * 10;
-    data(8) = (4912 * temp_y/32767) * 10;
-    data(9) = (4912 * temp_z/32767) * 10; 
-
-    %% Salva os dados sem alteração p/ poder aplicar a media movel mais a frente
-    r_data = [r_data(2:window_k,:) ; data(1:9)];
-
-    %% Faz a media movel dos dados lidos
-    data = sum(r_data) / window_k;
-    
     %% Salva valores após aplicar a media movel
-    ax = [ax(2:max_size) data(1)];
-    ay = [ay(2:max_size) data(2)];
-    az = [az(2:max_size) data(3)];
-    gx = [gx(2:max_size) data(4)];
-    gy = [gy(2:max_size) data(5)];
-    gz = [gz(2:max_size) data(6)];
-    hx = [hx(2:max_size) data(7)];
-    hy = [hy(2:max_size) data(8)];
-    hz = [hz(2:max_size) data(9)];
+    ax = [ax(2:max_size) filtered(1)];
+    ay = [ay(2:max_size) filtered(2)];
+    az = [az(2:max_size) filtered(3)];
+    gx = [gx(2:max_size) filtered(4)];
+    gy = [gy(2:max_size) filtered(5)];
+    gz = [gz(2:max_size) filtered(6)];
+    hx = [hx(2:max_size) filtered(7)];
+    hy = [hy(2:max_size) filtered(8)];
+    hz = [hz(2:max_size) filtered(9)];
+
+    plotAcel.update({ax, ay, az});
+    plotGvel.update({gx, gy, gz});
+    plotMag.update({hx, hy, hz});
 
     %% Calcula Yaw, Pitch e Roll realtivos(em relação a ultima Rotação do corpo) p/ a nova amostra usando giro
     % Usando o giro, fazemos a integral discreta (área do trapézio aculmulado)
@@ -324,99 +306,53 @@ while true
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
     if isOneIn(setted_objects_name, {Gdeg, Gtilt, AcelMagTilt, CompTilt, Car3DGdeg, Car3DGtilt, Car3DAcelMag, Car3DComp, Acel_G, Vel, Space, Space3D})
-        newPitch = (gPitch(max_size) + ((gy(max_size-1) + gy(max_size)) / (2 * freq_sample) ));
-        newRoll = (gRoll(max_size) + ((gx(max_size-1) + gx(max_size)) / (2 * freq_sample) ));
-        newYaw = (gYaw(max_size) + ((gz(max_size-1) + gz(max_size)) / (2 * freq_sample) ));
+        calculated = calculate_gyro_relative_tilt(...
+            [gRoll(max_size), gPitch(max_size), gYaw(max_size)],...
+            [gx(max_size), gy(max_size), gz(max_size)],...
+            [gx(max_size-1), gy(max_size-1), gz(max_size-1)],...
+            freq_sample...
+        );
 
-        gPitch  = [gPitch(2:max_size) newPitch];
-        gRoll   = [gRoll(2:max_size)  newRoll];
-        gYaw    = [gYaw(2:max_size)   newYaw];
+        gRoll   = [gRoll(2:max_size)  calculated(1)];
+        gPitch  = [gPitch(2:max_size) calculated(2)];
+        gYaw    = [gYaw(2:max_size)   calculated(3)];
+
+        plotGdeg.update({gRoll, gPitch, gYaw});
     end
     
     %% Calcula a matriz de Rotação (Z,Y,X) que foi responsável por mover o corpo da Posição da amostra anterior para a atual
     % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
     if isOneIn(setted_objects_name, {Gtilt, AcelMagTilt, CompTilt, Car3DGtilt, Car3DAcelMag, Car3DComp})
-        delta_gPitch = gPitch(max_size) - gPitch(max_size-1);
-        delta_gRoll = gRoll(max_size) - gRoll(max_size-1);
-        delta_gYaw = gYaw(max_size) - gYaw(max_size-1);
-        temp_Rx = [...
-            [1,                0,               0        ];...
-            [0,     cosd(delta_gRoll),  -sind(delta_gRoll)];...
-            [0,     sind(delta_gRoll),  cosd(delta_gRoll)]
-        ];
-        temp_Ry = [...
-            [cosd(delta_gPitch),        0,       sind(delta_gPitch)];...
-            [0,                         1,               0        ];...
-            [-sind(delta_gPitch),        0,      cosd(delta_gPitch)]
-        ];
-        temp_Rz = [...
-            [cosd(delta_gYaw),         -sind(delta_gYaw),       0];...
-            [sind(delta_gYaw),         cosd(delta_gYaw),       0];...
-            [0,                         0,                      1]
-        ];
-        temp_R = temp_Rz * temp_Ry * temp_Rx;
+        calculated = calculate_gyro_absolute_tilt([gRoll(max_size), gPitch(max_size), gYaw(max_size)]);
 
-        % Calcula a matriz de Rotação (Z,Y,X) que move o corpo da Posição inicial para a Posição atual
-        Rot = Rot * temp_R;
+        gRoll_abs  = [gRoll_abs(2:max_size)  calculated(1)];
+        gPitch_abs = [gPitch_abs(2:max_size) calculated(2)];
+        gYaw_abs   = [gYaw_abs(2:max_size)   calculated(3)];
 
-
-        %% Extrai Yaw, Pitch e Roll absolutos(em relação a Posição inicial do corpo) p/ a nova amostra usando a atual matriz de Rotação (Z,Y,X)
-        % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
-        newRoll = atan2(Rot(3,2), Rot(3,3)) * 180/pi;
-        newYaw = atan2(Rot(2,1), Rot(1,1)) * 180/pi;
-        if cosd(newYaw) == 0
-            newPitch = atan2(-Rot(3,1), Rot(2,1)/sind(newYaw)) * 180/pi;
-        else
-            newPitch = atan2(-Rot(3,1), Rot(1,1)/cosd(newYaw)) * 180/pi;
-        end
-
-        gPitch_abs = [gPitch_abs(2:max_size) newPitch];
-        gRoll_abs = [gRoll_abs(2:max_size) newRoll];
-        gYaw_abs = [gYaw_abs(2:max_size) newYaw];
+        plotGtilt.update({gRoll_abs, gPitch_abs, gYaw_abs});
     end
-
+    
     %% Calcula Yaw, Pitch e Roll absolutos(em relação a Posição inicial do corpo) p/ a nova amostra usando Aceleração e Magnetômetro
     % Usando a Aceleração, usamos o vetor de gravidade que deve sempre
     % estar presente p/ determinar a Posição do corpo
     % assim temos que p/ a orderm de Rotação Z,Y,X (note que na referencia ele faz o calculo com XYZ, isso se deve por conta do lado da equação ao qual a matriz aparece)
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {AcelMagTilt, CompTilt, KalmanTilt, Acel_G, Vel, Space, Car3DAcelMag, Car3DKalman, Car3DComp, Space3D, CompassCompensated})
+        calculated = calculate_acel_mag_tilt([ax(max_size), ay(max_size), az(max_size)], [hx(max_size), hy(max_size), hz(max_size)]);
+        
+        aRoll   = [aRoll(2:max_size)  calculated(1)];
+        aPitch  = [aPitch(2:max_size) calculated(2)];
+        mYaw    = [mYaw(2:max_size)   calculated(3)];
 
-        %% Calcula pich e roll usado aceleração
-        newPitch = atan2(-ax(max_size), sqrt( ay(max_size)^2 + az(max_size)^2 )) * 180/pi;
-        if (az(max_size)>=0)
-            sign = 1;
-        else
-            sign = -1;
-        end
-        miu = 0.001;
-        newRoll = atan2( ay(max_size),   (sign * sqrt( az(max_size)^2 + miu * ax(max_size)^2 ))) * 180/pi;
-
-        %% Calcula yaw usando magnetômetro (compass com compensação)
-        % Ref do calculo: https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
-        x = hx(max_size)*cosd(newPitch) + hy(max_size)*sind(newRoll)*sind(newPitch) + hz(max_size)*cosd(newRoll)*sind(newPitch);
-        y = -hy(max_size)*cosd(newRoll) + hz(max_size)*sind(newRoll);
-
-        newYaw = -atan2(-y, x) * 180/pi;
-
-        aPitch  = [aPitch(2:max_size) newPitch];
-        aRoll   = [aRoll(2:max_size)   newRoll];
-        mYaw    = [mYaw(2:max_size) newYaw];
+        plotAcelMagTilt.update({aRoll, aPitch, mYaw});
     end
 
     %% Calcula Compass sem compensação 
     % Ref do calculo: https://blog.digilentinc.com/how-to-convert-magnetometer-data-into-compass-heading/
     % e plota em plano polar o Compass sem compensação 
     if isOneIn(setted_objects_name, {Compass})
-        newYaw = atan2(-hy(max_size), hx(max_size)) * 180/pi;
-
-        if newYaw > 360
-            newYaw = newYaw - 360;
-        elseif newYaw < 0
-            newYaw = newYaw + 360;
-        end
-
-        plotCompass.rotateCompass(newYaw);
+        calculated = compass_without_compensation([hx(max_size), hy(max_size), hz(max_size)]);
+        plotCompass.rotateCompass(calculated);
     end
 
     %% Usa o valor calculado do compass com compensação já calculado acima
@@ -428,13 +364,17 @@ while true
     %% Calcula Rotação usando filtro complementar
     % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
     if isOneIn(setted_objects_name, {CompTilt, Car3DComp})
-        newRoll = weightedMeanAngle(compl_Roll(max_size) + delta_gRoll, aRoll(max_size), mu);
-        newPitch = weightedMeanAngle(compl_Pitch(max_size) + delta_gPitch, aPitch(max_size), mu);
-        newYaw = weightedMeanAngle(compl_Yaw(max_size) + delta_gYaw, mYaw(max_size), mu);
+        calculated = calculate_comp_filter(...
+            [compl_Roll(max_size), compl_Pitch(max_size), compl_Yaw(max_size)],...
+            [gRoll(max_size), gPitch(max_size), gYaw(max_size)],...
+            [gRoll(max_size-1), gPitch(max_size-1), gYaw(max_size-1)],...
+            [aRoll(max_size), aPitch(max_size), mYaw(max_size)],...
+            mu...
+        );
 
-        compl_Roll = [compl_Roll(2:max_size) newRoll];
-        compl_Pitch = [compl_Pitch(2:max_size) newPitch];
-        compl_Yaw = [compl_Yaw(2:max_size) newYaw];
+        compl_Roll  = [compl_Roll(2:max_size)  calculated(1)];
+        compl_Pitch = [compl_Pitch(2:max_size) calculated(2)];
+        compl_Yaw   = [compl_Yaw(2:max_size)   calculated(3)];
     end
 
     %% Calcula Rotação usando filtro de Kalman
@@ -490,13 +430,11 @@ while true
     % Usando os dados do filtro de kalman desrotacionar os vetores
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
     if isOneIn(setted_objects_name, {Acel_G, Vel, Space, Space3D})
-        Rot_M = ang2rotZYX(gYaw(max_size), gPitch(max_size), gRoll(max_size));
+        calculated = calculate_aceleration_without_gravity([gRoll(max_size), gPitch(max_size), gYaw(max_size)], [ax(max_size); ay(max_size); az(max_size)]);
 
-        unrotated_a = Rot_M * [ax(max_size); ay(max_size); az(max_size)];
-
-        ax_without_gravity = [ax_without_gravity(2:max_size) unrotated_a(1)];
-        ay_without_gravity = [ay_without_gravity(2:max_size) unrotated_a(2)];
-        az_without_gravity = [az_without_gravity(2:max_size) unrotated_a(3) - 1];
+        ax_without_gravity = [ax_without_gravity(2:max_size) calculated(1)];
+        ay_without_gravity = [ay_without_gravity(2:max_size) calculated(2)];
+        az_without_gravity = [az_without_gravity(2:max_size) calculated(3)];
     end
 
     %% Calcula Velocidade integrando a Aceleração
@@ -505,13 +443,16 @@ while true
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
     if isOneIn(setted_objects_name, {Vel, Space, Space3D})
-        newVx = (vx(max_size) + ((ax_without_gravity(max_size-1) + ax_without_gravity(max_size)) / (2 * freq_sample) ));
-        newVy = (vy(max_size) + ((ay_without_gravity(max_size-1) + ay_without_gravity(max_size)) / (2 * freq_sample) ));
-        newVz = (vz(max_size) + ((az_without_gravity(max_size-1) + az_without_gravity(max_size)) / (2 * freq_sample) ));
+        calculated = calculate_velocity(...
+            [vx(max_size), vy(max_size), vz(max_size)],...
+            [ax_without_gravity(max_size), ay_without_gravity(max_size), az_without_gravity(max_size)],...
+            [ax_without_gravity(max_size-1), ay_without_gravity(max_size-1), az_without_gravity(max_size-1)],...
+            freq_sample...
+        );
 
-        vx = [vx(2:max_size)  newVx];
-        vy = [vy(2:max_size)  newVy];
-        vz = [vz(2:max_size)  newVz];
+        vx = [vx(2:max_size)  calculated(1)];
+        vy = [vy(2:max_size)  calculated(2)];
+        vz = [vz(2:max_size)  calculated(3)];
     end
 
     %% Calcula Posição integrando a Velocidade
@@ -520,13 +461,16 @@ while true
     % É considerado nesse calculo que, as amostragens estão espaçadas de 1
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
     if isOneIn(setted_objects_name, {Space, Space3D})
-        newPx = (px(max_size) + ((vx(max_size-1) + vx(max_size)) / (2 * freq_sample) ));
-        newPy = (py(max_size) + ((vy(max_size-1) + vy(max_size)) / (2 * freq_sample) ));
-        newPz = (pz(max_size) + ((vz(max_size-1) + vz(max_size)) / (2 * freq_sample) ));
+        calculated = calculate_position(...
+            [px(max_size), py(max_size), pz(max_size)],...
+            [vx(max_size), vy(max_size), vz(max_size)],...
+            [vx(max_size-1), vy(max_size-1), vz(max_size-1)],...
+            freq_sample...
+        );
 
-        px = [px(2:max_size)  newPx];
-        py = [py(2:max_size)  newPy];
-        pz = [pz(2:max_size)  newPz];
+        px = [px(2:max_size)  calculated(1)];
+        py = [py(2:max_size)  calculated(2)];
+        pz = [pz(2:max_size)  calculated(3)];
     end
 
     %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)

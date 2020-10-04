@@ -26,6 +26,9 @@ classdef EmptyPlot < CustomPlot
         function rotateCompass(obj)
         end
         
+        function update(obj, source)
+        end
+        
     end
     
 end

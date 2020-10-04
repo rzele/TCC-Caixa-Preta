@@ -7,7 +7,7 @@ classdef PlotLine < CustomPlot
         subplot
         n_rows
         n_columns
-        series = []
+        series = {}
         sources = []
     end
     
@@ -26,7 +26,8 @@ classdef PlotLine < CustomPlot
                 title(p_title)
                 xlabel(p_xlabel);
                 ylabel(p_ylabel);
-                legend(s_legend);
+                % legend(s_legend);
+                xlim([0 4000]);
             else
                 error('Nao foi inicializado este objeto ainda, defina as fontes usando a funcao setSource.')
             end
@@ -38,10 +39,16 @@ classdef PlotLine < CustomPlot
             grid;
             hold on
             for i = 1:length(sources_name)
-                serie = plot(0, cell2mat(sources_color(i)));
-                serie.YDataSource = cell2mat(sources_name(i));
+                obj.series{i} = plot(0, sources_color{i});
+                obj.series{i}.YDataSource = cell2mat(sources_name(i));
             end
             hold off
+        end
+
+        function update(obj, source)
+            % for i = 1:length(source)
+            %     obj.series{i}.YData = source{i};
+            % end
         end
     end
     
