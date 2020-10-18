@@ -16,6 +16,8 @@ classdef Render < handle
         )
         grid_n_rows = 5
         grid_n_columns = 6
+        count_render_times = 0
+        time_rendering = 0;
     end
     
     methods
@@ -78,9 +80,14 @@ classdef Render < handle
         function try_render(obj)
             % Re plota
             if (now-obj.time)*100000 > 1/obj.freq_render
+                obj.count_render_times = obj.count_render_times + 1;
+                t1 = tic;
+
                 refreshdata
                 drawnow
                 obj.time = now;
+                
+                obj.time_rendering = obj.time_rendering + toc(t1);
             end
         end
 
@@ -102,6 +109,10 @@ classdef Render < handle
             end
 
             linkaxes(axis, 'x');
+        end
+
+        function delete(obj)
+            fprintf('Tempo médio da função de renderização: %fs\n', obj.time_rendering / obj.count_render_times);
         end
     end
 end

@@ -7,6 +7,7 @@ addpath('quaternion_library');      % include quaternion library
 addpath('render');                  % include plot library
 addpath('reader');                  % include reader library
 addpath('helpers');                 % include some useful functions
+addpath('funcs');                 % 
 
 close all;                          % close all figures
 clear;                              % clear all variables
@@ -113,7 +114,7 @@ beta=0.1;
 
 %% Variáveis de dados
 vazios=zeros(1,max_size); 
-count=0;                                 % conta quantas amostras foram lidas
+count=0;                                % conta quantas amostras foram lidas
 
 ax=vazios;                              % Aceleração eixo X
 ay=ax;                                  % Aceleração eixo Y
@@ -264,20 +265,23 @@ esc_giro = str2int16(reader.metadatas.gesc_op);                 % e giro //+/- 2
 %% Obtem os dados e plota em tempo real
 % NOTA: Se o buffer do serial encher (> 512 bytes) o programa pode explodir ou apresentar erros, caso isso ocorra
 % abaixe a taxa de renderização do gráfico. Para verificar se erros ocorreram, compare a quantidade de amostras enviadas com a quantidade lida
+time_calc_data = 0;
 while true
     
     %% Lê uma amostra de cada da porta serial/arquivo
     data = reader.read_sample();
-
+    
     % Se é o fim do arquivo ou deu algum erro finaliza
     if isempty(data)
         break;
     end
-
+    
     count=count+1;
     
+    t1 = tic;
     data = str2int16(data);
-    
+
+    %% Convert data
     acel = calculate_aceleration(data(1:3), [ax_bias, ay_bias, az_bias], esc_ac);
     gyro = calculate_gyro(data(4:6), [gx_bias, gy_bias, gz_bias], esc_giro);
     mag = calculate_mag(data(7:9), [hx_offset, hy_offset, hz_offset], [hx_scale, hy_scale, hz_scale]);
@@ -497,6 +501,8 @@ while true
     if isOneIn(setted_objects_name, Car3DMadgwick)
         plotCar3DMadgwick.rotateWithQuaternion(madgwickFilter.Quaternion);
     end
+    
+    time_calc_data = time_calc_data + toc(t1);
 
     %% Tenta redesenhar o plot, se deu o tempo da frequencia
     if plot_in_real_time
@@ -507,10 +513,12 @@ end
 %% Renderiza pela ultima vez, independente de ter dado o tempo da frequencia
 plot_1.force_render();
 
-%% Linka todos os eixos p/ poder dar zoom em todos de uma vez, so pode ser executado quando não tiver mais atualizações
-% plot_1.linkAllAxes();
+reader.delete();
+plot_1.delete();
+
+%% Calcula média dos tempos
+fprintf('Tempo médio de calculo: %fs\n', time_calc_data / count);
 
 %% Aqui acaba o script
 fprintf(1,'Recebidos %d amostras\n\n',count);
-reader.delete();
 return;

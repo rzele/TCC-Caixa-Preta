@@ -10,6 +10,8 @@ classdef ReaderCore < handle
         end_delimiter 
         data_delimiter 
         metadatas = struct()
+        count_reader_times = 0
+        time_reading = 0;
     end
     
     methods
@@ -90,6 +92,8 @@ classdef ReaderCore < handle
         end
 
         function data = read_sample(obj)
+            obj.count_reader_times = obj.count_reader_times + 1;
+            t1 = tic;
             % Le ate achar quebra de linha
             data=fgetl(obj.f_pt);
            
@@ -117,11 +121,13 @@ classdef ReaderCore < handle
                data = data(3:11);
             end
 
+            obj.time_reading = obj.time_reading + toc(t1);
        end
 
         % Fecha o arquivo ou conexao com porta serial
         function delete(obj)
             fclose(obj.f_pt);
+            fprintf('Tempo médio de leitura: %fs\n', obj.time_reading / obj.count_reader_times);
         end
     end
 end
