@@ -1,4 +1,4 @@
-function ret = ang2rotZYX( Z, Y, X )
+function ret = ang2rotZYX( X, Y, Z )
 % euler angles(in deg) to rotation matrix ZYX
 %  
     temp_Rx = [...

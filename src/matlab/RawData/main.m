@@ -7,7 +7,7 @@ addpath('quaternion_library');      % include quaternion library
 addpath('render');                  % include plot library
 addpath('reader');                  % include reader library
 addpath('helpers');                 % include some useful functions
-addpath('funcs');                 % 
+addpath('funcs');                   % 
 
 close all;                          % close all figures
 clear;                              % clear all variables
@@ -131,7 +131,6 @@ gYaw=ax;                                % Movimento de Yaw usando giro/s (relati
 gPitch_abs=ax;                          % Movimento de Pitch usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
 gRoll_abs=ax;                           % Movimento de Roll usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
 gYaw_abs=ax;                            % Movimento de Yaw usando giro/s e matriz de Rotação (em relação a Posição inicial do corpo)
-Rot=[[1,0,0];[0,1,0];[0,0,1]];          % Matriz de Rotação que move o corpo da Posição inicial p/ a atual
 aPitch=ax;                              % Movimento de Pitch usando Aceleração
 aRoll=ax;                               % Movimento de Roll usando Aceleração
 mYaw=ax;                                % Movimento de Yaw usando Magnetômetro
