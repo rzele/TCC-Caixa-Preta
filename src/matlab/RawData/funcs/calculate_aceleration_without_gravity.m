@@ -6,5 +6,5 @@ function ret = calculate_aceleration_without_gravity(tilt, A)
     % Remove gravity vector (1g)
     unrotated_a(3) = unrotated_a(3) - 1;
 
-    ret = unrotated_a;
+    ret = unrotated_a';
 end

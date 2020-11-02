@@ -5,22 +5,13 @@ classdef EmptyPlot < CustomPlot
     end
     
     methods
-        function setProperties(obj, p_title, p_xlabel, p_ylabel, s_legend)
-        end
-
-        function setSource(obj, sources_name, sources_color)
-        end
-
-        function setCar(obj)
+        function configPlot(obj, p_title, p_xlabel, p_ylabel, s_legend, sources_color)
         end
 
         function rotateWithEuler(obj)
         end
         
         function rotateWithQuaternion(obj)
-        end
-
-        function setCompass(obj)
         end
 
         function rotateCompass(obj)

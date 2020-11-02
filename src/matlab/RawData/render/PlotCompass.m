@@ -16,14 +16,9 @@ classdef PlotCompass < CustomPlot
         end
 
         % Define as propriedades do objeto no layout (titulo, legenda...)
-        function setProperties(obj, p_title)
-            % Verifica se o objeto existe e foi inicializado
-            if ~isempty(obj.subplot)
-                subplot(obj.subplot)
-                title(p_title)
-            else
-                error('Nao foi inicializado este objeto ainda, defina as fontes usando a funcao setSource.')
-            end
+        function configPlot(obj, p_title)
+            obj.setCompass();
+            title(p_title)
         end
 
         % Define o plot polar p/ ficar parecido com um compass
