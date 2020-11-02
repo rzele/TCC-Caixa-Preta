@@ -1,4 +1,4 @@
-classdef Car3DMadgwick < TemplateLine
+classdef Car3DMadgwick < TemplateCar3D
     properties
     end
 
@@ -11,10 +11,6 @@ classdef Car3DMadgwick < TemplateLine
             obj.my_plot = fig.setItemType(obj.name, 'plot3dcar');
             obj.my_plot.configPlot('Rotação 3D usando quaternions (filtro Madgwick)');
             obj.data = zeros(1, 4);
-        end
-
-        function calculate(obj, q)
-            obj.data = q;
         end
 
         function update(obj)

@@ -1,19 +1,10 @@
-classdef TemplateLine < handle
+classdef TemplateLine < Template
     properties
-        name
-        data
         w_size
-        my_plot
     end
 
     methods
         function obj = TemplateLine()
-        end
-
-        function obj = initialize(obj, fig, w_size)
-        end
-
-        function ret = calculate(obj, gyro_tilt, old_gyro_tilt, tilt, mu)
         end
 
         function update(obj)

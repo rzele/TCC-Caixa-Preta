@@ -1,4 +1,7 @@
 classdef CompassCompensated < TemplateLine
+    % Usa o valor calculado do compass com compensação já calculado acima
+    % Ref do calculo: https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
+
     properties
     end
 

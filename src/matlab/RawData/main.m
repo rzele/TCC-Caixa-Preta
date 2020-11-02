@@ -215,16 +215,11 @@ while true
         acel_mag_tilt.update();
     end
 
-    %% Calcula Compass sem compensação 
-    % Ref do calculo: https://blog.digilentinc.com/how-to-convert-magnetometer-data-into-compass-heading/
-    % e plota em plano polar o Compass sem compensação 
     if isOneIn(setted_objects_name, {Compass_name})
         compass.calculate(magnetometer.last());
         compass.update();
     end
 
-    %% Usa o valor calculado do compass com compensação já calculado acima
-    % Ref do calculo: https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
     if isOneIn(setted_objects_name, {CompassCompensated_name})
         acel_mag_last = acel_mag_tilt.last();
         compass_compensated.calculate(acel_mag_last(3));
