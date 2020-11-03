@@ -15,6 +15,7 @@ clear;                              % clear all variables
 clc;                                % clear the command terminal
 
 % Instância os plots
+Vazio = '';                         % Deixa a celula vazia
 aceleration = Aceleration();
 gyroscope = Gyroscope();
 magnetometer = Magnetometer();
@@ -38,30 +39,6 @@ car_3d_kalman = Car3DKalman();
 car_3d_madgwick = Car3DMadgwick();
 
 
-% layout Macros
-Vazio = '';                         % Deixa a celula vazia
-Acel = aceleration.name;                         % Aceleração X,Y,Z
-Vel = velocity.name;                          % Velocidade X,Y,Z
-Space = position.name;                        % Espaço percorrido X,Y,Z
-Gvel = gyroscope.name;                         % Velocidade angular em X,Y,Z
-Gdeg = gyro_relative_tilt.name;                         % Posição angular em Z,Y,X relativo (em relação a Posição anterior)
-Gtilt = gyro_absolute_tilt.name;                        % Posição angular em Z,Y,X absoluto (em relação aos eixos iniciais)
-Mag = magnetometer.name;                          % Magnetometro
-AcelMagTilt_name = acel_mag_tilt.name;                  % Posição angular em Z,Y,X absoluto, usando Aceleração e magnetometro
-CompTilt = comp_tilt.name;                     % Posição angular usando o filtro complementar
-KalmanTilt_name = kalman_tilt.name;                   % Posição angular usando o filtro de kalman
-MadgwickTilt_name = Madgwick_tilt.name;                 % Posição angular usando o filtro de madgwick
-Acel_G = acel_without_g.name;                       % Aceleração desconsiderando a gravidade (utilizando o melhor filtro p/ remove-la)
-Quat = quaternion.name;                         % Plot com os valore de quaternion extraidos do filtro de madgwick
-Car3DGdeg_name = car_3d_gdeg.name;                    % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (Gdeg)
-Car3DGtilt_name = car_3d_gtilt.name;                   % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (Gtilt)
-Car3DAcelMag_name = car_3d_acelMag.name;                 % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (AcelMagTilt_name)
-Car3DComp_name = car_3d_comp.name;                    % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (CompTilt)
-Car3DKalman_name = car_3d_kalman.name;                  % Posição angular atual usando um objeto 3D rotacionando utilizando matriz de Rotação (KalmanTilt_name)
-Car3DMadgwick_name = car_3d_madgwick.name;                % Posição angular atual usando um objeto 3D rotacionando utilizando quaternios advindos do filtro de Madgwick
-Compass_name = compass.name;                      % Angulo de yaw estraido do magnetometro sem compensação de tilt plotado em plano polar
-CompassCompensated_name = compass_compensated.name;           % Angulo de yaw estraido do magnetometro com compensação de tilt, usando dados do MPU, plotado em plano polar
-
 %% PARAMETROS DE USUÁRIO %%
 % Fonte de leitura
 read_from_serial=false;     % Set to false to use a file
@@ -78,8 +55,8 @@ plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo rea
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-    Car3DGdeg_name, Car3DGtilt_name, Car3DAcelMag_name ;...
-    Car3DComp_name, Car3DKalman_name, Car3DMadgwick_name;...
+    car_3d_gdeg, car_3d_gtilt, car_3d_acelMag ;...
+    car_3d_comp, car_3d_kalman, car_3d_madgwick;...
 
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -200,95 +177,95 @@ while true
     gyroscope.update();
     magnetometer.update();
 
-    if isOneIn(setted_objects_name, {Gdeg, Gtilt, AcelMagTilt_name, CompTilt, Car3DGdeg_name, Car3DGtilt_name, Car3DAcelMag_name, Car3DComp_name, Acel_G, Vel, Space})
+    if isOneIn(setted_objects_name, {gyro_relative_tilt.name, gyro_absolute_tilt.name, acel_mag_tilt.name, comp_tilt.name, car_3d_gdeg.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name, acel_without_g.name, velocity.name, position.name})
         gyro_relative_tilt.calculate(gyroscope.last(), gyroscope.penult(), freq_sample);
         gyro_relative_tilt.update();
     end
     
-    if isOneIn(setted_objects_name, {Gtilt, CompTilt, Car3DGtilt_name, Car3DAcelMag_name, Car3DComp_name})
+    if isOneIn(setted_objects_name, {gyro_absolute_tilt.name, comp_tilt.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name})
         gyro_absolute_tilt.calculate(gyro_relative_tilt.last());
         gyro_absolute_tilt.update();
     end
     
-    if isOneIn(setted_objects_name, {AcelMagTilt_name, CompTilt, KalmanTilt_name, Acel_G, Vel, Space, Car3DAcelMag_name, Car3DKalman_name, Car3DComp_name, CompassCompensated_name})
+    if isOneIn(setted_objects_name, {acel_mag_tilt.name, comp_tilt.name, kalman_tilt.name, acel_without_g.name, velocity.name, position.name, car_3d_acelMag.name, car_3d_kalman.name, car_3d_comp.name, compass_compensated.name})
         acel_mag_tilt.calculate(aceleration.last(), magnetometer.last());
         acel_mag_tilt.update();
     end
 
-    if isOneIn(setted_objects_name, {Compass_name})
+    if isOneIn(setted_objects_name, {compass.name})
         compass.calculate(magnetometer.last());
         compass.update();
     end
 
-    if isOneIn(setted_objects_name, {CompassCompensated_name})
+    if isOneIn(setted_objects_name, {compass_compensated.name})
         acel_mag_last = acel_mag_tilt.last();
         compass_compensated.calculate(acel_mag_last(3));
         compass_compensated.update();
     end
 
-    if isOneIn(setted_objects_name, {CompTilt, Car3DComp_name})
+    if isOneIn(setted_objects_name, {comp_tilt.name, car_3d_comp.name})
         comp_tilt.calculate(gyro_relative_tilt.last(), gyro_relative_tilt.penult(), acel_mag_tilt.last(), mu); 
         comp_tilt.update();
     end
 
-    if isOneIn(setted_objects_name, {KalmanTilt_name, Car3DKalman_name})
+    if isOneIn(setted_objects_name, {kalman_tilt.name, car_3d_kalman.name})
         kalman_tilt.calculate(gyroscope.last(), acel_mag_tilt.last());
         kalman_tilt.update();
     end
     
-    if isOneIn(setted_objects_name, {MadgwickTilt_name, Car3DMadgwick_name, Quat})
+    if isOneIn(setted_objects_name, {Madgwick_tilt.name, car_3d_madgwick.name, quaternion.name})
         Madgwick_tilt.calculate(gyroscope.last(), aceleration.last(), magnetometer.last());
         Madgwick_tilt.update();
     end
 
     %% Plota quaterions do filtro de madgwick
-    if isOneIn(setted_objects_name, {Quat})
+    if isOneIn(setted_objects_name, {quaternion.name})
         quaternion.calculate(Madgwick_tilt.last_quaternion());
         quaternion.update();
     end
     
-    if isOneIn(setted_objects_name, {Acel_G, Vel, Space})
+    if isOneIn(setted_objects_name, {acel_without_g.name, velocity.name, position.name})
         acel_without_g.calculate(gyro_relative_tilt.last(), aceleration.last());
         acel_without_g.update();
     end
 
-    if isOneIn(setted_objects_name, {Vel, Space})
+    if isOneIn(setted_objects_name, {velocity.name, position.name})
         velocity.calculate(acel_without_g.last(), acel_without_g.penult(), freq_sample);
         velocity.update();
     end
 
-    if isOneIn(setted_objects_name, {Space})
+    if isOneIn(setted_objects_name, {position.name})
         position.calculate(velocity.last(), velocity.penult(), freq_sample);
         position.update();
     end
 
     %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
-    if isOneIn(setted_objects_name, {Car3DGdeg_name})
+    if isOneIn(setted_objects_name, {car_3d_gdeg.name})
         car_3d_gdeg.calculate(gyro_relative_tilt.last());
         car_3d_gdeg.update();
     end
 
-    if isOneIn(setted_objects_name, {Car3DGtilt_name})
+    if isOneIn(setted_objects_name, {car_3d_gtilt.name})
         car_3d_gtilt.calculate(gyro_absolute_tilt.last());
         car_3d_gtilt.update();
     end
 
-    if isOneIn(setted_objects_name, {Car3DAcelMag_name})
+    if isOneIn(setted_objects_name, {car_3d_acelMag.name})
         car_3d_acelMag.calculate(acel_mag_tilt.last());
         car_3d_acelMag.update();
     end
 
-    if isOneIn(setted_objects_name, {Car3DComp_name})
+    if isOneIn(setted_objects_name, {car_3d_comp.name})
         car_3d_comp.calculate(comp_tilt.last());
         car_3d_comp.update();
     end
 
-    if isOneIn(setted_objects_name, {Car3DKalman_name})
+    if isOneIn(setted_objects_name, {car_3d_kalman.name})
         car_3d_kalman.calculate(kalman_tilt.last());
         car_3d_kalman.update();
     end
 
-    if isOneIn(setted_objects_name, {Car3DMadgwick_name})
+    if isOneIn(setted_objects_name, {car_3d_madgwick.name})
         car_3d_madgwick.calculate(Madgwick_tilt.last_quaternion());
         car_3d_madgwick.update();
     end

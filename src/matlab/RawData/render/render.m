@@ -35,7 +35,11 @@ classdef Render < handle
             % Define o grid de cada objeto no layout em fun��o de linha e colunas do grid
             for row = 1:obj.grid_n_rows
                 for col = 1:obj.grid_n_columns
-                    obj_name = cell2mat(layout(row, col));
+                    obj_name = layout{row, col};
+
+                    if isobject(obj_name)
+                        obj_name = obj_name.name;
+                    end
 
                     if ~strcmp(obj_name,'')
                         % Istancia a estrutura do objeto do layout se ainda não iniciada
