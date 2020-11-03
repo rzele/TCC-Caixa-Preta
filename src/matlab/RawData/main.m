@@ -173,101 +173,80 @@ while true
     gyroscope.calculate(data(4:6), [gx_bias, gy_bias, gz_bias], esc_giro);
     magnetometer.calculate(data(7:9), [hx_offset, hy_offset, hz_offset], [hx_scale, hy_scale, hz_scale]);
 
-    aceleration.update();
-    gyroscope.update();
-    magnetometer.update();
 
     if isOneIn(setted_objects_name, {gyro_relative_tilt.name, gyro_absolute_tilt.name, acel_mag_tilt.name, comp_tilt.name, car_3d_gdeg.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name, acel_without_g.name, velocity.name, position.name})
         gyro_relative_tilt.calculate(gyroscope.last(), gyroscope.penult(), freq_sample);
-        gyro_relative_tilt.update();
     end
     
     if isOneIn(setted_objects_name, {gyro_absolute_tilt.name, comp_tilt.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name})
         gyro_absolute_tilt.calculate(gyro_relative_tilt.last());
-        gyro_absolute_tilt.update();
     end
     
     if isOneIn(setted_objects_name, {acel_mag_tilt.name, comp_tilt.name, kalman_tilt.name, acel_without_g.name, velocity.name, position.name, car_3d_acelMag.name, car_3d_kalman.name, car_3d_comp.name, compass_compensated.name})
         acel_mag_tilt.calculate(aceleration.last(), magnetometer.last());
-        acel_mag_tilt.update();
     end
 
     if isOneIn(setted_objects_name, {compass.name})
         compass.calculate(magnetometer.last());
-        compass.update();
     end
 
     if isOneIn(setted_objects_name, {compass_compensated.name})
         acel_mag_last = acel_mag_tilt.last();
         compass_compensated.calculate(acel_mag_last(3));
-        compass_compensated.update();
     end
 
     if isOneIn(setted_objects_name, {comp_tilt.name, car_3d_comp.name})
         comp_tilt.calculate(gyro_relative_tilt.last(), gyro_relative_tilt.penult(), acel_mag_tilt.last(), mu); 
-        comp_tilt.update();
     end
 
     if isOneIn(setted_objects_name, {kalman_tilt.name, car_3d_kalman.name})
         kalman_tilt.calculate(gyroscope.last(), acel_mag_tilt.last());
-        kalman_tilt.update();
     end
     
     if isOneIn(setted_objects_name, {Madgwick_tilt.name, car_3d_madgwick.name, quaternion.name})
         Madgwick_tilt.calculate(gyroscope.last(), aceleration.last(), magnetometer.last());
-        Madgwick_tilt.update();
     end
 
     %% Plota quaterions do filtro de madgwick
     if isOneIn(setted_objects_name, {quaternion.name})
         quaternion.calculate(Madgwick_tilt.last_quaternion());
-        quaternion.update();
     end
     
     if isOneIn(setted_objects_name, {acel_without_g.name, velocity.name, position.name})
         acel_without_g.calculate(gyro_relative_tilt.last(), aceleration.last());
-        acel_without_g.update();
     end
 
     if isOneIn(setted_objects_name, {velocity.name, position.name})
         velocity.calculate(acel_without_g.last(), acel_without_g.penult(), freq_sample);
-        velocity.update();
     end
 
     if isOneIn(setted_objects_name, {position.name})
         position.calculate(velocity.last(), velocity.penult(), freq_sample);
-        position.update();
     end
 
     %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
     if isOneIn(setted_objects_name, {car_3d_gdeg.name})
         car_3d_gdeg.calculate(gyro_relative_tilt.last());
-        car_3d_gdeg.update();
     end
 
     if isOneIn(setted_objects_name, {car_3d_gtilt.name})
         car_3d_gtilt.calculate(gyro_absolute_tilt.last());
-        car_3d_gtilt.update();
     end
 
     if isOneIn(setted_objects_name, {car_3d_acelMag.name})
         car_3d_acelMag.calculate(acel_mag_tilt.last());
-        car_3d_acelMag.update();
     end
 
     if isOneIn(setted_objects_name, {car_3d_comp.name})
         car_3d_comp.calculate(comp_tilt.last());
-        car_3d_comp.update();
     end
 
     if isOneIn(setted_objects_name, {car_3d_kalman.name})
         car_3d_kalman.calculate(kalman_tilt.last());
-        car_3d_kalman.update();
     end
 
     if isOneIn(setted_objects_name, {car_3d_madgwick.name})
         car_3d_madgwick.calculate(Madgwick_tilt.last_quaternion());
-        car_3d_madgwick.update();
     end
     
     time_calc_data = time_calc_data + toc(t1);

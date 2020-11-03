@@ -16,7 +16,7 @@ classdef KalmanTilt < TemplateLine
 
         function obj = initialize(obj, fig, w_size, A,B,C,Q,R)
             obj.w_size = w_size;
-            obj.my_plot = fig.setItemType(obj.name, 'plotline');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotline');
             obj.my_plot.configPlot('Filtro de Kalman', 'Amostra', 'graus', {'Roll', 'Pitch', 'Yaw'}, {'r', 'g', 'b'});
             obj.data = zeros(w_size, 3);
 

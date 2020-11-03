@@ -12,7 +12,7 @@ classdef Compass < TemplateLine
         end
 
         function obj = initialize(obj, fig)
-            obj.my_plot = fig.setItemType(obj.name, 'plotcompass');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotcompass');
             obj.my_plot.configPlot('Magnetic Heading SEM compensação de tilt');
             obj.data = 0;
         end

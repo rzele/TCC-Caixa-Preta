@@ -10,7 +10,7 @@ classdef Aceleration < TemplateLine
 
         function obj = initialize(obj, fig, w_size, f_size)
             obj.w_size = w_size;
-            obj.my_plot = fig.setItemType(obj.name, 'plotline');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotline');
             obj.my_plot.configPlot('Aceleração em "g"', 'Amostra', 'g', {'vX', 'vY', 'vZ'}, {'r', 'g', 'b'});
             obj.moving_avg = MovingAverage(f_size, 3);
             obj.data = zeros(w_size, 3);

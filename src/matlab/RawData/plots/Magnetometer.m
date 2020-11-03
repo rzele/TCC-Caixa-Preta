@@ -10,7 +10,7 @@ classdef Magnetometer < TemplateLine
 
         function obj = initialize(obj, fig, w_size, f_size)
             obj.w_size = w_size;
-            obj.my_plot = fig.setItemType(obj.name, 'plotline');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotline');
             obj.my_plot.configPlot('Magnetrometro em mili Gaus', 'Amostra', 'mG', {'hx', 'hy', 'hz'}, {'r', 'g', 'b'});
             obj.moving_avg = MovingAverage(f_size, 3);
             obj.data = zeros(w_size, 3);

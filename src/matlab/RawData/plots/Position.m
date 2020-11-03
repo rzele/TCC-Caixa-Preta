@@ -15,7 +15,7 @@ classdef Position < TemplateLine
 
         function obj = initialize(obj, fig, w_size)
             obj.w_size = w_size;
-            obj.my_plot = fig.setItemType(obj.name, 'plotline');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotline');
             obj.my_plot.configPlot('Espaço em metros', 'Amostra', 'metros', {'X', 'Y', 'Z'}, {'r', 'g', 'b'});
             obj.data = zeros(w_size, 3);
         end

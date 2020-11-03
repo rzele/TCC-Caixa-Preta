@@ -59,7 +59,7 @@ classdef Render < handle
             obj.fig = figure('units','normalized','outerposition',[0 0 1 1]);
         end
 
-        function new_plot = setItemType(obj, obj_name, type_name)
+        function new_plot = setItemType(obj, obj_instance, obj_name, type_name)
             if ~isfield(obj.layout, obj_name)
                 new_plot = EmptyPlot();
                 return
@@ -77,6 +77,8 @@ classdef Render < handle
                 error('type_name is invalid');
             end
 
+            obj.layout.(obj_name).instance = obj_instance;
+
             obj.plots(length(obj.plots)+1) = new_plot;
         end
 
@@ -87,6 +89,8 @@ classdef Render < handle
                 obj.count_render_times = obj.count_render_times + 1;
                 t1 = tic;
 
+                obj.update_all();
+
                 refreshdata
                 drawnow
                 obj.time = now;
@@ -95,9 +99,17 @@ classdef Render < handle
             end
         end
 
+        function update_all(obj)
+            for i = 1:length(obj.setted_objects_name)
+                obj_name = obj.setted_objects_name{i};
+                obj.layout.(obj_name).instance.update();
+            end
+        end
+
         % Rendereza mesmo se nã0o deu o tempo da frequencia
         function force_render(obj)
             figure(1)
+            obj.update_all();
             refreshdata
             drawnow
             obj.time = now;

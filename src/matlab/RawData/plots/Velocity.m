@@ -15,7 +15,7 @@ classdef Velocity < TemplateLine
 
         function obj = initialize(obj, fig, w_size)
             obj.w_size = w_size;
-            obj.my_plot = fig.setItemType(obj.name, 'plotline');
+            obj.my_plot = fig.setItemType(obj, obj.name, 'plotline');
             obj.my_plot.configPlot('Velocidade em m/s', 'Amostra', 'm/s', {'vX', 'vY', 'vZ'}, {'r', 'g', 'b'});
             obj.data = zeros(w_size, 3);
         end
