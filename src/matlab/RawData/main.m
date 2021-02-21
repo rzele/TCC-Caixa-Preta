@@ -4,11 +4,10 @@
 % - file_simulated_freq ainda não funciona muito bem
 
 addpath('quaternion_library');      % include quaternion library
-addpath('render');                  % include plot library
 addpath('reader');                  % include reader library
 addpath('helpers');                 % include some useful functions
-addpath('funcs');                   % 
-addpath('plots');                   % 
+addpath('charts');                  % 
+addpath('plots');                   % include plot library
 
 close all;                          % close all figures
 clear;                              % clear all variables
@@ -51,12 +50,14 @@ max_size=4000;              % Quantidade maxima de amostras exibidas na tela
 freq_sample=100;            % Frequencia da amostragem dos dados
 
 % Plotagem
-plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo real
+plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
 freq_render=5;              % Frequencia de atualização do plot
 layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
 
-    car_3d_gdeg, car_3d_gtilt, car_3d_acelMag ;...
-    car_3d_comp, car_3d_kalman, car_3d_madgwick;...
+    aceleration, gyroscope, magnetometer, gyro_relative_tilt, gyro_absolute_tilt;...
+    acel_mag_tilt, comp_tilt, acel_without_g, velocity, position;...
+    kalman_tilt, Madgwick_tilt, quaternion, compass_compensated, car_3d_gdeg;...
+    car_3d_gtilt, car_3d_acelMag, car_3d_comp, car_3d_kalman, car_3d_madgwick;...
 
 };                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
 
@@ -113,9 +114,10 @@ plot_1 = Render(freq_render, layout);
 
 % Obtem a lista de itens unicos definidos no layout
 % para evitar calculo de itens descenessários
-setted_objects_name = plot_1.setted_objects_name;
+setted_objects_id = plot_1.setted_objects_id;
 
-aceleration.initialize(plot_1, max_size, window_k);
+%TODO - remover os initilize, isso deve fazer parte do construtor
+aceleration.initialize(max_size, window_k);
 gyroscope.initialize(plot_1, max_size, window_k);
 magnetometer.initialize(plot_1, max_size, window_k);
 gyro_relative_tilt.initialize(plot_1, max_size);
@@ -130,6 +132,10 @@ Madgwick_tilt.initialize(plot_1, max_size, freq_sample, beta);
 quaternion.initialize(plot_1, max_size);
 compass.initialize(plot_1);
 compass_compensated.initialize(plot_1);
+
+%TODO - criar car3DQuaternios e car3DEuler:
+% assim ao construir o objeto é injetado algum gráfico q retorne eulers ou quaternios.
+% O título do gráfico deve mudar para apontar qual classe foi injetada nele
 car_3d_gdeg.initialize(plot_1);
 car_3d_gtilt.initialize(plot_1);
 car_3d_acelMag.initialize(plot_1);
@@ -174,78 +180,78 @@ while true
     magnetometer.calculate(data(7:9), [hx_offset, hy_offset, hz_offset], [hx_scale, hy_scale, hz_scale]);
 
 
-    if isOneIn(setted_objects_name, {gyro_relative_tilt.name, gyro_absolute_tilt.name, acel_mag_tilt.name, comp_tilt.name, car_3d_gdeg.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name, acel_without_g.name, velocity.name, position.name})
+    if isOneIn(setted_objects_id, {gyro_relative_tilt.id, gyro_absolute_tilt.id, acel_mag_tilt.id, comp_tilt.id, car_3d_gdeg.id, car_3d_gtilt.id, car_3d_acelMag.id, car_3d_comp.id, acel_without_g.id, velocity.id, position.id})
         gyro_relative_tilt.calculate(gyroscope.last(), gyroscope.penult(), freq_sample);
     end
     
-    if isOneIn(setted_objects_name, {gyro_absolute_tilt.name, comp_tilt.name, car_3d_gtilt.name, car_3d_acelMag.name, car_3d_comp.name})
+    if isOneIn(setted_objects_id, {gyro_absolute_tilt.id, comp_tilt.id, car_3d_gtilt.id, car_3d_acelMag.id, car_3d_comp.id})
         gyro_absolute_tilt.calculate(gyro_relative_tilt.last());
     end
     
-    if isOneIn(setted_objects_name, {acel_mag_tilt.name, comp_tilt.name, kalman_tilt.name, acel_without_g.name, velocity.name, position.name, car_3d_acelMag.name, car_3d_kalman.name, car_3d_comp.name, compass_compensated.name})
+    if isOneIn(setted_objects_id, {acel_mag_tilt.id, comp_tilt.id, kalman_tilt.id, acel_without_g.id, velocity.id, position.id, car_3d_acelMag.id, car_3d_kalman.id, car_3d_comp.id, compass_compensated.id})
         acel_mag_tilt.calculate(aceleration.last(), magnetometer.last());
     end
 
-    if isOneIn(setted_objects_name, {compass.name})
+    if isOneIn(setted_objects_id, {compass.id})
         compass.calculate(magnetometer.last());
     end
 
-    if isOneIn(setted_objects_name, {compass_compensated.name})
+    if isOneIn(setted_objects_id, {compass_compensated.id})
         acel_mag_last = acel_mag_tilt.last();
         compass_compensated.calculate(acel_mag_last(3));
     end
 
-    if isOneIn(setted_objects_name, {comp_tilt.name, car_3d_comp.name})
+    if isOneIn(setted_objects_id, {comp_tilt.id, car_3d_comp.id})
         comp_tilt.calculate(gyro_relative_tilt.last(), gyro_relative_tilt.penult(), acel_mag_tilt.last(), mu); 
     end
 
-    if isOneIn(setted_objects_name, {kalman_tilt.name, car_3d_kalman.name})
+    if isOneIn(setted_objects_id, {kalman_tilt.id, car_3d_kalman.id})
         kalman_tilt.calculate(gyroscope.last(), acel_mag_tilt.last());
     end
     
-    if isOneIn(setted_objects_name, {Madgwick_tilt.name, car_3d_madgwick.name, quaternion.name})
+    if isOneIn(setted_objects_id, {Madgwick_tilt.id, car_3d_madgwick.id, quaternion.id})
         Madgwick_tilt.calculate(gyroscope.last(), aceleration.last(), magnetometer.last());
     end
 
     %% Plota quaterions do filtro de madgwick
-    if isOneIn(setted_objects_name, {quaternion.name})
+    if isOneIn(setted_objects_id, {quaternion.id})
         quaternion.calculate(Madgwick_tilt.last_quaternion());
     end
     
-    if isOneIn(setted_objects_name, {acel_without_g.name, velocity.name, position.name})
+    if isOneIn(setted_objects_id, {acel_without_g.id, velocity.id, position.id})
         acel_without_g.calculate(gyro_relative_tilt.last(), aceleration.last());
     end
 
-    if isOneIn(setted_objects_name, {velocity.name, position.name})
+    if isOneIn(setted_objects_id, {velocity.id, position.id})
         velocity.calculate(acel_without_g.last(), acel_without_g.penult(), freq_sample);
     end
 
-    if isOneIn(setted_objects_name, {position.name})
+    if isOneIn(setted_objects_id, {position.id})
         position.calculate(velocity.last(), velocity.penult(), freq_sample);
     end
 
-    %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
-    if isOneIn(setted_objects_name, {car_3d_gdeg.name})
+    % %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
+    if isOneIn(setted_objects_id, {car_3d_gdeg.id})
         car_3d_gdeg.calculate(gyro_relative_tilt.last());
     end
 
-    if isOneIn(setted_objects_name, {car_3d_gtilt.name})
+    if isOneIn(setted_objects_id, {car_3d_gtilt.id})
         car_3d_gtilt.calculate(gyro_absolute_tilt.last());
     end
 
-    if isOneIn(setted_objects_name, {car_3d_acelMag.name})
+    if isOneIn(setted_objects_id, {car_3d_acelMag.id})
         car_3d_acelMag.calculate(acel_mag_tilt.last());
     end
 
-    if isOneIn(setted_objects_name, {car_3d_comp.name})
+    if isOneIn(setted_objects_id, {car_3d_comp.id})
         car_3d_comp.calculate(comp_tilt.last());
     end
 
-    if isOneIn(setted_objects_name, {car_3d_kalman.name})
+    if isOneIn(setted_objects_id, {car_3d_kalman.id})
         car_3d_kalman.calculate(kalman_tilt.last());
     end
 
-    if isOneIn(setted_objects_name, {car_3d_madgwick.name})
+    if isOneIn(setted_objects_id, {car_3d_madgwick.id})
         car_3d_madgwick.calculate(Madgwick_tilt.last_quaternion());
     end
     

@@ -1,0 +1,42 @@
+classdef TemplateLine <  Template & PlotLine
+    % Esta classe é do tipo 'cálculo' e do tipo 'plot'
+    % Sendo assim, cabe a ela realizar cálculos e ao mesmo tempo
+    % renderizar os dados na tela em 'gráficos de linha'.
+    % A este tipo hibrido de classe demos o nome de 'chart'
+    %
+    % Por conta desta classe herdar 'PlotLine', esta classe (ou qualquer outra que herdar ela)
+    % pode ser injetada na classe 'render', para exibir o gráfico na tela.
+    %
+    % Sobrescrevendo o método 'update' do 'plotline', quando a 'render' chamar
+    % este método avisando que ocorrerá uma atualização na tela,
+    % esta classe pode atualizar o plot com os dados atuais cálculados.
+    % Sendo assim, não cabe mais a main, gerenciar os cálculos e seus respectivos plots
+    % Tornando cada gráfico visualizado na tela um módulo independente.
+    %
+    % NOTA: Esta class tem a função de implementar algumas das funções do template.
+    % Uma vez que essas funções implementadas seram iguais para quase todos os charts do tipo,
+    % evitando assim escrever todas as vez funções como por exemplo: 'update', 'last', 'penult'
+
+    properties
+        w_size
+    end
+
+    methods
+        function obj = TemplateLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color)
+            obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color);
+        end
+
+        function update(obj)
+            dataTransposed = obj.data';
+            obj.setSeries(dataTransposed);
+        end
+
+        function ret = last(obj)
+            ret = obj.data(obj.w_size, :);
+        end
+
+        function ret = penult(obj)
+            ret = obj.data(obj.w_size-1, :);
+        end
+    end
+end
