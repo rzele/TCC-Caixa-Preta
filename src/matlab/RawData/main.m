@@ -1,8 +1,3 @@
-% Ler da porta serial
-% Ainda precisa melhorar
-% BUGS:
-% - file_simulated_freq ainda não funciona muito bem
-
 % Importa tudo que esta na mesma raiz que a main.m, incluindo pastas e subpastas
 addpath(genpath('.'))
 

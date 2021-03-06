@@ -1,6 +1,13 @@
-classdef Kalman < handle
-    %KALMAN Summary of this class goes here
-    %   Model:
+classdef ModifiedKalmanFilter < handle
+    %KALMAN Implementa e modifica o filtro de kalman para estimativa de inclinação
+    %   OBS: Esta implemantação modifica o filtro de kalman para manter a
+    %   subtração (medida - estimativa) dentro do intervalo -180,180.
+    %   Esta mofificação é necessário conforme exemplificado mais abaixo!
+    %   Este filtro somente funciona para o modelo criado, ou seja,
+    %   os valores de A,B,C definidos.
+    %   Para utilizar com outro modelo, crie uma cópia e remova os conjuntos de if/else mais abaixo.
+    %
+    %   Formato padrão de modelagem:
     %   x[k] = A*x[k-1] + B*u[k] + w[k]
     %   y[k] = C*x[k] + v[k]
     %   E[wwt] = Q
@@ -23,7 +30,7 @@ classdef Kalman < handle
     end
     
     methods
-        function obj = Kalman(A,B,C,Q,R)
+        function obj = ModifiedKalmanFilter(A,B,C,Q,R)
            obj.A = A;
            obj.B = B;
            obj.C = C;
@@ -53,7 +60,23 @@ classdef Kalman < handle
             obj.K = obj.pk_minus * obj.C' / (obj.C * obj.pk_minus * obj.C' + obj.R);
 
             % atualiza x a posteriori
-            obj.xk_minus = obj.xk_minus + obj.K * (yk - obj.C * obj.xk_minus);
+            diff = yk - obj.C * obj.xk_minus;
+
+            % OBS: Esse conjunto de if/else não faz parte do kalman padrão.
+            % Ela é utilizada pois precisamos que os angulos estejam entre -180,180
+            % para não dar problema na subtração no momento de atualização. 
+            % E.g.:
+            %   Se nossa ultima estimativa foi -180 e a nova medida for 180, a diferença fica
+            %   -180 - (-180) = 360
+            %   Atualizar a estimativa atual de k*360 e diferente de k*180 ou k*(-1)*180 
+            %   Neste caso estariamos dobrando o valor a ser corrigido
+            if diff > 180
+                diff = diff - 360;
+            elseif diff < -180
+                diff = diff + 360;
+            end
+
+            obj.xk_minus = obj.xk_minus + obj.K * diff;
             xk = obj.xk_minus;
 
             % atualiza p a posteriori
@@ -64,6 +87,4 @@ classdef Kalman < handle
             obj.pk_1_minus = obj.pk_minus;
         end
     end
-    
 end
-

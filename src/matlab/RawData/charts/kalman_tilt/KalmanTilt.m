@@ -29,9 +29,9 @@ classdef KalmanTilt < CommonsLine
             %% Inicializa os filtros de kalman, um para cada eixo,
             % podemos fazer tudo com um filtro só, entretanto os parâmetros ficariam
             % bem grandes e de dificil visualização
-            obj.kalmanFilterRoll = Kalman(A,B,C,Q,R);
-            obj.kalmanFilterPitch = Kalman(A,B,C,Q,R);
-            obj.kalmanFilterYaw = Kalman(A,B,C,Q,R);
+            obj.kalmanFilterRoll = ModifiedKalmanFilter(A,B,C,Q,R);
+            obj.kalmanFilterPitch = ModifiedKalmanFilter(A,B,C,Q,R);
+            obj.kalmanFilterYaw = ModifiedKalmanFilter(A,B,C,Q,R);
 
             % Chart dependences
             obj.gyro_chart = gyro_chart;

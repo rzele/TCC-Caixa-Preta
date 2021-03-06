@@ -81,6 +81,11 @@ classdef Configs < handle
             %
             % y[k] = C*x[k] + v[k]
             % Y = X1 + ruido
+            % 
+            % OBS: O filtro de kalman utilizado foi modificado para manter os intervalos
+            % entre -180,180. Para entender melhor veja o arquivo 'ModifiedKalmanFilter.m'
+            % Portanto, não recomendamos a modificação das
+            % matrizes A,B e C, que representam a construção do modelo
 
             deltaT = 1/obj.freq_sample;
             obj.A = [1 deltaT; 0 1];
