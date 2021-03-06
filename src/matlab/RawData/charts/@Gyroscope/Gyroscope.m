@@ -4,16 +4,14 @@ classdef Gyroscope < TemplateLine
     end
 
     methods
-        function obj = Gyroscope()
+        function obj = Gyroscope(w_size, f_size)
             obj = obj@TemplateLine(...
                 'Giro em graus/seg', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'graus/seg', ...               % p_ylabel
                 {'gX', 'gY', 'gZ'}, ...        % s_legend
                 {'r', 'g', 'b'});              % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size, f_size)
             obj.w_size = w_size;
             obj.moving_avg = MovingAverage(f_size, 3);
             obj.data = zeros(w_size, 3);

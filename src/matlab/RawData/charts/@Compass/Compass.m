@@ -9,9 +9,6 @@ classdef Compass < TemplateCompass
     methods
         function obj = Compass()
             obj = obj@TemplateCompass('Magnetic Heading SEM compensação de tilt');      % p_title
-        end
-
-        function obj = initialize(obj, fig)
             obj.data = 0;
         end
 

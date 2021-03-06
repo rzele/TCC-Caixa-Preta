@@ -8,16 +8,14 @@ classdef MadgwickTilt < TemplateLine
     end
 
     methods
-        function obj = MadgwickTilt()
+        function obj = MadgwickTilt(w_size, freq_sample, beta)
             obj = obj@TemplateLine(...
                 'Filtro de Madgwick', ...               % p_title
                 'Amostra', ...                          % p_xlabel
                 'graus', ...                            % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...           % s_legend
                 {'r', 'g', 'b'});                       % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size, freq_sample, beta)
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
 

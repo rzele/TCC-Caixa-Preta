@@ -5,9 +5,6 @@ classdef Car3DKalman < TemplateCar3D
     methods
         function obj = Car3DKalman()
             obj = obj@TemplateCar3D('Rotação 3D usando filtro de kalman'); % p_title
-        end
-
-        function obj = initialize(obj, fig)
             obj.data = zeros(1, 3);
         end
 

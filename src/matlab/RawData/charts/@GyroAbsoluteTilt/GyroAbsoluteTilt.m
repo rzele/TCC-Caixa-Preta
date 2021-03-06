@@ -6,16 +6,14 @@ classdef GyroAbsoluteTilt < TemplateLine
     end
 
     methods
-        function obj = GyroAbsoluteTilt()
+        function obj = GyroAbsoluteTilt(w_size)
             obj = obj@TemplateLine(...
                 'Giro em graus(absoluto)', ...      % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...       % s_legend
                 {'r', 'g', 'b'});                   % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size)
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
         end

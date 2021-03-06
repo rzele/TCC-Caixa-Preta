@@ -5,9 +5,6 @@ classdef Car3DAcelMag < TemplateCar3D
     methods
         function obj = Car3DAcelMag()
             obj = obj@TemplateCar3D('Rotação 3D usando acel e mag'); % p_title
-        end
-
-        function obj = initialize(obj, fig)
             obj.data = zeros(1, 3);
         end
 

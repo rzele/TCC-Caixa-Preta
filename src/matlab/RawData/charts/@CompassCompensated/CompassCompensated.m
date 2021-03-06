@@ -8,9 +8,6 @@ classdef CompassCompensated < TemplateCompass
     methods
         function obj = CompassCompensated()
             obj = obj@TemplateCompass('Magnetic Heading COM compensação de tilt');      % p_title
-        end
-
-        function obj = initialize(obj, fig)
             obj.data = 0;
         end
 

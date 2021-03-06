@@ -7,16 +7,14 @@ classdef Aceleration < TemplateLine
     end
 
     methods
-        function obj = Aceleration()
+        function obj = Aceleration(w_size, f_size)
             obj = obj@TemplateLine(...
                 'Aceleração em "g"', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'g', ...                       % p_ylabel
                 {'aX', 'aY', 'aZ'}, ...        % s_legend
                 {'r', 'g', 'b'});              % sources_color
-        end
 
-        function obj = initialize(obj, w_size, f_size)
             obj.w_size = w_size;
             obj.moving_avg = MovingAverage(f_size, 3);
             obj.data = zeros(w_size, 3);

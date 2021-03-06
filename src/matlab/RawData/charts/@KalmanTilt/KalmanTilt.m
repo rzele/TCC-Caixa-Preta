@@ -10,16 +10,14 @@ classdef KalmanTilt < TemplateLine
     end
 
     methods
-        function obj = KalmanTilt()
+        function obj = KalmanTilt(w_size, A,B,C,Q,R)
             obj = obj@TemplateLine(...
                 'Filtro de Kalman', ...             % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...       % s_legend
                 {'r', 'g', 'b'});                   % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size, A,B,C,Q,R)
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
 
@@ -30,7 +28,7 @@ classdef KalmanTilt < TemplateLine
             obj.kalmanFilterPitch = Kalman(A,B,C,Q,R);
             obj.kalmanFilterYaw = Kalman(A,B,C,Q,R);
         end
-
+        
         function calculate(obj, G, tilt)
             % Calcula a predição p/ cada eixo individualmente
             obj.kalmanFilterRoll.predict(G(1));

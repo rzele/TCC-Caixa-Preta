@@ -13,152 +13,37 @@ close all;                          % close all figures
 clear;                              % clear all variables
 clc;                                % clear the command terminal
 
-% Instância os plots
-Vazio = '';                         % Deixa a celula vazia
-aceleration = Aceleration();
-gyroscope = Gyroscope();
-magnetometer = Magnetometer();
-gyro_relative_tilt = GyroRelativeTilt();
-gyro_absolute_tilt = GyroAbsoluteTilt();
-acel_mag_tilt = AcelMagTilt();
-comp_tilt = CompTilt();
-acel_without_g = AcelWithoutG();
-velocity = Velocity();
-position = Position();
-kalman_tilt = KalmanTilt();
-Madgwick_tilt = MadgwickTilt();
-quaternion = Quaternion();
-compass = Compass();
-compass_compensated = CompassCompensated();
-car_3d_gdeg = Car3DGdeg();
-car_3d_gtilt = Car3DGtilt();
-car_3d_acelMag = Car3DAcelMag();
-car_3d_comp = Car3DComp();
-car_3d_kalman = Car3DKalman();
-car_3d_madgwick = Car3DMadgwick();
+%% 1 - Obtem configurações estáticas
+cnf = Configs();
 
+%% 2 - Abre porta serial / arquivo
+if cnf.read_from_serial
+    reader = ReaderSerial(cnf.serial_COM, cnf.serial_baudrate);
+else
+    reader = ReaderFile(cnf.file_full_path);
+end
 
-%% PARAMETROS DE USUÁRIO %%
-% Fonte de leitura
-read_from_serial=false;     % Set to false to use a file
-serial_COM='COM4';
-serial_baudrate=115200;
-file_full_path='Dados/teste1.txt';
+%% 3 - Atualiza as configurações com metadados da caixa preta
+cnf.setDynamicConfigs(reader.metadatas);
 
-% Amostragem
-max_size=4000;              % Quantidade maxima de amostras exibidas na tela
-freq_sample=100;            % Frequencia da amostragem dos dados
+%% 4 - Instância todo o conjunto de gráficos
+charts = Charts(cnf);
 
-% Plotagem
-plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
-freq_render=5;              % Frequencia de atualização do plot
-layout= {...                % Layout dos plots, as visualizações possíveis estão variaveis no inicio do arquivo
+%% 5 - Obtem a configuração do layout
+cnf.setLayout(charts);
 
-    aceleration, gyroscope, magnetometer, gyro_relative_tilt, gyro_absolute_tilt;...
-    acel_mag_tilt, comp_tilt, acel_without_g, velocity, position;...
-    kalman_tilt, Madgwick_tilt, quaternion, compass_compensated, car_3d_gdeg;...
-    car_3d_gtilt, car_3d_acelMag, car_3d_comp, car_3d_kalman, car_3d_madgwick;...
-
-};                          % OBS: Repita o nome no layout p/ expandir o plot em varios grids
-
-% Constantes do sensor
-const_g=9.8;                % Constante gravitacional segundo fabricante do MPU
-gx_bias=-1.05;              % 
-gy_bias=0.2;                % 
-gz_bias=-0.52;              % 
-ax_bias=0;                  % 
-ay_bias=0;                  % 
-az_bias=0.04;               % 
-hx_offset=-70;              % 
-hy_offset=228;              % 
-hz_offset=10;               % 
-hx_scale=1.020833;          % 
-hy_scale=0.940048;          % 
-hz_scale=1.045333;          % 
-
-
-% Media movel parametros 
-window_k = 10;              % Janela da media movel (minimo = 2)
-
-% Variável de ajuste do filtro complementar
-mu=0.02;
-
-% Variável de ajuste do filtro de kalman, os valores iniciais de X e P são por padrão 0s
-% Nosso modelo countem:
-% - 1 entrada (uk = delta Giro/s)
-% - 2 estados (x1 = Tilt usando Giro e  x2 = Drift)
-% - 1 saida (yk = Tilt do acelerometro)
-% portanto nosso modelo fica:
-%
-% x[k] = A*x[k-1] + B*u[k] + w[k]
-% X1 = (x1 + x2 * deltaT) + (deltaT * uk) + ruido
-% X2 = (x2) + ruido
-%
-% y[k] = C*x[k] + v[k]
-% Y = X1 + ruido
-
-deltaT = 1/freq_sample;
-A = [1 deltaT; 0 1];
-B = [deltaT; 0];
-C = [1 0];
-Q = [0.002^2 0; 0 0];
-R = 0.03;
-
-% Variável de ajuste do filtro madgwick
-beta=0.1;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% Define uma janela p/ plot
-plot_1 = Render(freq_render, layout);
+%% 6 - Define uma janela p/ plot
+plot_1 = Render(cnf.freq_render, cnf.layout);
 
 % Obtem a lista de itens unicos definidos no layout
 % para evitar calculo de itens descenessários
 setted_objects_id = plot_1.setted_objects_id;
 
-%TODO - remover os initilize, isso deve fazer parte do construtor
-aceleration.initialize(max_size, window_k);
-gyroscope.initialize(plot_1, max_size, window_k);
-magnetometer.initialize(plot_1, max_size, window_k);
-gyro_relative_tilt.initialize(plot_1, max_size);
-gyro_absolute_tilt.initialize(plot_1, max_size);
-acel_mag_tilt.initialize(plot_1, max_size);
-comp_tilt.initialize(plot_1, max_size);
-acel_without_g.initialize(plot_1, max_size);
-velocity.initialize(plot_1, max_size);
-position.initialize(plot_1, max_size);
-kalman_tilt.initialize(plot_1, max_size, A,B,C,Q,R);
-Madgwick_tilt.initialize(plot_1, max_size, freq_sample, beta);
-quaternion.initialize(plot_1, max_size);
-compass.initialize(plot_1);
-compass_compensated.initialize(plot_1);
-
-%TODO - criar car3DQuaternios e car3DEuler:
-% assim ao construir o objeto é injetado algum gráfico q retorne eulers ou quaternios.
-% O título do gráfico deve mudar para apontar qual classe foi injetada nele
-car_3d_gdeg.initialize(plot_1);
-car_3d_gtilt.initialize(plot_1);
-car_3d_acelMag.initialize(plot_1);
-car_3d_comp.initialize(plot_1);
-car_3d_kalman.initialize(plot_1);
-car_3d_madgwick.initialize(plot_1);
-
-%% Abre porta serial / arquivo
-if read_from_serial
-    reader = ReaderSerial(serial_COM, serial_baudrate);
-else
-    reader = ReaderFile(file_full_path);
-end
-
-%% Configura as variáveis do MPU
-esc_ac = str2int16(reader.metadatas.aesc_op);                   % Vem do Arduino, função que configura escalas de Aceleração
-esc_giro = str2int16(reader.metadatas.gesc_op);                 % e giro //+/- 2g e +/-250gr/seg
-
 %% Obtem os dados e plota em tempo real
 % NOTA: Se o buffer do serial encher (> 512 bytes) o programa pode explodir ou apresentar erros, caso isso ocorra
 % abaixe a taxa de renderização do gráfico. Para verificar se erros ocorreram, compare a quantidade de amostras enviadas com a quantidade lida
 time_calc_data = 0;
-count=0;                                % conta quantas amostras foram lidas
+count=0;                                 % conta quantas amostras foram lidas
 while true
     
     %% Lê uma amostra de cada da porta serial/arquivo
@@ -175,90 +60,90 @@ while true
     data = str2int16(data);
 
     %% Convert data
-    aceleration.calculate(data(1:3), [ax_bias, ay_bias, az_bias], esc_ac);
-    gyroscope.calculate(data(4:6), [gx_bias, gy_bias, gz_bias], esc_giro);
-    magnetometer.calculate(data(7:9), [hx_offset, hy_offset, hz_offset], [hx_scale, hy_scale, hz_scale]);
+    charts.aceleration.calculate(data(1:3), [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
+    charts.gyroscope.calculate(data(4:6), [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
+    charts.magnetometer.calculate(data(7:9), [cnf.hx_offset, cnf.hy_offset, cnf.hz_offset], [cnf.hx_scale, cnf.hy_scale, cnf.hz_scale]);
 
 
-    if isOneIn(setted_objects_id, {gyro_relative_tilt.id, gyro_absolute_tilt.id, acel_mag_tilt.id, comp_tilt.id, car_3d_gdeg.id, car_3d_gtilt.id, car_3d_acelMag.id, car_3d_comp.id, acel_without_g.id, velocity.id, position.id})
-        gyro_relative_tilt.calculate(gyroscope.last(), gyroscope.penult(), freq_sample);
+    if isOneIn(setted_objects_id, {charts.gyro_relative_tilt.id, charts.gyro_absolute_tilt.id, charts.acel_mag_tilt.id, charts.comp_tilt.id, charts.car_3d_gdeg.id, charts.car_3d_gtilt.id, charts.car_3d_acelMag.id, charts.car_3d_comp.id, charts.acel_without_g.id, charts.velocity.id, charts.position.id})
+        charts.gyro_relative_tilt.calculate(charts.gyroscope.last(), charts.gyroscope.penult(), cnf.freq_sample);
     end
     
-    if isOneIn(setted_objects_id, {gyro_absolute_tilt.id, comp_tilt.id, car_3d_gtilt.id, car_3d_acelMag.id, car_3d_comp.id})
-        gyro_absolute_tilt.calculate(gyro_relative_tilt.last());
+    if isOneIn(setted_objects_id, {charts.gyro_absolute_tilt.id, charts.comp_tilt.id, charts.car_3d_gtilt.id, charts.car_3d_acelMag.id, charts.car_3d_comp.id})
+        charts.gyro_absolute_tilt.calculate(charts.gyro_relative_tilt.last());
     end
     
-    if isOneIn(setted_objects_id, {acel_mag_tilt.id, comp_tilt.id, kalman_tilt.id, acel_without_g.id, velocity.id, position.id, car_3d_acelMag.id, car_3d_kalman.id, car_3d_comp.id, compass_compensated.id})
-        acel_mag_tilt.calculate(aceleration.last(), magnetometer.last());
+    if isOneIn(setted_objects_id, {charts.acel_mag_tilt.id, charts.comp_tilt.id, charts.kalman_tilt.id, charts.acel_without_g.id, charts.velocity.id, charts.position.id, charts.car_3d_acelMag.id, charts.car_3d_kalman.id, charts.car_3d_comp.id, charts.compass_compensated.id})
+        charts.acel_mag_tilt.calculate(charts.aceleration.last(), charts.magnetometer.last());
     end
 
-    if isOneIn(setted_objects_id, {compass.id})
-        compass.calculate(magnetometer.last());
+    if isOneIn(setted_objects_id, {charts.compass.id})
+        charts.compass.calculate(charts.magnetometer.last());
     end
 
-    if isOneIn(setted_objects_id, {compass_compensated.id})
-        acel_mag_last = acel_mag_tilt.last();
-        compass_compensated.calculate(acel_mag_last(3));
+    if isOneIn(setted_objects_id, {charts.compass_compensated.id})
+        acel_mag_last = charts.acel_mag_tilt.last();
+        charts.compass_compensated.calculate(acel_mag_last(3));
     end
 
-    if isOneIn(setted_objects_id, {comp_tilt.id, car_3d_comp.id})
-        comp_tilt.calculate(gyro_relative_tilt.last(), gyro_relative_tilt.penult(), acel_mag_tilt.last(), mu); 
+    if isOneIn(setted_objects_id, {charts.comp_tilt.id, charts.car_3d_comp.id})
+        charts.comp_tilt.calculate(charts.gyro_relative_tilt.last(), charts.gyro_relative_tilt.penult(), charts.acel_mag_tilt.last(), cnf.mu); 
     end
 
-    if isOneIn(setted_objects_id, {kalman_tilt.id, car_3d_kalman.id})
-        kalman_tilt.calculate(gyroscope.last(), acel_mag_tilt.last());
+    if isOneIn(setted_objects_id, {charts.kalman_tilt.id, charts.car_3d_kalman.id})
+        charts.kalman_tilt.calculate(charts.gyroscope.last(), charts.acel_mag_tilt.last());
     end
     
-    if isOneIn(setted_objects_id, {Madgwick_tilt.id, car_3d_madgwick.id, quaternion.id})
-        Madgwick_tilt.calculate(gyroscope.last(), aceleration.last(), magnetometer.last());
+    if isOneIn(setted_objects_id, {charts.Madgwick_tilt.id, charts.car_3d_madgwick.id, charts.quaternion.id})
+        charts.Madgwick_tilt.calculate(charts.gyroscope.last(), charts.aceleration.last(), charts.magnetometer.last());
     end
 
     %% Plota quaterions do filtro de madgwick
-    if isOneIn(setted_objects_id, {quaternion.id})
-        quaternion.calculate(Madgwick_tilt.last_quaternion());
+    if isOneIn(setted_objects_id, {charts.quaternion.id})
+        charts.quaternion.calculate(charts.Madgwick_tilt.last_quaternion());
     end
     
-    if isOneIn(setted_objects_id, {acel_without_g.id, velocity.id, position.id})
-        acel_without_g.calculate(gyro_relative_tilt.last(), aceleration.last());
+    if isOneIn(setted_objects_id, {charts.acel_without_g.id, charts.velocity.id, charts.position.id})
+        charts.acel_without_g.calculate(charts.gyro_relative_tilt.last(), charts.aceleration.last());
     end
 
-    if isOneIn(setted_objects_id, {velocity.id, position.id})
-        velocity.calculate(acel_without_g.last(), acel_without_g.penult(), freq_sample);
+    if isOneIn(setted_objects_id, {charts.velocity.id, charts.position.id})
+        charts.velocity.calculate(charts.acel_without_g.last(), charts.acel_without_g.penult(), cnf.freq_sample, cnf.const_g);
     end
 
-    if isOneIn(setted_objects_id, {position.id})
-        position.calculate(velocity.last(), velocity.penult(), freq_sample);
+    if isOneIn(setted_objects_id, {charts.position.id})
+        charts.position.calculate(charts.velocity.last(), charts.velocity.penult(), cnf.freq_sample);
     end
 
     % %% Plota o carro em 3d, podendo ser usado qualquer um dos dados para rotacionar o objeto (Rotação absoluta, relativa, filtro de kalman ...)
-    if isOneIn(setted_objects_id, {car_3d_gdeg.id})
-        car_3d_gdeg.calculate(gyro_relative_tilt.last());
+    if isOneIn(setted_objects_id, {charts.car_3d_gdeg.id})
+        charts.car_3d_gdeg.calculate(charts.gyro_relative_tilt.last());
     end
 
-    if isOneIn(setted_objects_id, {car_3d_gtilt.id})
-        car_3d_gtilt.calculate(gyro_absolute_tilt.last());
+    if isOneIn(setted_objects_id, {charts.car_3d_gtilt.id})
+        charts.car_3d_gtilt.calculate(charts.gyro_absolute_tilt.last());
     end
 
-    if isOneIn(setted_objects_id, {car_3d_acelMag.id})
-        car_3d_acelMag.calculate(acel_mag_tilt.last());
+    if isOneIn(setted_objects_id, {charts.car_3d_acelMag.id})
+        charts.car_3d_acelMag.calculate(charts.acel_mag_tilt.last());
     end
 
-    if isOneIn(setted_objects_id, {car_3d_comp.id})
-        car_3d_comp.calculate(comp_tilt.last());
+    if isOneIn(setted_objects_id, {charts.car_3d_comp.id})
+        charts.car_3d_comp.calculate(charts.comp_tilt.last());
     end
 
-    if isOneIn(setted_objects_id, {car_3d_kalman.id})
-        car_3d_kalman.calculate(kalman_tilt.last());
+    if isOneIn(setted_objects_id, {charts.car_3d_kalman.id})
+        charts.car_3d_kalman.calculate(charts.kalman_tilt.last());
     end
 
-    if isOneIn(setted_objects_id, {car_3d_madgwick.id})
-        car_3d_madgwick.calculate(Madgwick_tilt.last_quaternion());
+    if isOneIn(setted_objects_id, {charts.car_3d_madgwick.id})
+        charts.car_3d_madgwick.calculate(charts.Madgwick_tilt.last_quaternion());
     end
     
     time_calc_data = time_calc_data + toc(t1);
 
     %% Tenta redesenhar o plot, se deu o tempo da frequencia
-    if plot_in_real_time
+    if cnf.plot_in_real_time
         plot_1.try_render();
     end
 end

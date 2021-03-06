@@ -71,9 +71,9 @@ classdef ReaderCore < handle
 
             obj.metadatas.('st_op') = l3(1);
             obj.metadatas.('sth_op') = l3(2);
-            obj.metadatas.('aesc_op') = l3(3);
-            obj.metadatas.('gesc_op') = l3(4);
-            obj.metadatas.('fammost') = l3(5);
+            obj.metadatas.('aesc_op') = str2int16(l3(3));
+            obj.metadatas.('gesc_op') = str2int16(l3(4));
+            obj.metadatas.('fammost') = str2int16(l3(5));
             obj.metadatas.('bw_ag') = l3(6);
         end
 

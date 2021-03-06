@@ -9,16 +9,14 @@ classdef Position < TemplateLine
     end
 
     methods
-        function obj = Position()
+        function obj = Position(w_size)
             obj = obj@TemplateLine(...
                 'Espaço em metros', ...     % p_title
                 'Amostra', ...              % p_xlabel
                 'metros', ...               % p_ylabel
                 {'X', 'Y', 'Z'}, ...        % s_legend
                 {'r', 'g', 'b'});           % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size)
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
         end

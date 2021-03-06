@@ -9,22 +9,20 @@ classdef Velocity < TemplateLine
     end
 
     methods
-        function obj = Velocity()
+        function obj = Velocity(w_size)
             obj = obj@TemplateLine(...
                 'Velocidade em m/s', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'm/s', ...                       % p_ylabel
                 {'vX', 'vY', 'vZ'}, ...        % s_legend
                 {'r', 'g', 'b'});              % sources_color
-        end
 
-        function obj = initialize(obj, fig, w_size)
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
         end
 
-        function calculate(obj, A_without_gravity, old_A_without_gravity, freq_sample)
-            new_data = obj.calculate_velocity(obj.last(), A_without_gravity, old_A_without_gravity, freq_sample);
+        function calculate(obj, A_without_gravity, old_A_without_gravity, freq_sample, const_g)
+            new_data = obj.calculate_velocity(obj.last(), const_g*A_without_gravity, const_g*old_A_without_gravity, freq_sample);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end
