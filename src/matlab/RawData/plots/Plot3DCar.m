@@ -96,12 +96,9 @@ classdef Plot3DCar < CustomPlot
                 q_diff = q;
             end
 
-            q_diff = quatnormalize(q_diff);
+            c = quatern2axisAngle(quatnormalize(q_diff));
 
-            ang = 2*acos(q_diff(1)) * 180/pi;
-            vec = q_diff(2:4) / sin(2*acos(q_diff(1)));
-
-            rotate(obj.patch, vec, ang);
+            rotate(obj.patch, c.axis, c.angle);
             
             obj.last_q = q;
         end
