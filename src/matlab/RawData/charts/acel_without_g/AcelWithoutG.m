@@ -9,14 +9,15 @@ classdef AcelWithoutG < CommonsLine
 
     properties
         % Chart dependences obj
-        relative_tilt_chart
+        some_tilt_chart
         acel_chart
     end
 
     methods
-        function obj = AcelWithoutG(w_size, relative_tilt_chart, acel_chart)
+        function obj = AcelWithoutG(w_size, some_tilt_chart, acel_chart)
+            p_title = sprintf('Acel em g sem gravidade (%s)', class(some_tilt_chart));
             obj = obj@CommonsLine(...
-                'Aceleração em g sem gravidade', ...        % p_title
+                p_title, ...                                % p_title
                 'Amostra', ...                              % p_xlabel
                 'g', ...                                    % p_ylabel
                 {'aX', 'aY', 'aZ'}, ...                     % s_legend
@@ -26,7 +27,7 @@ classdef AcelWithoutG < CommonsLine
             obj.data = zeros(w_size, 3);
 
             % Chart dependences
-            obj. relative_tilt_chart = relative_tilt_chart;
+            obj. some_tilt_chart = some_tilt_chart;
             obj. acel_chart = acel_chart;
         end
         
@@ -37,8 +38,8 @@ classdef AcelWithoutG < CommonsLine
             end
             
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.relative_tilt_chart.calculate(mpu_new_data, n_sample);
-            tilt = obj.relative_tilt_chart.last();
+            obj.some_tilt_chart.calculate(mpu_new_data, n_sample);
+            tilt = obj.some_tilt_chart.last();
             
             obj.acel_chart.calculate(mpu_new_data, n_sample);
             A = obj.acel_chart.last();
