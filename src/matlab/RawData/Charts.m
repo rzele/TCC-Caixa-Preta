@@ -1,7 +1,7 @@
 classdef Charts < handle
     properties
         % Gráficos possíveis
-        Vazio
+        vazio
         aceleration
         gyroscope
         magnetometer
@@ -13,8 +13,8 @@ classdef Charts < handle
         velocity
         position
         kalman_tilt
-        Madgwick_tilt
-        quaternion
+        madgwick_tilt_quaternion
+        madgwick_tilt_euler
         compass
         compass_compensated
         car_3d_gdeg
@@ -28,32 +28,30 @@ classdef Charts < handle
     methods
         function obj = Charts(cnf)
             % Instância os plots
-            obj.Vazio = '';                         % Deixa a celula vazia
-            obj.aceleration = Aceleration(cnf.max_size, cnf.window_k);
-            obj.gyroscope = Gyroscope(cnf.max_size, cnf.window_k);
-            obj.magnetometer = Magnetometer(cnf.max_size, cnf.window_k);
-            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size);
-            obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size);
-            obj.acel_mag_tilt = AcelMagTilt(cnf.max_size);
-            obj.comp_tilt = CompTilt(cnf.max_size);
-            obj.acel_without_g = AcelWithoutG(cnf.max_size);
-            obj.velocity = Velocity(cnf.max_size);
-            obj.position = Position(cnf.max_size);
-            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.A, cnf.B, cnf.C, cnf.Q, cnf.R);
-            obj.Madgwick_tilt = MadgwickTilt(cnf.max_size, cnf.freq_sample, cnf.beta);
-            obj.quaternion = Quaternion(cnf.max_size);
-            obj.compass = Compass();
-            obj.compass_compensated = CompassCompensated();
-
-            %TODO - criar car3DQuaternios e car3DEuler:
-            % assim ao construir o objeto é injetado algum gráfico q retorne eulers ou quaternios.
-            % O título do gráfico deve mudar para apontar qual classe foi injetada nele
-            obj.car_3d_gdeg = Car3DGdeg();
-            obj.car_3d_gtilt = Car3DGtilt();
-            obj.car_3d_acelMag = Car3DAcelMag();
-            obj.car_3d_comp = Car3DComp();
-            obj.car_3d_kalman = Car3DKalman();
-            obj.car_3d_madgwick = Car3DMadgwick();
+            obj.vazio = '';                         % Deixa a celula vazia
+            obj.aceleration = Aceleration(cnf.max_size, cnf.window_k, [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
+            obj.gyroscope = Gyroscope(cnf.max_size, cnf.window_k, [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
+            obj.magnetometer = Magnetometer(cnf.max_size, cnf.window_k, [cnf.hx_offset, cnf.hy_offset, cnf.hz_offset], [cnf.hx_scale, cnf.hy_scale, cnf.hz_scale]);
+            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.freq_sample, obj.gyroscope);
+            obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
+            obj.acel_mag_tilt = AcelMagTilt(cnf.max_size, obj.aceleration, obj.magnetometer);
+            obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_relative_tilt, obj.acel_mag_tilt);
+            obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, obj.aceleration);
+            obj.velocity = Velocity(cnf.max_size, cnf.freq_sample, cnf.const_g, obj.acel_without_g);
+            obj.position = Position(cnf.max_size, cnf.freq_sample, obj.velocity);
+            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.A, cnf.B, cnf.C, cnf.Q, cnf.R, obj.gyroscope, obj.acel_mag_tilt);
+            obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.freq_sample, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
+            obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
+            
+            obj.compass = Compass(obj.magnetometer);
+            obj.compass_compensated = CompassCompensated(obj.acel_mag_tilt);
+            
+            obj.car_3d_gdeg = Car3D('euler', obj.gyro_relative_tilt);
+            obj.car_3d_gtilt = Car3D('euler', obj.gyro_absolute_tilt);
+            obj.car_3d_acelMag = Car3D('euler', obj.acel_mag_tilt);
+            obj.car_3d_comp = Car3D('euler', obj.comp_tilt);
+            obj.car_3d_kalman = Car3D('euler', obj.kalman_tilt);
+            obj.car_3d_madgwick = Car3D('quaternion', obj.madgwick_tilt_quaternion);
         end
     end
 end

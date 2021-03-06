@@ -3,10 +3,15 @@ classdef CompTilt < TemplateLine
     % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
 
     properties
+        mu
+
+        % Chart dependences obj
+        relative_tilt_chart
+        acel_mag_tilt_chart
     end
 
     methods
-        function obj = CompTilt(w_size)
+        function obj = CompTilt(w_size, mu, relative_tilt_chart, acel_mag_tilt_chart)
             obj = obj@TemplateLine(...
                 'Filtro complementar', ...          % p_title
                 'Amostra', ...                      % p_xlabel
@@ -16,10 +21,29 @@ classdef CompTilt < TemplateLine
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
+            obj.mu = mu;
+
+            % Chart dependences
+            obj.relative_tilt_chart = relative_tilt_chart;
+            obj.acel_mag_tilt_chart = acel_mag_tilt_chart;
         end
         
-        function calculate(obj, gyro_tilt, old_gyro_tilt, tilt, mu)
-            new_data = obj.calculate_comp_filter(obj.last(), gyro_tilt, old_gyro_tilt, tilt, mu);
+        function calculate(obj, mpu_new_data, n_sample)
+            %% Verifica se já calculou essa amostra
+            if obj.has_calculated_this_sample(n_sample)
+                return
+            end
+            
+            %% Obtem o valor de outros charts ao qual este é dependente
+            obj.relative_tilt_chart.calculate(mpu_new_data, n_sample);
+            gyro_tilt = obj.relative_tilt_chart.last();
+            old_gyro_tilt = obj.relative_tilt_chart.penult();
+
+            obj.acel_mag_tilt_chart.calculate(mpu_new_data, n_sample);
+            tilt = obj.acel_mag_tilt_chart.last();
+
+            %% Calcula o valor p/ a próxima amostra
+            new_data = obj.calculate_comp_filter(obj.last(), gyro_tilt, old_gyro_tilt, tilt, obj.mu);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

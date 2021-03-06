@@ -7,12 +7,17 @@ classdef KalmanTilt < TemplateLine
         kalmanFilterRoll
         kalmanFilterPitch
         kalmanFilterYaw
+
+        % Chart dependences obj
+        gyro_chart
+        some_tilt_chart
     end
 
     methods
-        function obj = KalmanTilt(w_size, A,B,C,Q,R)
+        function obj = KalmanTilt(w_size, A,B,C,Q,R, gyro_chart, some_tilt_chart)
+            p_title = sprintf('Filtro de Kalman (Gyro + %s)', class(some_tilt_chart));
             obj = obj@TemplateLine(...
-                'Filtro de Kalman', ...             % p_title
+                p_title, ...             % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...       % s_legend
@@ -27,9 +32,26 @@ classdef KalmanTilt < TemplateLine
             obj.kalmanFilterRoll = Kalman(A,B,C,Q,R);
             obj.kalmanFilterPitch = Kalman(A,B,C,Q,R);
             obj.kalmanFilterYaw = Kalman(A,B,C,Q,R);
+
+            % Chart dependences
+            obj.gyro_chart = gyro_chart;
+            obj.some_tilt_chart = some_tilt_chart;
         end
         
-        function calculate(obj, G, tilt)
+        function calculate(obj, mpu_new_data, n_sample)
+            %% Verifica se já calculou essa amostra
+            if obj.has_calculated_this_sample(n_sample)
+                return
+            end
+
+            %% Obtem o valor de outros charts ao qual este é dependente
+            obj.gyro_chart.calculate(mpu_new_data, n_sample);
+            G = obj.gyro_chart.last();
+            
+            obj.some_tilt_chart.calculate(mpu_new_data, n_sample);
+            tilt = obj.some_tilt_chart.last();
+            
+            %% Calcula o valor p/ a próxima amostra
             % Calcula a predição p/ cada eixo individualmente
             obj.kalmanFilterRoll.predict(G(1));
             obj.kalmanFilterPitch.predict(G(2));

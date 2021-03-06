@@ -6,10 +6,13 @@ classdef AcelMagTilt < TemplateLine
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
 
     properties
+        % Chart dependences obj
+        acel_chart
+        mag_chart
     end
 
     methods
-        function obj = AcelMagTilt(w_size)
+        function obj = AcelMagTilt(w_size, acel_chart, mag_chart)
             obj = obj@TemplateLine(...
                 'Giro em graus(absoluto) usando acel + mag', ...     % p_title
                 'Amostra', ...                                       % p_xlabel
@@ -19,9 +22,26 @@ classdef AcelMagTilt < TemplateLine
             
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
+
+            % Chart dependences
+            obj.acel_chart = acel_chart;
+            obj.mag_chart = mag_chart;
         end
         
-        function calculate(obj, A, H)
+        function calculate(obj, mpu_new_data, n_sample)
+            %% Verifica se já calculou essa amostra
+            if obj.has_calculated_this_sample(n_sample)
+                return
+            end
+
+            %% Obtem o valor de outros charts ao qual este é dependente
+            obj.acel_chart.calculate(mpu_new_data, n_sample);
+            A = obj.acel_chart.last();
+
+            obj.mag_chart.calculate(mpu_new_data, n_sample);
+            H = obj.mag_chart.last();
+
+            %% Calcula o valor p/ a próxima amostra
             new_data = obj.calculate_acel_mag_tilt(A, H);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end

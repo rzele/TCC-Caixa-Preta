@@ -6,10 +6,14 @@ classdef Position < TemplateLine
     % periodo da amostragem, ent o trapézio é igual a 1/freq * ((n-1 + n)/2)
 
     properties
+        freq_sample
+        
+        % Chart dependences obj
+        vel_chart
     end
 
     methods
-        function obj = Position(w_size)
+        function obj = Position(w_size, freq_sample, vel_chart)
             obj = obj@TemplateLine(...
                 'Espaço em metros', ...     % p_title
                 'Amostra', ...              % p_xlabel
@@ -19,10 +23,25 @@ classdef Position < TemplateLine
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
+            obj.freq_sample = freq_sample;
+
+            % Chart dependences
+            obj.vel_chart = vel_chart;
         end
 
-        function calculate(obj, velocity, old_velocity, freq_sample)
-            new_data = obj.calculate_position(obj.last(), velocity, old_velocity, freq_sample);
+        function calculate(obj, mpu_new_data, n_sample)
+             %% Verifica se já calculou essa amostra
+             if obj.has_calculated_this_sample(n_sample)
+                return
+            end
+
+            %% Obtem o valor de outros charts ao qual este é dependente
+            obj.vel_chart.calculate(mpu_new_data, n_sample);
+            velocity = obj.vel_chart.last();
+            old_velocity = obj.vel_chart.penult();
+            
+            %% Calcula o valor p/ a próxima amostra
+            new_data = obj.calculate_position(obj.last(), velocity, old_velocity, obj.freq_sample);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

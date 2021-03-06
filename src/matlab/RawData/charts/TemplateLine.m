@@ -19,6 +19,7 @@ classdef TemplateLine <  Template & PlotLine
 
     properties
         w_size
+        last_sample=0
     end
 
     methods
@@ -37,6 +38,15 @@ classdef TemplateLine <  Template & PlotLine
 
         function ret = penult(obj)
             ret = obj.data(obj.w_size-1, :);
+        end
+
+        function ret = has_calculated_this_sample(obj, n_sample)
+            if obj.last_sample == n_sample
+                ret = true;
+            else
+                obj.last_sample = n_sample;
+                ret = false;
+            end
         end
     end
 end

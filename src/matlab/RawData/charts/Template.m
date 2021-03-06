@@ -7,19 +7,23 @@ classdef Template < handle
     
     properties
         data
+        n_sample
     end
 
     methods
         function obj = Template()
         end
 
-        function calculate(obj)
+        function calculate(obj, data, n_sample)
         end
 
         function ret = last(obj)
         end
 
         function ret = penult(obj)
+        end
+
+        function ret = has_calculated_this_sample(obj, n_sample)
         end
     end
 end
