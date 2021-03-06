@@ -1,10 +1,10 @@
-classdef TemplateCompass <  Template & PlotCompass
+classdef CommonsCompass <  Template & PlotCompass
     % Esta classe é do tipo 'cálculo' e do tipo 'plot'
     % Sendo assim, cabe a ela realizar cálculos e ao mesmo tempo
     % renderizar os dados na tela em 'gráficos de linha'.
     % A este tipo hibrido de classe demos o nome de 'chart'
     %
-    % Por conta desta classe herdar 'PlotLine', esta classe (ou qualquer outra que herdar ela)
+    % Por conta desta classe herdar 'PlotCompass', esta classe (ou qualquer outra que herdar ela)
     % pode ser injetada na classe 'render', para exibir o gráfico na tela.
     %
     % Sobrescrevendo o método 'update' do 'plotline', quando a 'render' chamar
@@ -19,7 +19,7 @@ classdef TemplateCompass <  Template & PlotCompass
     end
 
     methods
-        function obj = TemplateCompass(p_title)
+        function obj = CommonsCompass(p_title)
             obj = obj@PlotCompass(p_title);
         end
 

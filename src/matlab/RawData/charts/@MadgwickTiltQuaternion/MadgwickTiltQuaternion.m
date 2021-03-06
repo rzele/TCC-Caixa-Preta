@@ -1,4 +1,4 @@
-classdef MadgwickTiltQuaternion < TemplateLine
+classdef MadgwickTiltQuaternion < CommonsLine
     % Calcula Rotação usando filtro de madgwick
     % Ref do calculo: https://nitinjsanket.github.io/tutorials/attitudeest/madgwick
     % e https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
@@ -14,7 +14,7 @@ classdef MadgwickTiltQuaternion < TemplateLine
 
     methods
         function obj = MadgwickTiltQuaternion(w_size, freq_sample, beta, acel_chart, gyro_chart, mag_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Quaterions do filtro de Madgwick', ...       % p_title
                 'Amostra', ...                                % p_xlabel
                 'val', ...                                    % p_ylabel

@@ -1,4 +1,4 @@
-classdef AcelWithoutG < TemplateLine
+classdef AcelWithoutG < CommonsLine
     % Calcula a Aceleração absoluta (relativo a terra) removendo a gravidade
     % Obtem os vetores de aceleração atual rotacionando NO MESMO SENTIDO realizado pelo corpo
     % (uma vez que os queremos os vetores que não rotacionam com o corpo, como a gravidade que sempre aponta p/ baixo)
@@ -15,7 +15,7 @@ classdef AcelWithoutG < TemplateLine
 
     methods
         function obj = AcelWithoutG(w_size, relative_tilt_chart, acel_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Aceleração em g sem gravidade', ...        % p_title
                 'Amostra', ...                              % p_xlabel
                 'g', ...                                    % p_ylabel

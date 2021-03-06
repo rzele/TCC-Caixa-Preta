@@ -1,4 +1,4 @@
-classdef GyroRelativeTilt < TemplateLine
+classdef GyroRelativeTilt < CommonsLine
     % Calcula Yaw, Pitch e Roll realtivos(em relação a ultima Rotação do corpo) p/ a nova amostra usando giro
     % Usando o giro, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
@@ -14,7 +14,7 @@ classdef GyroRelativeTilt < TemplateLine
 
     methods
         function obj = GyroRelativeTilt(w_size, freq_sample, gyro_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Giro em graus(relativo)', ...      % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel

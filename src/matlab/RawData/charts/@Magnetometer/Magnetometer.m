@@ -1,4 +1,4 @@
-classdef Magnetometer < TemplateLine
+classdef Magnetometer < CommonsLine
     properties
         moving_avg
         h_offsets
@@ -7,7 +7,7 @@ classdef Magnetometer < TemplateLine
 
     methods
         function obj = Magnetometer(w_size, f_size, h_offsets, h_scaleso)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Magnetrometro em mili Gaus', ...       % p_title
                 'Amostra', ...                          % p_xlabel
                 'mG', ...                               % p_ylabel

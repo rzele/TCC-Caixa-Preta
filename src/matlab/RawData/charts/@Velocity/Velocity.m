@@ -1,4 +1,4 @@
-classdef Velocity < TemplateLine
+classdef Velocity < CommonsLine
     % Calcula Velocidade integrando a Aceleração
     % Usando a Aceleração, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
@@ -15,7 +15,7 @@ classdef Velocity < TemplateLine
 
     methods
         function obj = Velocity(w_size, freq_sample, const_g, acel_without_g_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Velocidade em m/s', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'm/s', ...                       % p_ylabel

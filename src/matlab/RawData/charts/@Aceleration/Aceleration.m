@@ -1,4 +1,4 @@
-classdef Aceleration < TemplateLine
+classdef Aceleration < CommonsLine
     % Esta classe realizar cálculos de aceleração
     % e plotagem de um gráfico em linha na tela
 
@@ -10,7 +10,7 @@ classdef Aceleration < TemplateLine
 
     methods
         function obj = Aceleration(w_size, f_size, a_bias, esc_ac)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Aceleração em "g"', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'g', ...                       % p_ylabel

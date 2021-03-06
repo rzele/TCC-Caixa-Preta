@@ -1,4 +1,4 @@
-classdef AcelMagTilt < TemplateLine
+classdef AcelMagTilt < CommonsLine
     % Calcula Yaw, Pitch e Roll absolutos(em relação a Posição inicial do corpo) p/ a nova amostra usando Aceleração e Magnetômetro
     % Usando a Aceleração, usamos o vetor de gravidade que deve sempre
     % estar presente p/ determinar a Posição do corpo
@@ -13,7 +13,7 @@ classdef AcelMagTilt < TemplateLine
 
     methods
         function obj = AcelMagTilt(w_size, acel_chart, mag_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Giro em graus(absoluto) usando acel + mag', ...     % p_title
                 'Amostra', ...                                       % p_xlabel
                 'graus', ...                                         % p_ylabel

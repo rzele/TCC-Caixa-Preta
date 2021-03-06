@@ -1,4 +1,4 @@
-classdef GyroAbsoluteTilt < TemplateLine
+classdef GyroAbsoluteTilt < CommonsLine
     % Calcula a matriz de Rotação (Z,Y,X) que foi responsável por mover o corpo da Posição da amostra anterior para a atual
     % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
 
@@ -9,7 +9,7 @@ classdef GyroAbsoluteTilt < TemplateLine
 
     methods
         function obj = GyroAbsoluteTilt(w_size, relative_tilt_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Giro em graus(absoluto)', ...      % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel

@@ -1,4 +1,4 @@
-classdef CompTilt < TemplateLine
+classdef CompTilt < CommonsLine
     % Calcula Rotação usando filtro complementar
     % Ref do calculo: https://www.youtube.com/watch?v=whSw42XddsU
 
@@ -12,7 +12,7 @@ classdef CompTilt < TemplateLine
 
     methods
         function obj = CompTilt(w_size, mu, relative_tilt_chart, acel_mag_tilt_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Filtro complementar', ...          % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel

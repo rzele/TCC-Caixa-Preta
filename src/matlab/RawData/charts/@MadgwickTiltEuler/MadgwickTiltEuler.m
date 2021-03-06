@@ -1,4 +1,4 @@
-classdef MadgwickTiltEuler < TemplateLine
+classdef MadgwickTiltEuler < CommonsLine
     properties
         % Chart dependences obj
         madgwick_q_chart
@@ -6,7 +6,7 @@ classdef MadgwickTiltEuler < TemplateLine
 
     methods
         function obj = MadgwickTiltEuler(w_size, madgwick_q_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Filtro de Madgwick', ...               % p_title
                 'Amostra', ...                          % p_xlabel
                 'graus', ...                            % p_ylabel

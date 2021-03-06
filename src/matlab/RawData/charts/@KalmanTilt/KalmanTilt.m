@@ -1,4 +1,4 @@
-classdef KalmanTilt < TemplateLine
+classdef KalmanTilt < CommonsLine
     % Calcula Rotação usando filtro de Kalman
     % Ref do calculo: https://www.youtube.com/watch?v=urhaoECmCQk
     % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
@@ -16,7 +16,7 @@ classdef KalmanTilt < TemplateLine
     methods
         function obj = KalmanTilt(w_size, A,B,C,Q,R, gyro_chart, some_tilt_chart)
             p_title = sprintf('Filtro de Kalman (Gyro + %s)', class(some_tilt_chart));
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 p_title, ...             % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel

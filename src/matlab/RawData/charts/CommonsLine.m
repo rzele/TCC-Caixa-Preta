@@ -1,4 +1,4 @@
-classdef TemplateLine <  Template & PlotLine
+classdef CommonsLine <  Template & PlotLine
     % Esta classe é do tipo 'cálculo' e do tipo 'plot'
     % Sendo assim, cabe a ela realizar cálculos e ao mesmo tempo
     % renderizar os dados na tela em 'gráficos de linha'.
@@ -23,7 +23,7 @@ classdef TemplateLine <  Template & PlotLine
     end
 
     methods
-        function obj = TemplateLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color)
+        function obj = CommonsLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color)
             obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color);
         end
 

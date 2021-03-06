@@ -1,4 +1,4 @@
-classdef Position < TemplateLine
+classdef Position < CommonsLine
     % Calcula Posição integrando a Velocidade
     % Usando a Velocidade, fazemos a integral discreta (área do trapézio aculmulado)
     % P/ o novo dado isso significa, ultimo valor + novo trapézio (entre ultimo dado e o novo)
@@ -14,7 +14,7 @@ classdef Position < TemplateLine
 
     methods
         function obj = Position(w_size, freq_sample, vel_chart)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Espaço em metros', ...     % p_title
                 'Amostra', ...              % p_xlabel
                 'metros', ...               % p_ylabel

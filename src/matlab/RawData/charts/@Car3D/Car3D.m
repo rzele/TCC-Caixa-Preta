@@ -1,4 +1,4 @@
-classdef Car3D < TemplateCar3D
+classdef Car3D < CommonsCar3D
     properties
         data_type % quaternion or euler
 
@@ -9,7 +9,7 @@ classdef Car3D < TemplateCar3D
     methods
         function obj = Car3D(data_type, some_tilt_chart)
             p_title = sprintf('Rotação 3D usando %s (%s)', data_type, class(some_tilt_chart));
-            obj = obj@TemplateCar3D(p_title); % p_title
+            obj = obj@CommonsCar3D(p_title); % p_title
             obj.data_type = data_type; % quaternion or euler
 
             if strcmp(obj.data_type, 'euler')

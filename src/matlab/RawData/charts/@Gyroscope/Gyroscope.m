@@ -1,4 +1,4 @@
-classdef Gyroscope < TemplateLine
+classdef Gyroscope < CommonsLine
     properties
         moving_avg
         g_bias
@@ -7,7 +7,7 @@ classdef Gyroscope < TemplateLine
 
     methods
         function obj = Gyroscope(w_size, f_size, g_bias, esc_giro)
-            obj = obj@TemplateLine(...
+            obj = obj@CommonsLine(...
                 'Giro em graus/seg', ...       % p_title
                 'Amostra', ...                 % p_xlabel
                 'graus/seg', ...               % p_ylabel

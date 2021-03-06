@@ -1,4 +1,4 @@
-classdef CompassCompensated < TemplateCompass
+classdef CompassCompensated < CommonsCompass
     % Usa o valor calculado do compass com compensação já calculado acima
     % Ref do calculo: https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
 
@@ -9,7 +9,7 @@ classdef CompassCompensated < TemplateCompass
 
     methods
         function obj = CompassCompensated(acel_mag_tilt_chart)
-            obj = obj@TemplateCompass('Magnetic Heading COM compensação de tilt');      % p_title
+            obj = obj@CommonsCompass('Magnetic Heading COM compensação de tilt');      % p_title
             obj.data = 0;
 
             % Chart dependences

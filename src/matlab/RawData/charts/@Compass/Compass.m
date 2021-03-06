@@ -1,4 +1,4 @@
-classdef Compass < TemplateCompass
+classdef Compass < CommonsCompass
     % Calcula Compass sem compensação 
     % Ref do calculo: https://blog.digilentinc.com/how-to-convert-magnetometer-data-into-compass-heading/
     % e plota em plano polar o Compass sem compensação 
@@ -10,7 +10,7 @@ classdef Compass < TemplateCompass
 
     methods
         function obj = Compass(mag_chart)
-            obj = obj@TemplateCompass('Magnetic Heading SEM compensação de tilt');      % p_title
+            obj = obj@CommonsCompass('Magnetic Heading SEM compensação de tilt');      % p_title
             obj.data = 0;
 
             % Chart dependences

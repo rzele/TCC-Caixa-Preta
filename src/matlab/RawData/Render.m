@@ -86,7 +86,7 @@ classdef Render < handle
 
         % Rendereza mesmo se que não tenha dado o tempo da frequencia
         function force_render(obj)
-            figure(1)
+            figure(obj.fig)
             obj.update_all();
             refreshdata
             drawnow

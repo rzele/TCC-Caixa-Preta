@@ -1,10 +1,10 @@
-classdef TemplateCar3D < Template & Plot3DCar
+classdef CommonsCar3D < Template & Plot3DCar
     properties
         last_sample=0
     end
 
     methods
-        function obj = TemplateCar3D(p_title)
+        function obj = CommonsCar3D(p_title)
             obj = obj@Plot3DCar(p_title);
         end
         
