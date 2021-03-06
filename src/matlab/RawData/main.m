@@ -3,11 +3,8 @@
 % BUGS:
 % - file_simulated_freq ainda não funciona muito bem
 
-addpath('quaternion_library');      % include quaternion library
-addpath('reader');                  % include reader library
-addpath('helpers');                 % include some useful functions
-addpath('charts');                  % 
-addpath('plots');                   % include plot library
+% Importa tudo que esta na mesma raiz que a main.m, incluindo pastas e subpastas
+addpath(genpath('.'))
 
 close all;                          % close all figures
 clear;                              % clear all variables
