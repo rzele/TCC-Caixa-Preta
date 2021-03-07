@@ -13,10 +13,11 @@ classdef Configs < handle
 
         % Plotagem
         plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
-        freq_render=5;              % Frequencia de atualização do plot
+        freq_render=5;               % Frequencia de atualização do plot
 
-        % Media movel parametros 
-        window_k = 10;              % Janela da media movel (minimo = 2)
+        % Filtros das entradas (aplicado ao acel, gyro e mag)
+        window_k = 10;                    % Janela do filtro (minimo = 2)
+        filter_type = 'media';            % pode ser 'media' ou 'mediana'
 
         % Variável de ajuste do filtro complementar
         mu=0.02;

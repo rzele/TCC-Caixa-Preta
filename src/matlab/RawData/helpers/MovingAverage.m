@@ -10,7 +10,7 @@ classdef MovingAverage < handle
             obj.data = zeros(k, n_elemets);
         end
 
-        function ret = update(obj, newData)
+        function ret = calculate(obj, newData)
             obj.data = [obj.data(2:obj.k,:) ; newData];
             ret = sum(obj.data) / obj.k;
         end

@@ -36,9 +36,9 @@ classdef Charts < handle
         function obj = Charts(cnf)
             %% Cria gráficos de linha
             obj.vazio = '';                         % Deixa a celula vazia
-            obj.aceleration = Aceleration(cnf.max_size, cnf.window_k, [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
-            obj.gyroscope = Gyroscope(cnf.max_size, cnf.window_k, [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
-            obj.magnetometer = Magnetometer(cnf.max_size, cnf.window_k, [cnf.hx_offset, cnf.hy_offset, cnf.hz_offset], [cnf.hx_scale, cnf.hy_scale, cnf.hz_scale]);
+            obj.aceleration = Aceleration(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
+            obj.gyroscope = Gyroscope(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
+            obj.magnetometer = Magnetometer(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.hx_offset, cnf.hy_offset, cnf.hz_offset], [cnf.hx_scale, cnf.hy_scale, cnf.hz_scale]);
             obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.freq_sample, obj.gyroscope);
             obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
             obj.acel_mag_tilt = AcelMagTilt(cnf.max_size, obj.aceleration, obj.magnetometer);
