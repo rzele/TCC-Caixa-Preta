@@ -80,7 +80,7 @@ classdef Render < handle
 
         function update_all(obj)
             for i = 1:length(obj.plots)
-                obj.plots(i).update();
+                obj.plots(i).on_update();
             end
         end
 
@@ -94,6 +94,10 @@ classdef Render < handle
         end
 
         function delete(obj)
+            % Dispara esse evento para cada gráfico realizar sua finalização se necessário
+            for i=1:length(obj.plots)
+                obj.plots(i).on_delete();
+            end
             fprintf('Tempo médio da função de renderização: %fs\n', obj.time_rendering / obj.count_render_times);
         end
     end

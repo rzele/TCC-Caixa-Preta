@@ -27,7 +27,7 @@ classdef CommonsLine <  Template & PlotLine
             obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color);
         end
 
-        function update(obj)
+        function on_update(obj)
             dataTransposed = obj.data';
             obj.setSeries(dataTransposed);
         end

@@ -7,7 +7,6 @@ classdef Template < handle
     
     properties
         data
-        n_sample
     end
 
     methods

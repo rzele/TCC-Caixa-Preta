@@ -38,7 +38,7 @@ classdef Car3D < CommonsCar3D
             obj.data = new_data;
         end
 
-        function update(obj)
+        function on_update(obj)
             has_error = false;
 
             if strcmp(obj.data_type, 'euler')

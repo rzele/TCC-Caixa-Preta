@@ -30,7 +30,10 @@ classdef CustomPlot < matlab.mixin.Heterogeneous & handle
         function createPlot(obj)
         end
 
-        function update(obj)
+        function on_update(obj)
+        end
+
+        function on_delete(obj)
         end
     end
 end

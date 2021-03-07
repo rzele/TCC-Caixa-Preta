@@ -103,7 +103,10 @@ classdef Plot3DCar < CustomPlot
             obj.last_q = q;
         end
 
-        function update(obj)
+        function on_update(obj)
+        end
+
+        function on_delete(obj)
         end
     end
     

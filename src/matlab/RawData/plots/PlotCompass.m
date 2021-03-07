@@ -40,7 +40,10 @@ classdef PlotCompass < CustomPlot
             obj.subplot = ax;
         end
 
-        function update(obj)
+        function on_update(obj)
+        end
+
+        function on_delete(obj)
         end
         
         function rotateCompass(obj, ang)

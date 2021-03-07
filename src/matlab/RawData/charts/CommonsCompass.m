@@ -23,7 +23,7 @@ classdef CommonsCompass <  Template & PlotCompass
             obj = obj@PlotCompass(p_title);
         end
 
-        function update(obj)
+        function on_update(obj)
             obj.rotateCompass(obj.data);
         end
 
