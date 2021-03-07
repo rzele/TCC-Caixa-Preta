@@ -33,14 +33,14 @@ classdef PlotLine < CustomPlot
             grid;
             hold on
             for i = 1:length(obj.sources_color)
-                obj.series{i} = plot(0, obj.sources_color{i});
+                obj.series{i} = plot(0, 'Color', obj.sources_color{i});
             end
             hold off
 
-            % title(obj.p_title)
+            title(obj.p_title)
             xlabel(obj.p_xlabel);
             ylabel(obj.p_ylabel);
-            % legend(obj.s_legend);
+            legend(obj.s_legend);
             xlim([0 4000]);
         end
 
