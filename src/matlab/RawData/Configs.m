@@ -12,7 +12,7 @@ classdef Configs < handle
         max_size=4000;              % Quantidade maxima de amostras exibidas na tela
 
         % Plotagem
-        plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
+        plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo real
         freq_render=5;              % Frequencia de atualização do plot
 
         % Media movel parametros 
@@ -104,6 +104,7 @@ classdef Configs < handle
             obj.layout = {...                
                 c.gyro_relative_tilt, c.gyro_absolute_tilt, c.acel_mag_tilt;...
                 c.compare_rolls, c.compare_pitchs, c.compare_yaws;...
+                c.car_3d_gdeg, c.car_3d_gtilt, c.car_3d_acelMag;...
 
             };
         end

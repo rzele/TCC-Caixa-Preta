@@ -7,9 +7,25 @@ classdef CompareTilts < CommonsLine
         data_order      % Ordem no array do gráfico de tilt passado que se encontra o dado
                         % dependendo do tipo definido. E.g.: roll é o primeiro no array retornando pelo .last()
 
+        mse_arr
+        variance_arr
+
         % Chart dependences obj
         base_line_chart
         others_charts_arr
+    end
+
+    methods (Static)
+        % Use esta função para terceirizar a criação individual de cada comparação de tilt.
+        % Ela recebe os mesmo parâmetros da classe normal, com exceção do 'data_type'
+        % e retorna uma struct com os gráficos de comparação de roll, pitch e yaw
+        function ret = factory_row_pitch_yaw(w_size, base_line_chart, others_charts_arr)
+            compare_rolls = CompareTilts('roll', w_size, base_line_chart, others_charts_arr);
+            compare_pitchs = CompareTilts('pitch', w_size, base_line_chart, others_charts_arr);
+            compare_yaws = CompareTilts('yaw', w_size, base_line_chart, others_charts_arr);
+
+            ret = struct('roll', compare_rolls, 'pitch', compare_pitchs, 'yaw', compare_yaws);
+        end
     end
 
     methods
@@ -34,6 +50,8 @@ classdef CompareTilts < CommonsLine
             obj.w_size = w_size;
             obj.data_type = data_type;
             obj.data = zeros(w_size, 1 + length(others_charts_arr));
+            obj.mse_arr = zeros(1, length(others_charts_arr));
+            obj.variance_arr = zeros(1, length(others_charts_arr));
 
             % Chart dependences
             obj.base_line_chart = base_line_chart;
@@ -73,6 +91,45 @@ classdef CompareTilts < CommonsLine
             %% Calcula o valor p/ a próxima amostra
             % note que data(:, 1) é sempre o baseline
             obj.data = [obj.data(2:obj.w_size, :); new_data];
+
+            %% Calcula dados de estatistica
+            obj.calculate_mse(new_data(1), new_data(2:length(new_data)));
+            obj.caculate_variance(new_data(1), new_data(2:length(new_data)));
         end
+
+        function calculate_mse(obj, baseline, datas_arr)
+            % Calcula o erro médio quadrático das entradas, dado um baseline.
+            % Como este cálculo é dado interação a interação, sem salvar todos valores lidos,
+            % será realizado aqui somente até a etapa de soma, a divisão pelo nº de amostras
+            % será executado somente no momento de exibição
+            % 
+            % O cálculo MSE indica quão próximo (em média) do baseline esta um dado método de estimativa
+            for i=1:length(datas_arr)
+                cur_mse = obj.mse_arr(i);
+                cur_data = datas_arr(i);
+                diff = pow2(baseline - cur_data);
+                obj.mse_arr(i) = cur_mse + diff;
+            end
+        end
+
+        function caculate_variance(obj, baseline, datas_arr)
+            % Calcula a variância das entradas, dado um baseline.
+            % Seu funcionamento é semelhante ao calculate_mse
+            % 
+            % O cálculo da Variância indica quão disperso está o método de estimativa
+            % comparado ao baseline
+        end
+
+        function on_delete(obj)
+            % Este método sobrescreve o método das classes plot
+            % É chamado quando o render vai finalizar
+            % Aqui será utilizado para exibir as estatísticas calculadas
+            fprintf('[Compara %s]\n', obj.data_type);
+            for i=1:length(obj.others_charts_arr)
+                mse = obj.mse_arr(i) / obj.last_sample;
+                fprintf('mse - %s: %.5f\n', class(obj.others_charts_arr(i)), mse);
+            end
+        end
+        
     end
 end

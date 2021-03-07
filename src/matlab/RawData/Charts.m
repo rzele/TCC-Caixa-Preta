@@ -15,14 +15,18 @@ classdef Charts < handle
         kalman_tilt
         madgwick_tilt_quaternion
         madgwick_tilt_euler
+        
         compass
         compass_compensated
+        
         car_3d_gdeg
         car_3d_gtilt
         car_3d_acelMag
         car_3d_comp
         car_3d_kalman
         car_3d_madgwick
+
+        compare_tilts
         compare_rolls
         compare_pitchs
         compare_yaws
@@ -30,7 +34,7 @@ classdef Charts < handle
     
     methods
         function obj = Charts(cnf)
-            %% Instância os plots
+            %% Cria gráficos de linha
             obj.vazio = '';                         % Deixa a celula vazia
             obj.aceleration = Aceleration(cnf.max_size, cnf.window_k, [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
             obj.gyroscope = Gyroscope(cnf.max_size, cnf.window_k, [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
@@ -46,11 +50,11 @@ classdef Charts < handle
             obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.freq_sample, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
             obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
             
-            % Cria gráficos de bússola
+            %% Cria gráficos de bússola
             obj.compass = Compass(obj.magnetometer);
             obj.compass_compensated = CompassCompensated(obj.acel_mag_tilt);
             
-            % Cria gráficos de carrinho
+            %% Cria gráficos de carrinho
             obj.car_3d_gdeg = Car3D('euler', obj.gyro_relative_tilt);
             obj.car_3d_gtilt = Car3D('euler', obj.gyro_absolute_tilt);
             obj.car_3d_acelMag = Car3D('euler', obj.acel_mag_tilt);
@@ -58,13 +62,16 @@ classdef Charts < handle
             obj.car_3d_kalman = Car3D('euler', obj.kalman_tilt);
             obj.car_3d_madgwick = Car3D('quaternion', obj.madgwick_tilt_quaternion);
 
-            % Cria gráficos de comparação de métodos de estimativa de tilt
-            obj.compare_rolls = CompareTilts('roll', cnf.max_size, obj.gyro_relative_tilt,...
+            %% Cria gráficos de comparação de métodos de estimativa de tilt
+            % Nas configurações de layout você pode utilizar tanto a struct aqui retornada
+            % c.compare_tilts.yaw (.pitch ou .roll)
+            % ou pode utilizar os apelidos abaixo: c.compare_rolls, c.compare_pitchs, c.compare_yaws
+            obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.gyro_relative_tilt,...
                 [obj.gyro_absolute_tilt, obj.acel_mag_tilt]);
-            obj.compare_pitchs = CompareTilts('pitch', cnf.max_size, obj.gyro_relative_tilt,...
-                [obj.gyro_absolute_tilt, obj.acel_mag_tilt]);
-            obj.compare_yaws = CompareTilts('yaw', cnf.max_size, obj.gyro_relative_tilt,...
-                [obj.gyro_absolute_tilt, obj.acel_mag_tilt]);
+            % Apelidos
+            obj.compare_rolls = obj.compare_tilts.roll;
+            obj.compare_pitchs = obj.compare_tilts.pitch;
+            obj.compare_yaws = obj.compare_tilts.yaw;
         end
     end
 end
