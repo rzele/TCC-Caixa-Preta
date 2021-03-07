@@ -8,9 +8,9 @@ classdef Gyroscope < CommonsLine
     methods
         function obj = Gyroscope(w_size, f_size, g_bias, esc_giro)
             obj = obj@CommonsLine(...
-                'Giro em graus/seg', ...       % p_title
+                'Giro em graus/s', ...         % p_title
                 'Amostra', ...                 % p_xlabel
-                'graus/seg', ...               % p_ylabel
+                'graus/s', ...                 % p_ylabel
                 {'gX', 'gY', 'gZ'}, ...        % s_legend
                 {'r', 'g', 'b'});              % sources_color
 

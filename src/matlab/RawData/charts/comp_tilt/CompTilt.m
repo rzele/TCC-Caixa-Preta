@@ -13,7 +13,7 @@ classdef CompTilt < CommonsLine
     methods
         function obj = CompTilt(w_size, mu, relative_tilt_chart, acel_mag_tilt_chart)
             obj = obj@CommonsLine(...
-                'Filtro complementar', ...          % p_title
+                'Filtro Complementar', ...          % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...       % s_legend

@@ -15,7 +15,7 @@ classdef GyroRelativeTilt < CommonsLine
     methods
         function obj = GyroRelativeTilt(w_size, freq_sample, gyro_chart)
             obj = obj@CommonsLine(...
-                'Giro em graus(relativo)', ...      % p_title
+                'Inclinação Relativa', ...          % p_title
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...       % s_legend

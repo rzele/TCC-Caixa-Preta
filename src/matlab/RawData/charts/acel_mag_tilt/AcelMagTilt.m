@@ -14,7 +14,7 @@ classdef AcelMagTilt < CommonsLine
     methods
         function obj = AcelMagTilt(w_size, acel_chart, mag_chart)
             obj = obj@CommonsLine(...
-                'Giro em graus(absoluto) usando acel + mag', ...     % p_title
+                'Inclinação Absoluta (acel + mag)', ...              % p_title
                 'Amostra', ...                                       % p_xlabel
                 'graus', ...                                         % p_ylabel
                 {'aRoll', 'aPitch', 'mYaw'}, ...                     % s_legend
