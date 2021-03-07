@@ -23,8 +23,8 @@ classdef CommonsLine <  Template & PlotLine
     end
 
     methods
-        function obj = CommonsLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color)
-            obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color);
+        function obj = CommonsLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color, win_size)
+            obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color, win_size);
         end
 
         function on_update(obj)

@@ -19,7 +19,8 @@ classdef Position < CommonsLine
                 'Amostra', ...              % p_xlabel
                 'metros', ...               % p_ylabel
                 {'X', 'Y', 'Z'}, ...        % s_legend
-                {'r', 'g', 'b'});           % sources_color
+                {'r', 'g', 'b'}, ...        % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);

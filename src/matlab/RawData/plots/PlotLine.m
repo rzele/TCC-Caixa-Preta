@@ -13,15 +13,17 @@ classdef PlotLine < CustomPlot
         p_ylabel
         s_legend
         sources_color
+        win_size
     end
     
     methods
-        function obj = PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color)
+        function obj = PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color, win_size)
             obj.p_title = p_title;
             obj.p_xlabel = p_xlabel;
             obj.p_ylabel = p_ylabel;
             obj.s_legend = s_legend;
             obj.sources_color = sources_color;
+            obj.win_size = win_size;
         end
 
         function createPlot(obj, n_rows, n_columns, grid)
@@ -41,7 +43,7 @@ classdef PlotLine < CustomPlot
             xlabel(obj.p_xlabel);
             ylabel(obj.p_ylabel);
             legend(obj.s_legend);
-            xlim([0 4000]);
+            xlim([0 obj.win_size]);
         end
 
         function setSeries(obj, source)

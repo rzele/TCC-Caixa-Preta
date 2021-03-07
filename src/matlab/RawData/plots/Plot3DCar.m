@@ -22,7 +22,7 @@ classdef Plot3DCar < CustomPlot
             obj.n_columns = n_columns;
             
             obj.setCar();
-            % title(obj.p_title)
+            title(obj.p_title)
         end
 
         % Define o carro

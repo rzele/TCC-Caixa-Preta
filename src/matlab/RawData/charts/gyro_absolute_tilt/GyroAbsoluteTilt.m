@@ -10,11 +10,12 @@ classdef GyroAbsoluteTilt < CommonsLine
     methods
         function obj = GyroAbsoluteTilt(w_size, relative_tilt_chart)
             obj = obj@CommonsLine(...
-                'Inclinação Absoluta (gyro)', ...      % p_title
+                'Inclinação Absoluta (gyro)', ...             % p_title
                 'Amostra', ...                                % p_xlabel
                 'graus', ...                                  % p_ylabel
                 {'Roll', 'Pitch', 'Yaw'}, ...                 % s_legend
-                {'r', 'g', 'b'});                             % sources_color
+                {'r', 'g', 'b'}, ...                          % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);

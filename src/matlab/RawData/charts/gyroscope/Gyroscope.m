@@ -12,7 +12,8 @@ classdef Gyroscope < CommonsLine
                 'Amostra', ...                 % p_xlabel
                 'graus/s', ...                 % p_ylabel
                 {'gX', 'gY', 'gZ'}, ...        % s_legend
-                {'r', 'g', 'b'});              % sources_color
+                {'r', 'g', 'b'}, ...           % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.moving_avg = MovingAverage(f_size, 3);

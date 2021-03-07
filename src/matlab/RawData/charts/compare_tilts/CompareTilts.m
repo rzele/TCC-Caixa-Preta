@@ -45,7 +45,8 @@ classdef CompareTilts < CommonsLine
                 'Amostra', ...                      % p_xlabel
                 'graus', ...                        % p_ylabel
                 s_legend, ...                       % s_legend
-                sources_color);                     % sources_color
+                sources_color, ...                  % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.data_type = data_type;

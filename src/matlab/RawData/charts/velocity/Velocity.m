@@ -18,9 +18,10 @@ classdef Velocity < CommonsLine
             obj = obj@CommonsLine(...
                 'Velocidade em m/s', ...       % p_title
                 'Amostra', ...                 % p_xlabel
-                'm/s', ...                       % p_ylabel
+                'm/s', ...                     % p_ylabel
                 {'vX', 'vY', 'vZ'}, ...        % s_legend
-                {'r', 'g', 'b'});              % sources_color
+                {'r', 'g', 'b'}, ...           % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);

@@ -19,7 +19,8 @@ classdef MadgwickTiltQuaternion < CommonsLine
                 'Amostra', ...                                % p_xlabel
                 'val', ...                                    % p_ylabel
                 {'q1', 'q2', 'q3', 'q4'}, ...                 % s_legend
-                {'r', 'g', 'b', 'y'});                        % sources_color
+                {'r', 'g', 'b', 'y'}, ...                     % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 4);

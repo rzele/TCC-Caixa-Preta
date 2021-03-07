@@ -22,7 +22,7 @@ classdef PlotCompass < CustomPlot
             obj.n_columns = n_columns;
 
             obj.setCompass();
-            % title(obj.p_title)
+            title(obj.p_title)
         end
 
         % Define o plot polar p/ ficar parecido com um compass

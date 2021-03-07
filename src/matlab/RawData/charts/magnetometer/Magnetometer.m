@@ -12,7 +12,8 @@ classdef Magnetometer < CommonsLine
                 'Amostra', ...                          % p_xlabel
                 'mG', ...                               % p_ylabel
                 {'hx', 'hy', 'hz'}, ...                 % s_legend
-                {'r', 'g', 'b'});                       % sources_color
+                {'r', 'g', 'b'}, ...                    % sources_color
+                w_size);
 
             obj.w_size = w_size;
             obj.moving_avg = MovingAverage(f_size, 3);
