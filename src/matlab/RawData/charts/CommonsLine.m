@@ -19,12 +19,13 @@ classdef CommonsLine <  Template & PlotLine
 
     properties
         w_size
-        last_sample=0
     end
-
+    
     methods
         function obj = CommonsLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color, win_size)
             obj = obj@PlotLine(p_title, p_xlabel, p_ylabel, s_legend, sources_color, win_size);
+            obj.last_sample = 0;
+            obj.time = 0;
         end
 
         function on_update(obj)
@@ -38,6 +39,10 @@ classdef CommonsLine <  Template & PlotLine
 
         function ret = penult(obj)
             ret = obj.data(obj.w_size-1, :);
+        end
+
+        function ret = get_time_calculating(obj)
+            ret = obj.time / obj.last_sample;
         end
 
         function ret = has_calculated_this_sample(obj, n_sample)

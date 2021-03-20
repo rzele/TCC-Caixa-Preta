@@ -1,11 +1,11 @@
 classdef CommonsCar3D < Template & Plot3DCar
     properties
-        last_sample=0
     end
 
     methods
         function obj = CommonsCar3D(p_title)
             obj = obj@Plot3DCar(p_title);
+            obj.last_sample = 0;
         end
         
         function ret = last(obj)

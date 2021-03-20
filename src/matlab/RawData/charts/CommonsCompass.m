@@ -15,12 +15,12 @@ classdef CommonsCompass <  Template & PlotCompass
 
     properties
         w_size
-        last_sample=0
     end
 
     methods
         function obj = CommonsCompass(p_title)
             obj = obj@PlotCompass(p_title);
+            obj.last_sample = 0;
         end
 
         function on_update(obj)

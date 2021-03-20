@@ -7,6 +7,8 @@ classdef Template < handle
     
     properties
         data
+        time
+        last_sample
     end
 
     methods
@@ -14,6 +16,9 @@ classdef Template < handle
         end
 
         function calculate(obj, data, n_sample)
+        end
+
+        function get_time_calculating(obj, data, n_sample)
         end
 
         function ret = last(obj)
