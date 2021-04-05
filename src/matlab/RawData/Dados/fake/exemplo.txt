@@ -1,0 +1,50 @@
+# O programa que realiza a leitura deste arquivo irá receber
+# a quantidade de amostras por segundo que deve simular,
+# e assim, interpolar os mili segundos aqui descritos gerando mais dados.
+# adicionados de ruído e bias conforme os modelos de cada input (acel, mag, gyro)
+# Desta forma podemos utilizar esses dados p/ simular de forma controlada os métodos
+
+# Use hashtags para comentários
+
+# O arquivo é descrito por 7 colunas separadas por espaço
+# tempo(em ms) | xyz da posição em centímetros | zyx da inclinação em graus
+# OBS: é utilizado a ordem de rotação ZYX, cuidado ao inserir o dado
+
+# E.x.:
+# Corpo inicia em t=0ms, parado e sem inclinação
+0 0 0 0 0 0 0
+
+# No instante t=200ms, ele inicia um movimento de yaw (rotação em Z)
+200 0 0 0 1 0 0
+
+# No instante t=1000ms, ele conclui o movimento de yaw, chegando a 90 graus
+1000 0 0 0 90 0 0
+
+# Até o instante t=1200ms, ele permanece na mesma posição
+1200 0 0 0 90 0 0
+
+# No o instante t=1300ms, ele inicia um movimento para frente em x
+1300 1 0 0 90 0 0
+
+# No o instante t=2400ms, ele termina a 400 centímetros de distância 
+2400 400 0 0 90 0 0
+
+# Mantém ele na posição final por alguns ms 
+2600 400 0 0 90 0 0
+
+# OBS:
+# Os eixos xyz da posição são globais, isso é, refere-se a um plano que não rotaciona
+# Logo o mover do corpo em x com ele rotacionado de 0 ou 90 no yaw, leva para uma mesma posição
+
+# OBS2:
+# Os ângulos também são relativos a eixos globais, isto é, rotacionar +45 em z no instante t=1
+# e +45 em z novamente no instante t=2 não é cumulativo, o objeto ficará parado em +45
+
+# OBS3:
+# Os valores de xyz de posição são inteiros, e variam de 0 a +infinito
+# Já os de inclinação, são inteiros, evariam de -180 a +180
+
+# OBS4:
+# Cuidado com o tempo de cada evento definido, e a frequência utiliza na geração do dado
+# E.x.: Se a frequência de amostragem é 100Hz, período igual a 10ms
+# mudanças na casa de 1ms só serão visíveis devido a interpolação.
