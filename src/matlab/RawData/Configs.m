@@ -13,7 +13,7 @@ classdef Configs < handle
         serial_baudrate=115200;
         
         % Se a fonte for 'mockup', também defina os parâmetros abaixo
-        only_generate = true;           % Irá apenas gerar os dados falso, não executa o programa de dashboard
+        only_generate = false;           % Irá apenas gerar os dados falso, não executa o programa de dashboard
         fake_sample_freq = 100;         % Frequência que simula a amostragem do MPU
         fake_esc_ac = 2;                % Escala do acelerômetro
         fake_esc_giro = 250;            % Escala do giroscópio
@@ -113,10 +113,12 @@ classdef Configs < handle
             %
             % OBS: Repita o objeto no layout p/ expandir o plot em varios grids
             % E.x.: layout = {aceleration, aceleration; gyroscope, magnetometer};
-            obj.layout = {...               
+            obj.layout = {...
 
                 c.aceleration, c.gyroscope, c.magnetometer;...
                 c.gyro_relative_tilt, c.acel_mag_tilt, c.position;...
+                c.kalman_tilt, c.comp_tilt, c.madgwick_tilt_euler;...
+                c.acel_without_g, c.velocity, c.vazio;...
 
             };
         end

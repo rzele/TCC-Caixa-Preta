@@ -252,8 +252,6 @@ classdef DataFactory < handle
                 acel(i, :) = data';
             end
 
-            % insere ruído
-
             % Para debug
             if obj.debug_on
                 obj.pos = pos;
@@ -261,6 +259,8 @@ classdef DataFactory < handle
                 obj.acel = acel;
             end
 
+            % insere ruído
+            
             ret = acel;
         end
         
@@ -299,13 +299,15 @@ classdef DataFactory < handle
                 obj.gyro = gyro;
             end
 
+            % Insere ruído
+
             ret = gyro;
         end
         
         function ret = generate_mag(obj)
             % Usando amostras de dados de entrada (posição em cm e inclinação absoluta em graus),
             % gera uma linha de dado do magnetômetro
-            ret = zeros(size(obj.interpolated_data,1), 3);
+            temp_ret = zeros(size(obj.interpolated_data,1), 3);
 
             for i = 1:size(obj.interpolated_data,1)
                 d = obj.interpolated_data(i, :);
@@ -319,16 +321,21 @@ classdef DataFactory < handle
                 % É arbitrário porque para estimar a inclinação esse dado acaba sendo anulado 
                 data = rot_inv * [20*cosd(45); 0; 20*sind(45)];
                 
-                % inverte os eixos, para corresponder ao mesmo da placa do MPU9250
-                ret(i,1) = data(2);
-                ret(i,2) = data(1);
-                ret(i,3) = -data(3);
+                temp_ret(i,:) = data';
+            end
+            
+            % Para debug. Usa versão com os eixos ainda não rotacionados
+            % porque o dashboard vai exibir depois de des-rotacionar
+            % assim dá p/ comparar visualmente os dados
+            if obj.debug_on
+                obj.mag = temp_ret;
             end
 
-            % Para debug
-            if obj.debug_on
-                obj.mag = ret;
-            end
+            % inverte os eixos, para corresponder ao mesmo da placa do MPU9250
+            ret = zeros(size(obj.interpolated_data,1), 3);
+            ret(:,1) = temp_ret(:, 2);
+            ret(:,2) = temp_ret(:, 1);
+            ret(:,3) = -temp_ret(:, 3);
 
             % insere ruído
         end
@@ -338,7 +345,7 @@ classdef DataFactory < handle
             % Como por exemplo ver como ficou a interpolação
 
             figure('Name','DataFactory - Debug');
-            s_title = {'pos (cm X ms)', 'vel (cm/ms X ms)', 'acel (cm/ms^2 X ms)', 'ang (º X ms)', 'gyro (º/ms X ms)', 'mag (uT X ms)'};
+            s_title = {'pos (cm X ms)', 'vel (cm/ms X ms)', 'acel (g X ms)', 'ang (º X ms)', 'gyro (º/s X ms)', 'mag (uT X ms)'};
             sources = {obj.pos, obj.vel, obj.acel, obj.ang, obj.gyro, obj.mag};
             x_axis = obj.interpolated_data(:,1);
             style = {'-r', '-g', '-b'};
