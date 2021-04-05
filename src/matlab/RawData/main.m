@@ -8,11 +8,23 @@ clc;                                % clear the command terminal
 %% 1 - Obtem configurações estáticas
 cnf = Configs();
 
+%% 1.5 - Gera arquivos falsos, se configurado
+if strcmp(cnf.read_from, 'mockup')
+    df = DataFactory(cnf.file_full_path, cnf.fake_sample_freq, cnf.fake_esc_ac, cnf.fake_esc_giro, cnf.debug_on);
+    cnf.file_full_path = df.generate();
+
+    if cnf.only_generate
+        return
+    end
+end
+
 %% 2 - Abre porta serial / arquivo
-if cnf.read_from_serial
+if strcmp(cnf.read_from, 'serial') || strcmp(cnf.read_from, 'bluethoot')
     reader = ReaderSerial(cnf.serial_COM, cnf.serial_baudrate);
-else
+elseif strcmp(cnf.read_from, 'arquivo') || strcmp(cnf.read_from, 'mockup')
     reader = ReaderFile(cnf.file_full_path);
+else
+    error('Invalid parameter "read_from". Change it at config file');
 end
 
 %% 3 - Atualiza as configurações com metadados da caixa preta

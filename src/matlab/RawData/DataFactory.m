@@ -14,7 +14,6 @@ classdef DataFactory < handle
     properties
         generated_path
         source_path
-        source_file_name
 
         interpolated_data
         read_ptr
@@ -34,10 +33,9 @@ classdef DataFactory < handle
 
     methods (Access=public)
         function obj = DataFactory(file_name, sample_freq, esc_ac, esc_giro, debug_on)
-            % nome do arquivo na pasta 'dados/fake/' com extensão
-            obj.source_file_name = file_name;
-            obj.source_path = strcat('dados/fake/', file_name);
-            obj.generated_path = strcat('dados/fake/generated-', file_name);
+            % Nome do arquivo na pasta 'dados/fake/' com extensão
+            obj.source_path = file_name;
+            obj.generated_path = strcat(file_name, '.generated');
             obj.sample_freq = sample_freq;
             obj.sample_period = 1000/sample_freq;
             obj.gravity_value = 9.8;
@@ -47,9 +45,9 @@ classdef DataFactory < handle
             obj.debug_on = debug_on;
         end
 
-        function file_name = generate(obj)
+        function out_file_name = generate(obj)
             % Interpola os dados base, gera dados, salva em um arquivo e retorna o nome do arquivo
-            fprintf('Gerando dados a partir de "%s"...\n', obj.source_file_name);
+            fprintf('Gerando dados a partir de "%s"...\n', obj.source_path);
             
             fprintf('Interpolando...\n');
             obj.interpolate();
@@ -85,8 +83,8 @@ classdef DataFactory < handle
                 obj.plot_all();
             end
 
-            file_name = strcat('dados/fake/generated-', obj.source_file_name);
-            fprintf('Dados gerados no arquivo "%s".\n', file_name);
+            out_file_name = obj.generated_path;
+            fprintf('Dados gerados no arquivo "%s".\n', out_file_name);
         end
 
         function sample = read(obj)
@@ -339,7 +337,7 @@ classdef DataFactory < handle
             % Usado apenas para plotar os dados, para fins de debug
             % Como por exemplo ver como ficou a interpolação
 
-            figure('Name','DataFactory - Debug2');
+            figure('Name','DataFactory - Debug');
             s_title = {'pos (cm X ms)', 'vel (cm/ms X ms)', 'acel (cm/ms^2 X ms)', 'ang (º X ms)', 'gyro (º/ms X ms)', 'mag (uT X ms)'};
             sources = {obj.pos, obj.vel, obj.acel, obj.ang, obj.gyro, obj.mag};
             x_axis = obj.interpolated_data(:,1);

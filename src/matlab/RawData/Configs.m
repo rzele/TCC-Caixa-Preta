@@ -3,10 +3,21 @@ classdef Configs < handle
         %% Configurações estáticas
 
         % Fonte de leitura
-        read_from_serial=false;     % Set to false to use a file
+        read_from = 'mockup';     % difina como, 'serial', 'bluethoot', 'arquivo' ou 'mockup'
+
+        % Coloque o path completo se a fonte for 'arquivo' ou 'mockup'
+        file_full_path='Dados/fake/exemplo'; 
+
+        % Coloque a porta COM e a taxa de comunicação se a fonte for 'serial' ou 'bluethoot'
         serial_COM='COM4';
         serial_baudrate=115200;
-        file_full_path='Dados/fake/generated-exemplo.txt';
+        
+        % Se a fonte for 'mockup', também defina os parâmetros abaixo
+        only_generate = true;           % Irá apenas gerar os dados falso, não executa o programa de dashboard
+        fake_sample_freq = 100;         % Frequência que simula a amostragem do MPU
+        fake_esc_ac = 2;                % Escala do acelerômetro
+        fake_esc_giro = 250;            % Escala do giroscópio
+        debug_on = true;                % Exibe um gráfico com os dados gerados, antes de converter p/ as escalas
 
         % Amostragem
         max_size=250;              % Quantidade maxima de amostras exibidas na tela

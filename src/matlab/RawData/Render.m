@@ -52,7 +52,7 @@ classdef Render < handle
                 end
             end
 
-            obj.fig = figure('units','normalized','outerposition',[0 0 1 1]);
+            obj.fig = figure('name', 'Dashboard', 'units','normalized','outerposition',[0 0 1 1]);
             
             % Cria cada plot na tela
             for i = 1:length(obj.plots)
