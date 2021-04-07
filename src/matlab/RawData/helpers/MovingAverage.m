@@ -11,6 +11,11 @@ classdef MovingAverage < handle
         end
 
         function ret = calculate(obj, newData)
+            if obj.k == 1
+                ret = newData;
+                return
+            end
+                
             obj.data = [obj.data(2:obj.k,:) ; newData];
             ret = sum(obj.data) / obj.k;
         end

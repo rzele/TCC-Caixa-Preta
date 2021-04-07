@@ -27,7 +27,7 @@ classdef Configs < handle
         freq_render=20;               % Frequencia de atualização do plot
 
         % Filtros das entradas (aplicado ao acel, gyro e mag)
-        window_k = 10;                    % Janela do filtro (minimo = 2)
+        window_k = 1;                    % Janela do filtro (minimo = 1, 1 equivale a não usar)
         filter_type = 'media';            % pode ser 'media' ou 'mediana'
 
         % Variável de ajuste do filtro complementar
