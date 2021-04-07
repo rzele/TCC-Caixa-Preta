@@ -1,0 +1,211 @@
+// Colocar o MPU num estado conhecido
+// Taxa = 1 kHz, Banda: Acel=5.05 Hz e Giro=5 Hz. Delay Acel = 32.48ms. Delay Giro = 33.48
+// Taxa de amostragem =  taxa/(1+SMPLRT_DIV) = 1k/10 = 100Hz
+//Escalas acel = +/2g e giro = +/-250 gr/s
+void mpu_config(void) {
+
+  // Despertar MPU, Relógio = PLL do Giro-x
+  mpu_wr(PWR_MGMT_1, 0x01);
+  delay(200);       //200ms - Esperar PLL estabilizar
+
+  // Definir escalas
+  mpu_escalas(GIRO_FS_250, ACEL_FS_2G);   //Escalas acel = +/2g e giro = +/-250 gr/s
+
+  // 6 => Liga o filtro passa-baixa do giroscópio e temperatura para para 5Hz
+  // Delay giro = 33.48ms, Taxa giro = 1Khz; Delay temperatura 18.6ms 
+  mpu_wr(CONFIG, 6);
+
+  // 6 => Liga o filtro passa-baixa do acelerômetro para para 5.05Hz. Delay= 32.48ms
+  mpu_wr(ACCEL_CONFIG_2, 6);
+  
+  // 9 ==> Taxa de amostragem =  taxa/(1+SMPLRT_DIV) = 1k/10 = 100Hz
+  mpu_wr(SMPLRT_DIV, SAMPLE_RT_100Hz);  //Taxa de amostragem = 100 Hz
+  //mpu_wr(SMPLRT_DIV, SAMPLE_RT_500Hz);  //Taxa de amostragem = 500 Hz
+}
+
+
+
+// MPU: Realizar Self-Test (ST), prn = imprimir resultados?
+// Retorna: TRUE  se passou no teste
+//          FALSE se falhou no teste
+// baseado no documento AN-MPU-9250A-03 MPU-9250 Accel Gyro and Compass Self-Test Implementation v1 0_062813.pdf
+byte mpu_self_test(byte prn = FALSE) {
+  
+  float ST_OPT[6];            // self test value de fábrica
+  long  sum[6];               // registrador auxilar para calcular a soma  
+  int   aux[6];               // registrador auxiliar para leituras
+  int   mediaNoST[6];         // media das 200 medidas sem o self test
+  int   mediaST[6];           // media das 200 medidas com o self test
+  int   selfTestResponse[6];  // self test response (medias com self test - medias sem self test)
+  byte  ST_CODE[6];           // factory self test code (usado para calcular o self test value)
+  float porcentagens[6];      // porcentagem ao dividir selfTestResponse por ST_OPT (determina se st passou)
+  
+  int   qtd = 200;            // quantos valores coletar para calcular a média
+  bool  passou = true;        // valor que retorna no final da função (passou ou não?)
+
+  /* 3.0 Procedimento */
+  // 1. Configurações necessárias para o self test 
+  mpu_wr(SMPLRT_DIV, 0x00);    
+  mpu_wr(CONFIG, 0x02);        // Giroscópio: mudando DLPF para config 2. taxa do giroscopio 1 kHz e DLPF  92 Hz
+  mpu_wr(ACCEL_CONFIG_2, 0x02); // Acelerometro: taxa do acelerometro 1 kHz banda 92 Hz 
+    
+  //configura escalas do giroscopio e acelerometro para o recomendado para o self test
+  // +/- 2g e +/-250gr/seg
+  mpu_escalas(GIRO_FS_250,ACEL_FS_2G); 
+  delay(250); //Aguardar cofiguração estabilizar
+
+  // 2. Com o self test desligado, ler 200 medidas do giroscópio e acelerometro e armazenar as médias
+  // em mediaNoST [ax, ay, az, gx, gy, gz]
+  for (int i = 0; i<6; i++)   sum[i]=0; //Zerar acumulador
+  mpu_int(); // Habilitar interrupção
+  mpu_dado_ok=FALSE;
+  //200 medidas sem self test
+  for (int i=0; i<qtd; i++){
+    while(mpu_dado_ok == FALSE);
+    mpu_dado_ok = FALSE;
+    mpu_rd_ac_gi(aux);
+    for (int j=0; j<6; j++) sum[j] += aux[j]; 
+  }
+  // Calcular as médias sem o self test
+  for (int i=0; i<6; i++) mediaNoST[i] = sum[i]/qtd;
+  
+  // 3. habilitar self test nos 3 eixos do acelerometro e giroscópio
+  mpu_wr(ACCEL_CONFIG, 0xE0);
+  mpu_wr(GYRO_CONFIG,  0xE0);
+
+  // 4. delay para as oscilações estabilizarem
+  delay(25);  
+
+  // 5. Com o self test ligado, ler 200 medidas do giroscópio e acelerometro e armazenar as médias
+  // em mediaST [ax, ay, az, gx, gy, gz]
+  for (int i = 0; i<6; i++)   sum[i]=0; //Zerar acumulador 
+  //200 medidas com self test
+  for (int i=0; i<qtd; i++){
+    while(mpu_dado_ok == FALSE);
+    mpu_dado_ok = FALSE;
+    mpu_rd_ac_gi(aux);
+    for (int j=0; j<6; j++) sum[j] += aux[j]; 
+  }
+  for (int i=0; i<6; i++) mediaST[i] = sum[i]/qtd;
+  
+  // 6. calculando as respostas para o self test
+  for(int i = 0 ; i < 6 ; i++){
+    selfTestResponse[i] = mediaST[i] - mediaNoST[i];
+  }
+ 
+  /* 3.1 Configurar giro e acel para operação normal */
+  mpu_wr( ACCEL_CONFIG, 0x00);
+  mpu_wr( GYRO_CONFIG,  0x00);
+  delay(25);  // Delay a while to let the device stabilize
+  //acertar as escalas 
+  mpu_escalas(GIRO_FS_250,ACEL_FS_8G); 
+  //tem que rodar o mpu_config denovo?
+ 
+  /* 3.2 critérios para passar no self test */
+  
+  // 1. lendo factory Self-Test Code do giroscopio e acelerometro   
+  // X-axis accel self-test
+  ST_CODE[0] = mpu_rd(SELF_TEST_X_ACCEL);
+  // Y-axis accel self-test
+  ST_CODE[1] = mpu_rd(SELF_TEST_Y_ACCEL);
+  // Z-axis accel self-test
+  ST_CODE[2] = mpu_rd(SELF_TEST_Z_ACCEL);
+  // X-axis gyro self-test
+  ST_CODE[3] = mpu_rd(SELF_TEST_X_GYRO);
+  // Y-axis gyro self-tes
+  ST_CODE[4] = mpu_rd(SELF_TEST_Y_GYRO);
+  // Z-axis gyro self-test
+  ST_CODE[5] = mpu_rd(SELF_TEST_Z_GYRO); 
+
+  // 2. calculando factory self-test value a partir do factory self test code
+  // FT[Xa]
+  ST_OPT[0] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[0] - 1.0) ));
+  // FT[Ya]
+  ST_OPT[1] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[1] - 1.0) ));
+  // FT[Za]
+  ST_OPT[2] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[2] - 1.0) ));
+  // FT[Xg]
+  ST_OPT[3] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[3] - 1.0) ));
+  // FT[Yg]
+  ST_OPT[4] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[4] - 1.0) ));
+  // FT[Zg]
+  ST_OPT[5] = (float)(2620/1<<GIRO_FS_250)*(pow(1.01 ,((float)ST_CODE[5] - 1.0) ));
+ 
+  for(int i = 0 ; i < 6 ; i++){
+    porcentagens[i] = (float)selfTestResponse[i]/ST_OPT[i];     
+  }
+
+  // 3. Determinando a condição de passar no teste
+  // X-gyro: (GXST / GXST_OTP) > 0.5
+  // Y-gyro (GYST / GYST_OTP) > 0.5
+  // Z-gyro (GZST / GZST_OTP) > 0.5
+  // X-Accel 0.5 < (AXST / AXST_OTP) < 1.5
+  // Y-Accel 0.5 < (AYST / AYST_OTP) < 1.5
+  // Z-Accel 0.5 < (AZST / AZST_OTP) < 1.5
+  
+  for(int i = 0 ; i < 3 ; i++){
+    //testando giro
+    if(porcentagens[i+3] <= 0.5) passou = false;
+    //testando acel
+    if(!((porcentagens[i] > 0.5) && (porcentagens[i] < 1.5))) passou = false;
+  }
+
+  //printa os resultados
+  if(prn == TRUE){
+    
+    ser_crlf(2);
+    ser_str("medias sem self test");
+    ser_crlf(1);
+    ser_str("\t");
+    for (int i =0; i<6; i++){  ser_dec16(mediaNoST[i]);   ser_spc(1); }
+
+    ser_crlf(2);
+    
+    ser_str("medias com self test");
+    ser_crlf(1);
+    ser_str("\t");
+    for (int i =0; i<6; i++){  ser_dec16(mediaST[i]);   ser_spc(1); }
+
+    ser_crlf(2);
+    
+    ser_str("Self test response");
+    ser_crlf(1);
+    ser_str("\t");
+    for (int j =0; j<6; j++){  
+      ser_dec16(selfTestResponse[j]);
+      ser_spc(1); 
+    }
+    
+    ser_crlf(2);
+
+    ser_str("Factory self test code (nos registradores)");
+    ser_crlf(1);
+    ser_str("\t");
+    for (int j =0; j<6; j++){  
+      ser_dec8(ST_CODE[j]);
+      ser_spc(1); 
+    }
+    
+    ser_crlf(2);
+    
+    ser_str("Self Test value (st_opt)");
+    ser_crlf(1);
+    ser_str("\t");
+    for (int j =0; j<6; j++){  
+      ser_float(ST_OPT[j],2);
+      ser_spc(1); 
+    }
+
+    ser_crlf(2); 
+    
+    ser_str("Porcentagens self_test_response / self_test_value");
+    ser_crlf(1);
+    ser_str("\t");
+    for(int i = 0 ; i < 6 ; i++){
+      ser_float(porcentagens[i],4); ser_spc(1); 
+    }
+    ser_crlf(1);
+
+  }
+  return passou;
+}
