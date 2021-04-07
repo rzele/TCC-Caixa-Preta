@@ -13,7 +13,7 @@ classdef Baselines < CommonsLine
                 error('Invalid selected_baseline must be "position" or "tilt"');
             end
 
-            unidade = struct('tilt', 'graus', 'position', 'cm');
+            unidade = struct('tilt', 'graus', 'position', 'm');
             p_title = sprintf('Baseline (%s)', selected_baseline);
             obj = obj@CommonsLine(...
                 p_title, ...                            % p_title
