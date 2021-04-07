@@ -8,7 +8,7 @@ clc;                                % clear the command terminal
 %% 1 - Obtem configurações estáticas
 cnf = Configs();
 
-%% 1.5 - Gera arquivos falsos, se configurado
+%% 1.5 - Se configurado modo de leitura como 'mockup', gera arquivos falsos
 if strcmp(cnf.read_from, 'mockup')
     df = DataFactory(cnf.file_full_path, cnf.fake_sample_freq, cnf.fake_esc_ac, cnf.fake_esc_giro, cnf.debug_on);
     cnf.file_full_path = df.generate();
@@ -19,7 +19,7 @@ if strcmp(cnf.read_from, 'mockup')
 end
 
 %% 2 - Abre porta serial / arquivo
-if strcmp(cnf.read_from, 'serial') || strcmp(cnf.read_from, 'bluethoot')
+if strcmp(cnf.read_from, 'serial') || strcmp(cnf.read_from, 'bluetooth')
     reader = ReaderSerial(cnf.serial_COM, cnf.serial_baudrate);
 elseif strcmp(cnf.read_from, 'arquivo') || strcmp(cnf.read_from, 'mockup')
     reader = ReaderFile(cnf.file_full_path);
@@ -27,7 +27,8 @@ else
     error('Invalid parameter "read_from". Change it at config file');
 end
 
-%% 3 - Atualiza as configurações com metadados da caixa preta
+%% 3 - Atualiza as configurações, com configurações dinâmicas (aqueles que usam metadados da caixa preta)
+% e também insere os metadados da caixa preta no objeto de configuração
 cnf.setDynamicConfigs(reader.metadatas);
 
 %% 4 - Instância todo o conjunto de gráficos
@@ -39,6 +40,14 @@ cnf.setLayout(charts);
 %% 6 - Define uma janela p/ plot
 plot_1 = Render(cnf.freq_render, cnf.layout);
 
+% 7 - Verifica se foi definido nos gráficos um do tipo 'baseline'
+% e foi esquecido de trocar o modo de leitura para 'mockup'
+for i = 1:length(plot_1.plots)
+    if (isa(plot_1.plots(i), 'Baselines') || isa(plot_1.plots(i), 'CompareTilts')) && ~strcmp(cnf.read_from, 'mockup')
+        error('You must set read mode to "mockup", to use baseline or compare charts');
+    end
+end
+
 %% Obtem os dados e plota em tempo real
 % NOTA: Se o buffer do serial encher (> 512 bytes) o programa pode explodir ou apresentar erros, caso isso ocorra
 % abaixe a taxa de renderização do gráfico. Para verificar se erros ocorreram, compare a quantidade de amostras enviadas com a quantidade lida
@@ -48,6 +57,14 @@ while true
     
     %% Lê uma amostra de cada da porta serial/arquivo
     data = reader.read_sample();
+
+    % Se definido a leitura como 'mockup', lê um dado do baseline
+    % Dado esse que deu origem aos dados gerados
+    if strcmp(cnf.read_from, 'mockup')
+        baseline_data = df.read();
+    else
+        baseline_data = [];
+    end
     
     % Se é o fim do arquivo ou deu algum erro finaliza
     if isempty(data)
@@ -62,7 +79,7 @@ while true
     % Chama cada gráfico na tela para realizar seus calculos
     % atualizando os dados a partir dos dados de entrada
     for i = 1:length(plot_1.plots)
-        plot_1.plots(i).calculate(data, count);
+        plot_1.plots(i).calculate(data, baseline_data, count);
     end
     
     time_calc_data = time_calc_data + toc(t1);

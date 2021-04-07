@@ -17,14 +17,14 @@ classdef Compass < CommonsCompass
             obj.mag_chart = mag_chart;
         end
 
-        function calculate(obj, mpu_new_data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
             %% Verifica se já calculou essa amostra
             if obj.has_calculated_this_sample(n_sample)
                 return
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.mag_chart.calculate(mpu_new_data, n_sample);
+            obj.mag_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             H = obj.mag_chart.last();
             
             %% Calcula o valor p/ a próxima amostra

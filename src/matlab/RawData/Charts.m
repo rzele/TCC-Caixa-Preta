@@ -2,6 +2,7 @@ classdef Charts < handle
     properties
         % Gráficos possíveis
         vazio
+
         aceleration
         gyroscope
         magnetometer
@@ -30,6 +31,10 @@ classdef Charts < handle
         compare_rolls
         compare_pitchs
         compare_yaws
+
+        baseline_tilt
+        baseline_position
+        car_3d_baseline
     end
     
     methods
@@ -62,12 +67,18 @@ classdef Charts < handle
             obj.car_3d_kalman = Car3D('euler', obj.kalman_tilt);
             obj.car_3d_madgwick = Car3D('quaternion', obj.madgwick_tilt_quaternion);
 
+            %% Cria gráficos de baseline (somente p/ leitura usando mockup)
+            obj.baseline_tilt = Baselines('tilt', cnf.max_size);
+            obj.baseline_position = Baselines('position', cnf.max_size);
+            obj.car_3d_baseline = Car3D('euler', obj.baseline_tilt);
+
             %% Cria gráficos de comparação de métodos de estimativa de tilt
             % Nas configurações de layout você pode utilizar tanto a struct aqui retornada
             % c.compare_tilts.yaw (.pitch ou .roll)
             % ou pode utilizar os apelidos abaixo: c.compare_rolls, c.compare_pitchs, c.compare_yaws
-            obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.gyro_relative_tilt,...
-                [obj.gyro_absolute_tilt, obj.acel_mag_tilt]);
+            % Você pode alterar os métodos que serão comparados no array abaixo
+            obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt,...
+                [obj.gyro_relative_tilt, obj.acel_mag_tilt]);
             % Apelidos
             obj.compare_rolls = obj.compare_tilts.roll;
             obj.compare_pitchs = obj.compare_tilts.pitch;

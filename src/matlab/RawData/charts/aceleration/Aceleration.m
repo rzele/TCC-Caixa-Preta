@@ -36,7 +36,7 @@ classdef Aceleration < CommonsLine
             end
         end
 
-        function calculate(obj, mpu_new_data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
             %% Verifica se já calculou essa amostra
             if obj.has_calculated_this_sample(n_sample)
                 return

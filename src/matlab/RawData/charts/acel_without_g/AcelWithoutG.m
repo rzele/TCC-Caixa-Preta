@@ -32,17 +32,17 @@ classdef AcelWithoutG < CommonsLine
             obj. acel_chart = acel_chart;
         end
         
-        function calculate(obj, mpu_new_data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
             %% Verifica se já calculou essa amostra
             if obj.has_calculated_this_sample(n_sample)
                 return
             end
             
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.some_tilt_chart.calculate(mpu_new_data, n_sample);
+            obj.some_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             tilt = obj.some_tilt_chart.last();
             
-            obj.acel_chart.calculate(mpu_new_data, n_sample);
+            obj.acel_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             A = obj.acel_chart.last();
             
             %% Calcula o valor p/ a próxima amostra

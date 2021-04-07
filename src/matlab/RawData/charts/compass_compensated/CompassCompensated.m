@@ -16,14 +16,14 @@ classdef CompassCompensated < CommonsCompass
             obj.acel_mag_tilt_chart = acel_mag_tilt_chart;
         end
 
-        function calculate(obj, mpu_new_data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
             %% Verifica se já calculou essa amostra
             if obj.has_calculated_this_sample(n_sample)
                 return
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.acel_mag_tilt_chart.calculate(mpu_new_data, n_sample);
+            obj.acel_mag_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             acel_mag_last = obj.acel_mag_tilt_chart.last();
             yaw = acel_mag_last(3);
             

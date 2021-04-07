@@ -70,7 +70,7 @@ classdef CompareTilts < CommonsLine
             end
         end
         
-        function calculate(obj, mpu_new_data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
             %% Verifica se já calculou essa amostra
             if obj.has_calculated_this_sample(n_sample)
                 return
@@ -78,13 +78,13 @@ classdef CompareTilts < CommonsLine
             
             %% Obtem o valor de outros charts ao qual este é dependente
             % Obtem data do baseline
-            obj.base_line_chart.calculate(mpu_new_data, n_sample);
+            obj.base_line_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             base_line_data = obj.base_line_chart.last();
             new_data = [base_line_data(obj.data_order)];
 
             % Obtem data dos outros gráficos
             for i=1:length(obj.others_charts_arr)
-                obj.others_charts_arr(i).calculate(mpu_new_data, n_sample);
+                obj.others_charts_arr(i).calculate(mpu_new_data, baselines_new_data, n_sample);
                 chart_data = obj.others_charts_arr(i).last();
                 new_data = [new_data, chart_data(obj.data_order)];
             end
