@@ -15,7 +15,7 @@ classdef Template < handle
         function obj = Template()
         end
 
-        function calculate(obj, data, n_sample)
+        function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
         end
 
         function get_time_calculating(obj, data, n_sample)
