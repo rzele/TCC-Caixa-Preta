@@ -20,11 +20,11 @@ classdef Configs < handle
         debug_on = false;                % Exibe um gráfico com os dados gerados, antes de converter p/ as escalas
 
         % Amostragem
-        max_size=250;              % Quantidade maxima de amostras exibidas na tela
+        max_size=261;              % Quantidade maxima de amostras exibidas na tela
 
         % Plotagem
-        plot_in_real_time=true;     % Define se o plot será so no final, ou em tempo real
-        freq_render=5;               % Frequencia de atualização do plot
+        plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
+        freq_render=20;               % Frequencia de atualização do plot
 
         % Filtros das entradas (aplicado ao acel, gyro e mag)
         window_k = 10;                    % Janela do filtro (minimo = 2)
@@ -62,16 +62,16 @@ classdef Configs < handle
             obj.cxp = caixaPretaMetadata;
 
             %% Constantes do sensor
-            obj.freq_sample=obj.cxp.fammost;            % Frequencia da amostragem dos dados
-            obj.gx_bias=0;                          % 
-            obj.gy_bias=0;                            % 
-            obj.gz_bias=0;                          % 
-            obj.ax_bias=0;                              % 
-            obj.ay_bias=0;                              % 
-            obj.az_bias=0;                           % 
-            obj.hx_offset=0;                          % 
-            obj.hy_offset=0;                          % 
-            obj.hz_offset=0;                           % 
+            obj.freq_sample=obj.cxp.fammost;     % Frequencia da amostragem dos dados
+            obj.gx_bias=0;                       % 
+            obj.gy_bias=0;                       % 
+            obj.gz_bias=0;                       % 
+            obj.ax_bias=0;                       % 
+            obj.ay_bias=0;                       % 
+            obj.az_bias=0;                       % 
+            obj.hx_offset=0;                     % 
+            obj.hy_offset=0;                     % 
+            obj.hz_offset=0;                     % 
             obj.hx_scale=1;                      % 
             obj.hy_scale=1;                      % 
             obj.hz_scale=1;                      % 
@@ -116,8 +116,8 @@ classdef Configs < handle
             obj.layout = {...
 
                 c.compare_rolls, c.compare_pitchs, c.compare_yaws;...
-                c.gyro_relative_tilt, c.car_3d_gdeg, c.position;...
-                c.baseline_tilt, c.car_3d_baseline, c.baseline_position;...
+                c.gyro_relative_tilt, c.acel_without_g, c.position;...
+                c.baseline_tilt, c.car_3d_gdeg, c.baseline_position;...
 
             };
         end

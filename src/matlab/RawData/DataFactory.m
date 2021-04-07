@@ -37,7 +37,7 @@ classdef DataFactory < handle
             obj.source_path = file_name;
             obj.generated_path = strcat(file_name, '.generated');
             obj.sample_freq = sample_freq;
-            obj.sample_period = 1000/sample_freq;
+            obj.sample_period = 1000/sample_freq; % em ms
             obj.gravity_value = 9.8;
             obj.esc_ac = esc_ac;
             obj.esc_giro = esc_giro;
@@ -225,13 +225,13 @@ classdef DataFactory < handle
             % Obtem aceleração pela derivada numerica, adiantada f'(i) = (f(i+1) - f(i)) / 2
             % Devido a derivada numerica, acel e vel não tem valor p/ a ultima amostra
             % joguei aqui como sendo o valor anterior
-            % OBS: a integral numérica por trapésio, não retorna o dado original, anulando a derivada
-            % nenhuma das outras também retorna, somente funciona a integral f(i) = f'(i-1) * t
+            % OBS: a integral numérica por trapésio, não retorna o dado original, anulando a derivada.
+            % Nenhuma das outras também retorna, somente funciona a integral atrasada f(i) = f'(i-1) * t
             pos = d(:, 2:4);
             vel = diff(pos) / obj.sample_period;
-            vel(size(vel,1)+1, :) = vel(size(vel,1), :);
+            vel = vertcat(vel, vel(size(vel,1),:));
             acel = diff(vel) / obj.sample_period;
-            acel(size(acel,1)+1, :) = acel(size(acel,1), :);
+            acel = vertcat(acel, acel(size(acel,1),:));
 
             % converte cm/ms^2 p/ g
             acel = acel * 1000000 / (100 * obj.gravity_value);
@@ -285,10 +285,10 @@ classdef DataFactory < handle
             % Deriva as posições relativas para obter a velociade angular
             % Devido a derivada numerica, gyro não tem valor p/ a ultima amostra
             % joguei aqui como sendo o valor anterior
-            % OBS: a integral numérica por trapésio, não retorna o dado original, anulando a derivada
-            % nenhuma das outras também retorna, somente funciona a integral f(i) = f'(i-1) * t
+            % OBS: a integral numérica por trapésio, não retorna o dado original, anulando a derivada.
+            % Nenhuma das outras também retorna, somente funciona a integral atrasada f(i) = f'(i-1) * t
             gyro = diff(relative_gyro) / obj.sample_period;
-            gyro = vertcat(gyro, gyro(size(gyro,1), :));
+            gyro = vertcat(gyro, gyro(size(gyro,1),:));
 
             % converte giro/ms para giro/s
             gyro = gyro*1000;
