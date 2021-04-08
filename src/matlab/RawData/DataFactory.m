@@ -15,6 +15,7 @@ classdef DataFactory < handle
         generated_path
         source_path
 
+        add_noise_bias
         interpolated_data
         read_ptr
 
@@ -43,6 +44,7 @@ classdef DataFactory < handle
             obj.esc_giro = esc_giro;
             obj.esc_mag = 4912;
             obj.debug_on = debug_on;
+            obj.add_noise_bias = true;
         end
 
         function out_file_name = generate(obj)
@@ -252,6 +254,16 @@ classdef DataFactory < handle
                 acel(i, :) = data';
             end
 
+            % adiciona ruído branco gaussiano e bias
+            % Valores arbitrários (só não exagerar, este bias simula o bias após correção)
+            % seria o resto que não deu para ser corrigido com a calibração
+            if obj.add_noise_bias
+                acel(:,1) = acel(:,1) + 0.0027;
+                acel(:,2) = acel(:,2) - 0.013;
+                acel(:,3) = acel(:,3) + 0.015;
+                acel = awgn(acel, 10, 'measured');
+            end
+
             % Para debug
             if obj.debug_on
                 obj.pos = pos;
@@ -293,6 +305,15 @@ classdef DataFactory < handle
             % converte giro/ms para giro/s
             gyro = gyro*1000;
 
+            % adiciona ruído branco gaussiano e bias
+            % Valores arbitrários (só não exagerar)
+            if obj.add_noise_bias
+                gyro(:,1) = gyro(:,1) + 0.027;
+                gyro(:,2) = gyro(:,2) - 0.072;
+                gyro(:,3) = gyro(:,3) + 0.055;
+                gyro = awgn(gyro, 10, 'measured');
+            end
+
             % Para debug
             if obj.debug_on
                 obj.ang = fliplr(obj.interpolated_data(:, 5:7));
@@ -307,7 +328,7 @@ classdef DataFactory < handle
         function ret = generate_mag(obj)
             % Usando amostras de dados de entrada (posição em cm e inclinação absoluta em graus),
             % gera uma linha de dado do magnetômetro
-            temp_ret = zeros(size(obj.interpolated_data,1), 3);
+            mag = zeros(size(obj.interpolated_data,1), 3);
 
             for i = 1:size(obj.interpolated_data,1)
                 d = obj.interpolated_data(i, :);
@@ -321,21 +342,30 @@ classdef DataFactory < handle
                 % É arbitrário porque para estimar a inclinação esse dado acaba sendo anulado 
                 data = rot_inv * [20*cosd(45); 0; 20*sind(45)];
                 
-                temp_ret(i,:) = data';
+                mag(i,:) = data';
+            end
+
+            % adiciona ruído branco gaussiano e bias
+            % Valores arbitrários (só não exagerar)
+            if obj.add_noise_bias
+                mag(:,1) = (mag(:,1) + 2.5) * 1.00208;
+                mag(:,2) = (mag(:,2) - 1.11) * 0.98213;
+                mag(:,3) = (mag(:,3) + 3.45) * 1.00423;
+                mag = awgn(mag, 10, 'measured');
             end
             
             % Para debug. Usa versão com os eixos ainda não rotacionados
             % porque o dashboard vai exibir depois de des-rotacionar
             % assim dá p/ comparar visualmente os dados
             if obj.debug_on
-                obj.mag = temp_ret;
+                obj.mag = mag;
             end
 
             % inverte os eixos, para corresponder ao mesmo da placa do MPU9250
             ret = zeros(size(obj.interpolated_data,1), 3);
-            ret(:,1) = temp_ret(:, 2);
-            ret(:,2) = temp_ret(:, 1);
-            ret(:,3) = -temp_ret(:, 3);
+            ret(:,1) = mag(:, 2);
+            ret(:,2) = mag(:, 1);
+            ret(:,3) = -mag(:, 3);
 
             % insere ruído
         end
