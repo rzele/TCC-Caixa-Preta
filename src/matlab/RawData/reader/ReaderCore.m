@@ -25,7 +25,7 @@ classdef ReaderCore < handle
                 fprintf('.')
                 temp = obj.read_not_empty_line();
                 if strcmp(temp, obj.start_delimiter) == 1
-                    fprintf('\nIniciando leitura.\n');
+                    fprintf('\nIniciando leitura.\n\n');
                     return
                 end
             end

@@ -43,10 +43,14 @@ classdef Aceleration < CommonsLine
             end
 
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             A = mpu_new_data(1:3);
             last_data = obj.last();
             new_data = calculate_aceleration(A, obj.a_bias, obj.esc_ac);
             filtered = obj.filter.calculate(new_data);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); filtered];
         end
     end

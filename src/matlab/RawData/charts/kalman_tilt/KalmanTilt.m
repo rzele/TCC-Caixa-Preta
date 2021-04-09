@@ -7,10 +7,6 @@ classdef KalmanTilt < CommonsLine
         kalmanFilterRoll
         kalmanFilterPitch
         kalmanFilterYaw
-
-        % Chart dependences obj
-        gyro_chart
-        some_tilt_chart
     end
 
     methods
@@ -35,8 +31,8 @@ classdef KalmanTilt < CommonsLine
             obj.kalmanFilterYaw = ModifiedKalmanFilter(A,B,C,Q,R);
 
             % Chart dependences
-            obj.gyro_chart = gyro_chart;
-            obj.some_tilt_chart = some_tilt_chart;
+            obj.dependencies.gyro = gyro_chart;
+            obj.dependencies.some_tilt = some_tilt_chart;
         end
         
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -46,13 +42,15 @@ classdef KalmanTilt < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.gyro_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            G = obj.gyro_chart.last();
+            obj.dependencies.gyro.calculate(mpu_new_data, baselines_new_data, n_sample);
+            G = obj.dependencies.gyro.last();
             
-            obj.some_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            tilt = obj.some_tilt_chart.last();
+            obj.dependencies.some_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            tilt = obj.dependencies.some_tilt.last();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+
             % Calcula a predição p/ cada eixo individualmente
             obj.kalmanFilterRoll.predict(G(1));
             obj.kalmanFilterPitch.predict(G(2));
@@ -65,6 +63,8 @@ classdef KalmanTilt < CommonsLine
 
             % Insere o valor filtrado no eixo a ser plotado
             new_data = [roll_and_bias(1) pitch_and_bias(1) yaw_and_bias(1)];
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

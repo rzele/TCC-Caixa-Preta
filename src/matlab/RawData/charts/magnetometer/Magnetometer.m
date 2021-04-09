@@ -40,10 +40,14 @@ classdef Magnetometer < CommonsLine
             end
 
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             H = mpu_new_data(7:9);
             last_data = obj.last();
             new_data = calculate_mag(H, obj.h_offsets, obj.h_scaleso);
             filtered = obj.filter.calculate(new_data);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); filtered];
         end
     end

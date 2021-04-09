@@ -4,10 +4,6 @@ classdef CompTilt < CommonsLine
 
     properties
         mu
-
-        % Chart dependences obj
-        relative_tilt_chart
-        acel_mag_tilt_chart
     end
 
     methods
@@ -25,8 +21,8 @@ classdef CompTilt < CommonsLine
             obj.mu = mu;
 
             % Chart dependences
-            obj.relative_tilt_chart = relative_tilt_chart;
-            obj.acel_mag_tilt_chart = acel_mag_tilt_chart;
+            obj.dependencies.relative_tilt = relative_tilt_chart;
+            obj.dependencies.acel_mag_tilt = acel_mag_tilt_chart;
         end
         
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -36,15 +32,19 @@ classdef CompTilt < CommonsLine
             end
             
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.relative_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            gyro_tilt = obj.relative_tilt_chart.last();
-            old_gyro_tilt = obj.relative_tilt_chart.penult();
+            obj.dependencies.relative_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            gyro_tilt = obj.dependencies.relative_tilt.last();
+            old_gyro_tilt = obj.dependencies.relative_tilt.penult();
 
-            obj.acel_mag_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            tilt = obj.acel_mag_tilt_chart.last();
+            obj.dependencies.acel_mag_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            tilt = obj.dependencies.acel_mag_tilt.last();
 
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             new_data = calculate_comp_filter(obj.last(), gyro_tilt, old_gyro_tilt, tilt, obj.mu);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

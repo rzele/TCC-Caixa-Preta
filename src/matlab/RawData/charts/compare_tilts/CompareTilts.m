@@ -130,6 +130,7 @@ classdef CompareTilts < CommonsLine
                 mse = obj.mse_arr(i) / obj.last_sample;
                 fprintf('mse - %s: %.5f\n', class(obj.others_charts_arr(i)), mse);
             end
+            fprintf('\n');
         end
     end
 end

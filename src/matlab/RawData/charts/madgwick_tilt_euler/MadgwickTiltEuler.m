@@ -1,7 +1,5 @@
 classdef MadgwickTiltEuler < CommonsLine
     properties
-        % Chart dependences obj
-        madgwick_q_chart
     end
 
     methods
@@ -18,7 +16,7 @@ classdef MadgwickTiltEuler < CommonsLine
             obj.data = zeros(w_size, 3);
 
             % Chart dependences
-            obj.madgwick_q_chart = madgwick_q_chart;
+            obj.dependencies.madgwick_q = madgwick_q_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -28,11 +26,15 @@ classdef MadgwickTiltEuler < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.madgwick_q_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            q = obj.madgwick_q_chart.last();
+            obj.dependencies.madgwick_q.calculate(mpu_new_data, baselines_new_data, n_sample);
+            q = obj.dependencies.madgwick_q.last();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+
             euler = quatern2euler(quaternConj(q)) * (180/pi);
+          
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); euler];
         end
     end

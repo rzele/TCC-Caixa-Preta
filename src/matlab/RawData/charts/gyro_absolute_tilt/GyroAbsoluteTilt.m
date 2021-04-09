@@ -3,8 +3,6 @@ classdef GyroAbsoluteTilt < CommonsLine
     % Ref do calculo: https://www.youtube.com/watch?v=wg9bI8-Qx2Q
 
     properties
-        % Chart dependences obj
-        relative_tilt_chart
     end
 
     methods
@@ -21,7 +19,7 @@ classdef GyroAbsoluteTilt < CommonsLine
             obj.data = zeros(w_size, 3);
             
             % Chart dependences
-            obj.relative_tilt_chart = relative_tilt_chart;
+            obj.dependencies.relative_tilt = relative_tilt_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -31,11 +29,15 @@ classdef GyroAbsoluteTilt < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.relative_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            relative_tilt = obj.relative_tilt_chart.last();
+            obj.dependencies.relative_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            relative_tilt = obj.dependencies.relative_tilt.last();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+           
             new_data = calculate_gyro_absolute_tilt(relative_tilt);
+           
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

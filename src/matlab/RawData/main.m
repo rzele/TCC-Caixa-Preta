@@ -95,11 +95,11 @@ end
 %% Renderiza pela ultima vez, independente de ter dado o tempo da frequencia
 plot_1.force_render();
 
-reader.delete();
 plot_1.delete();
+reader.delete();
 
 %% Calcula média dos tempos
-fprintf('Tempo médio de calculo: %fs\n', time_calc_data / count);
+fprintf('Tempo médio dos calculos: %fs\n', time_calc_data / count);
 
 %% Aqui acaba o script
 fprintf(1,'Recebidos %d amostras\n\n',count);

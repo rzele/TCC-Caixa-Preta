@@ -9,6 +9,7 @@ classdef Template < handle
         data
         time
         last_sample
+        dependencies = struct();
     end
 
     methods
@@ -18,7 +19,7 @@ classdef Template < handle
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
         end
 
-        function get_time_calculating(obj, data, n_sample)
+        function get_time_calculating(obj)
         end
 
         function ret = last(obj)

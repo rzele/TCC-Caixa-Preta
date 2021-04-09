@@ -41,8 +41,17 @@ classdef CommonsLine <  Template & PlotLine
             ret = obj.data(obj.w_size-1, :);
         end
 
-        function ret = get_time_calculating(obj)
-            ret = obj.time / obj.last_sample;
+        function total = get_time_calculating(obj)
+            total = 0;
+
+            % tempo médio das dependências executarem
+            fn = fieldnames(obj.dependencies);
+            for i = 1:length(fn)
+                total = total + obj.dependencies.(fn{i}).get_time_calculating();
+            end
+
+            % tempo médio total
+            total = total + (obj.time / obj.last_sample);
         end
 
         function ret = has_calculated_this_sample(obj, n_sample)
@@ -52,6 +61,12 @@ classdef CommonsLine <  Template & PlotLine
                 obj.last_sample = n_sample;
                 ret = false;
             end
+        end
+
+        function on_delete(obj)
+            fprintf('[%s]\n', class(obj));
+            fprintf('exec_t: %fs\n', obj.get_time_calculating());
+            fprintf('\n');
         end
     end
 end

@@ -8,9 +8,6 @@ classdef Velocity < CommonsLine
     properties
         freq_sample
         const_g
-
-        % Chart dependences obj
-        acel_without_g_chart
     end
 
     methods
@@ -29,7 +26,7 @@ classdef Velocity < CommonsLine
             obj.const_g = const_g;
 
             % Chart dependences
-            obj.acel_without_g_chart = acel_without_g_chart;
+            obj.dependencies.acel_without_g = acel_without_g_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -39,9 +36,11 @@ classdef Velocity < CommonsLine
             end
             
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.acel_without_g_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            A_without_gravity = obj.acel_without_g_chart.last();
-            old_A_without_gravity = obj.acel_without_g_chart.penult();
+            obj.dependencies.acel_without_g.calculate(mpu_new_data, baselines_new_data, n_sample);
+            A_without_gravity = obj.dependencies.acel_without_g.last();
+            old_A_without_gravity = obj.dependencies.acel_without_g.penult();
+
+            t = tic();
 
             % Obtem aceleração em m/s^2 até aqui a aceleração era dada em escalas de g's
             A_ms = obj.const_g * A_without_gravity;
@@ -49,6 +48,8 @@ classdef Velocity < CommonsLine
             
             %% Calcula o valor p/ a próxima amostra
             new_data = calculate_velocity(obj.last(), A_ms, old_A_ms, obj.freq_sample);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

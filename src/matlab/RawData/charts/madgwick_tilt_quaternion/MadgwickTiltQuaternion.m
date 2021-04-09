@@ -5,11 +5,6 @@ classdef MadgwickTiltQuaternion < CommonsLine
     
     properties
         madgwickFilter
-
-        % Chart dependences obj
-        acel_chart
-        gyro_chart
-        mag_chart
     end
 
     methods
@@ -29,9 +24,9 @@ classdef MadgwickTiltQuaternion < CommonsLine
             obj.madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
 
             % Chart dependences
-            obj.acel_chart = acel_chart;
-            obj.gyro_chart = gyro_chart;
-            obj.mag_chart = mag_chart;
+            obj.dependencies.acel = acel_chart;
+            obj.dependencies.gyro = gyro_chart;
+            obj.dependencies.mag = mag_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -41,14 +36,14 @@ classdef MadgwickTiltQuaternion < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.gyro_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            G = obj.gyro_chart.last();
+            obj.dependencies.gyro.calculate(mpu_new_data, baselines_new_data, n_sample);
+            G = obj.dependencies.gyro.last();
 
-            obj.acel_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            A = obj.acel_chart.last();
+            obj.dependencies.acel.calculate(mpu_new_data, baselines_new_data, n_sample);
+            A = obj.dependencies.acel.last();
 
-            obj.mag_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            H = obj.mag_chart.last();
+            obj.dependencies.mag.calculate(mpu_new_data, baselines_new_data, n_sample);
+            H = obj.dependencies.mag.last();
             
             %% Calcula o valor p/ a próxima amostra
             obj.madgwickFilter.Update(G*pi/180, A, H);

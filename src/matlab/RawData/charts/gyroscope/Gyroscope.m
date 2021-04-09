@@ -40,10 +40,14 @@ classdef Gyroscope < CommonsLine
             end
 
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             G = mpu_new_data(4:6);
             last_data = obj.last();
             new_data = calculate_gyro(G, obj.g_bias, obj.esc_giro);
             filtered = obj.filter.calculate(new_data);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); filtered];
         end
     end

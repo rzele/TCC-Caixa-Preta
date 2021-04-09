@@ -7,9 +7,6 @@ classdef GyroRelativeTilt < CommonsLine
 
     properties
         freq_sample
-
-        % Chart dependences obj
-        gyro_chart
     end
 
     methods
@@ -27,7 +24,7 @@ classdef GyroRelativeTilt < CommonsLine
             obj.freq_sample = freq_sample;
 
             % Chart dependences
-            obj.gyro_chart = gyro_chart;
+            obj.dependencies.gyro = gyro_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -37,12 +34,16 @@ classdef GyroRelativeTilt < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.gyro_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            G = obj.gyro_chart.last();
-            old_G = obj.gyro_chart.penult();
+            obj.dependencies.gyro.calculate(mpu_new_data, baselines_new_data, n_sample);
+            G = obj.dependencies.gyro.last();
+            old_G = obj.dependencies.gyro.penult();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+           
             new_data = calculate_gyro_relative_tilt(obj.last(), G, old_G, obj.freq_sample);
+           
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

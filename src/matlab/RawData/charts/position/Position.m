@@ -7,9 +7,6 @@ classdef Position < CommonsLine
 
     properties
         freq_sample
-        
-        % Chart dependences obj
-        vel_chart
     end
 
     methods
@@ -27,7 +24,7 @@ classdef Position < CommonsLine
             obj.freq_sample = freq_sample;
 
             % Chart dependences
-            obj.vel_chart = vel_chart;
+            obj.dependencies.vel = vel_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -37,12 +34,16 @@ classdef Position < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.vel_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            velocity = obj.vel_chart.last();
-            old_velocity = obj.vel_chart.penult();
+            obj.dependencies.vel.calculate(mpu_new_data, baselines_new_data, n_sample);
+            velocity = obj.dependencies.vel.last();
+            old_velocity = obj.dependencies.vel.penult();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             new_data = calculate_position(obj.last(), velocity, old_velocity, obj.freq_sample);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

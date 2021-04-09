@@ -6,9 +6,6 @@ classdef AcelMagTilt < CommonsLine
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
 
     properties
-        % Chart dependences obj
-        acel_chart
-        mag_chart
     end
 
     methods
@@ -25,8 +22,8 @@ classdef AcelMagTilt < CommonsLine
             obj.data = zeros(w_size, 3);
 
             % Chart dependences
-            obj.acel_chart = acel_chart;
-            obj.mag_chart = mag_chart;
+            obj.dependencies.acel = acel_chart;
+            obj.dependencies.mag = mag_chart;
         end
         
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -36,14 +33,18 @@ classdef AcelMagTilt < CommonsLine
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.acel_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            A = obj.acel_chart.last();
+            obj.dependencies.acel.calculate(mpu_new_data, baselines_new_data, n_sample);
+            A = obj.dependencies.acel.last();
 
-            obj.mag_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            H = obj.mag_chart.last();
+            obj.dependencies.mag.calculate(mpu_new_data, baselines_new_data, n_sample);
+            H = obj.dependencies.mag.last();
 
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             new_data = calculate_acel_mag_tilt(A, H);
+
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end

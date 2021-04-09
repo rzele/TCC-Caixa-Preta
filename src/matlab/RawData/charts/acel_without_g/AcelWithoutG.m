@@ -8,9 +8,6 @@ classdef AcelWithoutG < CommonsLine
     % Ref do calculo: https://www.nxp.com/docs/en/application-note/AN3461.pdf
 
     properties
-        % Chart dependences obj
-        some_tilt_chart
-        acel_chart
     end
 
     methods
@@ -28,8 +25,8 @@ classdef AcelWithoutG < CommonsLine
             obj.data = zeros(w_size, 3);
 
             % Chart dependences
-            obj. some_tilt_chart = some_tilt_chart;
-            obj. acel_chart = acel_chart;
+            obj.dependencies.some_tilt = some_tilt_chart;
+            obj.dependencies.acel = acel_chart;
         end
         
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -39,14 +36,18 @@ classdef AcelWithoutG < CommonsLine
             end
             
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.some_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            tilt = obj.some_tilt_chart.last();
+            obj.dependencies.some_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            tilt = obj.dependencies.some_tilt.last();
             
-            obj.acel_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            A = obj.acel_chart.last();
+            obj.dependencies.acel.calculate(mpu_new_data, baselines_new_data, n_sample);
+            A = obj.dependencies.acel.last();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+            
             new_data = calculate_aceleration_without_gravity(tilt, A);
+            
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
     end
