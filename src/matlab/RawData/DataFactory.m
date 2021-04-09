@@ -213,8 +213,8 @@ classdef DataFactory < handle
             fprintf(f_ptr, '6525\n');
             fprintf(f_ptr, '49878\n');
             fprintf(f_ptr, '233088\n');
-            fprintf(f_ptr, '1 1 1 1 1 1 1 1 1 1 1\n');
-            fprintf(f_ptr, '1 1 1 1 1 1 1 1 1 1 1\n');
+            fprintf(f_ptr, '1 1 1 1 1 0 0 0 0 0 0\n');
+            fprintf(f_ptr, '1 1 1 1 1 0 0 0 1 1 1\n');
             fprintf(f_ptr, '20046 21331 %d %d %d 5 1  2  3  4  5\n', obj.esc_ac, obj.esc_giro, obj.sample_freq);
             fprintf(f_ptr, '%d\n', size(obj.interpolated_data, 1));
         end
