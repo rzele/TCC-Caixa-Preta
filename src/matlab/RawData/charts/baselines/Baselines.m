@@ -44,5 +44,10 @@ classdef Baselines < CommonsLine
             
             obj.data = [obj.data(2:obj.w_size, :); new_data];
         end
+
+        function on_delete(obj)
+            % Apenas sobrescreve a implementação de 'CommonsLine'
+            % para não exibir nenhum tempo
+        end
     end
 end

@@ -4,8 +4,6 @@ classdef Compass < CommonsCompass
     % e plota em plano polar o Compass sem compensação 
 
     properties
-        % Chart dependences obj
-        mag_chart
     end
 
     methods
@@ -14,7 +12,7 @@ classdef Compass < CommonsCompass
             obj.data = 0;
 
             % Chart dependences
-            obj.mag_chart = mag_chart;
+            obj.dependencies.mag = mag_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -24,8 +22,8 @@ classdef Compass < CommonsCompass
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.mag_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            H = obj.mag_chart.last();
+            obj.dependencies.mag.calculate(mpu_new_data, baselines_new_data, n_sample);
+            H = obj.dependencies.mag.last();
             
             %% Calcula o valor p/ a próxima amostra
             new_data = calculate_compass_without_compensation(H);

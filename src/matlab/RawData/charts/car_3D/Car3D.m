@@ -1,9 +1,6 @@
 classdef Car3D < CommonsCar3D
     properties
         data_type % quaternion or euler
-
-        % Chart dependences obj
-        some_tilt_chart
     end
 
     methods
@@ -21,7 +18,7 @@ classdef Car3D < CommonsCar3D
             end
 
             % Chart dependences obj
-            obj.some_tilt_chart = some_tilt_chart;
+            obj.dependencies.some_tilt = some_tilt_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -31,8 +28,8 @@ classdef Car3D < CommonsCar3D
             end
 
             %% Obtem o valor de outros charts ao qual este é dependente
-            obj.some_tilt_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
-            new_data = obj.some_tilt_chart.last();
+            obj.dependencies.some_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+            new_data = obj.dependencies.some_tilt.last();
             
             %% Calcula o valor p/ a próxima amostra
             obj.data = new_data;
