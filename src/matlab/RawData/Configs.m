@@ -41,12 +41,6 @@ classdef Configs < handle
 
         %% Configurações dinamicas
         % Qualquer coisa que precise de dados do mpu
-        freq_sample
-        gx_bias, gy_bias, gz_bias
-        ax_bias, ay_bias, az_bias
-        hx_offset, hy_offset, hz_offset
-        hx_scale, hy_scale, hz_scale
-        esc_ac, esc_giro
         A, B, C, Q, R
 
         cxp % metadados da caixa preta
@@ -60,25 +54,6 @@ classdef Configs < handle
 
         function setDynamicConfigs(obj, caixaPretaMetadata)
             obj.cxp = caixaPretaMetadata;
-
-            %% Constantes do sensor
-            obj.freq_sample=obj.cxp.fammost;     % Frequencia da amostragem dos dados
-            obj.gx_bias=0;                       % 
-            obj.gy_bias=0;                       % 
-            obj.gz_bias=0;                       % 
-            obj.ax_bias=0;                       % 
-            obj.ay_bias=0;                       % 
-            obj.az_bias=0;                       % 
-            obj.hx_offset=0;                     % 
-            obj.hy_offset=0;                     % 
-            obj.hz_offset=0;                     % 
-            obj.hx_scale=1;                      % 
-            obj.hy_scale=1;                      % 
-            obj.hz_scale=1;                      % 
-
-            %% Configura as variáveis do MPU
-            obj.esc_ac = obj.cxp.aesc_op;        % Vem do Arduino, função que configura escalas de Aceleração
-            obj.esc_giro = obj.cxp.gesc_op;      % e giro //+/- 2g e +/-250gr/seg
 
             %% Variável de ajuste do filtro de kalman, os valores iniciais de X e P são por padrão 0s
             % Nosso modelo countem:
@@ -99,7 +74,7 @@ classdef Configs < handle
             % Portanto, não recomendamos a modificação das
             % matrizes A,B e C, que representam a construção do modelo
 
-            deltaT = 1/obj.freq_sample;
+            deltaT = 1/obj.cxp.fammost;
             obj.A = [1 deltaT; 0 1];
             obj.B = [deltaT; 0];
             obj.C = [1 0];
@@ -115,6 +90,7 @@ classdef Configs < handle
             % E.x.: layout = {aceleration, aceleration; gyroscope, magnetometer};
             obj.layout = {...
 
+                c.aceleration, c.gyroscope, c.magnetometer;...
                 c.compare_rolls, c.compare_pitchs, c.compare_yaws;...
                 c.gyro_relative_tilt, c.acel_without_g, c.position;...
                 c.baseline_tilt, c.car_3d_gdeg, c.baseline_position;...

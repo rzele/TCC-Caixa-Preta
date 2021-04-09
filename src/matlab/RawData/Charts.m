@@ -41,18 +41,18 @@ classdef Charts < handle
         function obj = Charts(cnf)
             %% Cria gráficos de linha
             obj.vazio = '';                         % Deixa a celula vazia
-            obj.aceleration = Aceleration(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.ax_bias, cnf.ay_bias, cnf.az_bias], cnf.esc_ac);
-            obj.gyroscope = Gyroscope(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.gx_bias, cnf.gy_bias, cnf.gz_bias], cnf.esc_giro);
-            obj.magnetometer = Magnetometer(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.hx_offset, cnf.hy_offset, cnf.hz_offset], [cnf.hx_scale, cnf.hy_scale, cnf.hz_scale]);
-            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.freq_sample, obj.gyroscope);
+            obj.aceleration = Aceleration(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.ax_offset, cnf.cxp.ay_offset, cnf.cxp.az_offset], cnf.cxp.aesc_op);
+            obj.gyroscope = Gyroscope(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.gx_offset, cnf.cxp.gy_offset, cnf.cxp.gz_offset], cnf.cxp.gesc_op);
+            obj.magnetometer = Magnetometer(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.hx_offset, cnf.cxp.hy_offset, cnf.cxp.hz_offset], [cnf.cxp.hx_escala, cnf.cxp.hy_escala, cnf.cxp.hz_escala]);
+            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.cxp.fammost, obj.gyroscope);
             obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
             obj.acel_mag_tilt = AcelMagTilt(cnf.max_size, obj.aceleration, obj.magnetometer);
             obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_relative_tilt, obj.acel_mag_tilt);
             obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, obj.aceleration);
-            obj.velocity = Velocity(cnf.max_size, cnf.freq_sample, cnf.const_g, obj.acel_without_g);
-            obj.position = Position(cnf.max_size, cnf.freq_sample, obj.velocity);
+            obj.velocity = Velocity(cnf.max_size, cnf.cxp.fammost, cnf.const_g, obj.acel_without_g);
+            obj.position = Position(cnf.max_size, cnf.cxp.fammost, obj.velocity);
             obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.A, cnf.B, cnf.C, cnf.Q, cnf.R, obj.gyroscope, obj.acel_mag_tilt);
-            obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.freq_sample, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
+            obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
             obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
             
             %% Cria gráficos de bússola
