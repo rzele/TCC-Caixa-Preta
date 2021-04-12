@@ -30,12 +30,13 @@ classdef GyroAbsoluteTilt < CommonsLine
 
             %% Obtem o valor de outros charts ao qual este é dependente
             obj.dependencies.relative_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
-            relative_tilt = obj.dependencies.relative_tilt.last();
+            rel_tilt = obj.dependencies.relative_tilt.last();
+            old_rel_tilt = obj.dependencies.relative_tilt.penult();
             
             %% Calcula o valor p/ a próxima amostra
             t = tic();
            
-            new_data = calculate_gyro_absolute_tilt(relative_tilt);
+            new_data = calculate_gyro_absolute_tilt(rel_tilt, old_rel_tilt, obj.last());
            
             obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];
