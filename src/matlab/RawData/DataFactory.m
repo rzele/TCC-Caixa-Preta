@@ -291,7 +291,9 @@ classdef DataFactory < handle
                 rot = ang2rotZYX(d(7), d(6), d(5));
 
                 relative_rot = old_rot' * rot;
-                relative_gyro(i, :) = rot2angZYX(relative_rot);
+                relative_gyro(i, :) = relative_gyro(i-1, :) + rot2angZYX(relative_rot);
+
+                old_rot = rot;
             end
 
             % Deriva as posições relativas para obter a velociade angular
