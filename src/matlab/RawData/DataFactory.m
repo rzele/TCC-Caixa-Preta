@@ -52,8 +52,12 @@ classdef DataFactory < handle
             fprintf('Gerando dados a partir de "%s"...\n', obj.source_path);
             
             fprintf('Interpolando...\n');
-            obj.interpolate();
+            obj.interpolated_data = obj.interpolate();
             
+            % Os angulos interpolados são relativos, precisamos deles em absoluto,
+            % sendo descritos em zyx com relação a posição inicial, que deve ser 0.
+            obj.interpolated_data(:, 5:7) = obj.convert_ang(obj.interpolated_data(:, 5:7));
+
             generated_f_ptr = obj.open_file(obj.generated_path, 'w');
             fprintf(generated_f_ptr, '#[m\n');
 
@@ -198,12 +202,28 @@ classdef DataFactory < handle
             fclose(source_f_ptr);
         end
 
-        function interpolate(obj)
-            % Interpola amostras, e salva em um arquivo
+        function ret = interpolate(obj)
+            % Interpola amostras
             data = obj.read_all_source();
             old_x = data(:,1);
             new_x = old_x(1):obj.sample_period:old_x(length(old_x));
-            obj.interpolated_data = interp1(old_x, data, new_x, 'pchip');
+            data(:, 5:7) = cumsum(data(:,5:7));
+            ret = interp1(old_x, data, new_x, 'pchip');
+        end
+
+        function ret = convert_ang(obj, ang_data)
+            ret = zeros(size(ang_data,1), 3);
+            abs_rot = ang2rotZYX(ang_data(1,3), ang_data(1,2), ang_data(1,1));
+            
+            for i = 2:size(ang_data,1)
+                old_d = ang_data(i-1, :);
+                d = ang_data(i, :);
+                delta = d - old_d;
+                rel_rot = ang2rotZYX(delta(3), delta(2), delta(1));
+
+                abs_rot = abs_rot * rel_rot;
+                ret(i, :) = flip(rot2angZYX(abs_rot));
+            end
         end
 
         function write_metadatas(obj, f_ptr)
