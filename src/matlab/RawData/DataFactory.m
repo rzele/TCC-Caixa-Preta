@@ -213,16 +213,16 @@ classdef DataFactory < handle
 
         function ret = convert_ang(obj, ang_data)
             ret = zeros(size(ang_data,1), 3);
-            abs_rot = ang2rotZYX(ang_data(1,3), ang_data(1,2), ang_data(1,1));
+            abs_rot = ang2rotZYX(ang_data(1,1), ang_data(1,2), ang_data(1,3));
             
             for i = 2:size(ang_data,1)
                 old_d = ang_data(i-1, :);
                 d = ang_data(i, :);
                 delta = d - old_d;
-                rel_rot = ang2rotZYX(delta(3), delta(2), delta(1));
+                rel_rot = ang2rotZYX(delta(1), delta(2), delta(3));
 
                 abs_rot = abs_rot * rel_rot;
-                ret(i, :) = flip(rot2angZYX(abs_rot));
+                ret(i, :) = rot2angZYX(abs_rot);
             end
         end
 
@@ -267,7 +267,7 @@ classdef DataFactory < handle
             % Por mais estranho que pareçaa, a rotação deve ser na inversa 
             for i = 1:size(obj.interpolated_data,1)
                 d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(7), d(6), d(5));
+                rot = ang2rotZYX(d(5), d(6), d(7));
                 rot_inv = rot'; % transpor matriz de rotação é igual a inverter
             
                 data = rot_inv * acel(i, :)';
@@ -304,11 +304,11 @@ classdef DataFactory < handle
             relative_gyro = zeros(size(obj.interpolated_data,1), 3);
             
             old_d = obj.interpolated_data(1, :);
-            old_rot = ang2rotZYX(old_d(7), old_d(6), old_d(5));
+            old_rot = ang2rotZYX(old_d(5), old_d(6), old_d(7));
             
             for i = 2:size(obj.interpolated_data,1)
                 d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(7), d(6), d(5));
+                rot = ang2rotZYX(d(5), d(6), d(7));
 
                 relative_rot = old_rot' * rot;
                 relative_gyro(i, :) = relative_gyro(i-1, :) + rot2angZYX(relative_rot);
@@ -338,12 +338,11 @@ classdef DataFactory < handle
 
             % Para debug
             if obj.debug_on
-                obj.ang = fliplr(obj.interpolated_data(:, 5:7));
+                obj.ang = obj.interpolated_data(:, 5:7);
                 obj.gyro = gyro;
             end
 
             % Insere ruído
-
             ret = gyro;
         end
         
@@ -354,7 +353,7 @@ classdef DataFactory < handle
 
             for i = 1:size(obj.interpolated_data,1)
                 d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(7), d(6), d(5));
+                rot = ang2rotZYX(d(5), d(6), d(7));
                 rot_inv = rot'; % transpor matriz de rotação é igual a inverter
             
                 % Cria um dado falso de magnetômetro, o array abaixo segue o modelo:

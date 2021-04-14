@@ -37,7 +37,7 @@ classdef Baselines < CommonsLine
             %% Calcula o valor p/ a próxima amostra
             if strcmp(obj.selected_baseline, 'tilt')
                 % inverte a ordem porque no baseline vem zyx
-                new_data = flip(baselines_new_data(5:7));
+                new_data = baselines_new_data(5:7);
             else
                 new_data = baselines_new_data(2:4);
             end

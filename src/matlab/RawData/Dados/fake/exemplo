@@ -7,7 +7,7 @@
 # Use hashtags para comentários
 
 # O arquivo é descrito por 7 colunas separadas por espaço
-# tempo(em ms) | xyz da posição em centímetros | zyx da inclinação em graus
+# tempo(em ms) | xyz da posição em centímetros | xyz da inclinação em graus
 
 # OBS:
 # Os eixos xyz da posição são globais, isso é, refere-se a um plano que não rotaciona
@@ -35,10 +35,10 @@
 0 0 0 0 0 0 0
 
 # No instante t=200ms, ele inicia um movimento de yaw (rotação em Z)
-200 0 0 0 1 0 0
+200 0 0 0 0 0 1
 
 # No instante t=1000ms, ele conclui o movimento de yaw, chegando a 90 graus
-1000 0 0 0 89 0 0
+1000 0 0 0 0 0 89
 
 # Até o instante t=1200ms, ele permanece na mesma posição
 1200 0 0 0 0 0 0
