@@ -44,7 +44,7 @@ classdef DataFactory < handle
             obj.esc_giro = esc_giro;
             obj.esc_mag = 4912;
             obj.debug_on = debug_on;
-            obj.add_noise_bias = true;
+            obj.add_noise_bias = false;
         end
 
         function out_file_name = generate(obj)
@@ -358,10 +358,11 @@ classdef DataFactory < handle
             
                 % Cria um dado falso de magnetômetro, o array abaixo segue o modelo:
                 % https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
-                % e é arbitrário, poderia ser qualquer valor de ângulo
+                % e é arbitrário, poderia ser qualquer valor de ângulo,
+                % Com a diferença que Z aponta para cima, Y para a esquerda e X para frente
                 % (que representa a incidência do campo magnético nesta região do planeta)
                 % É arbitrário porque para estimar a inclinação esse dado acaba sendo anulado 
-                data = rot_inv * [20*cosd(45); 0; 20*sind(45)];
+                data = rot_inv * [20*cosd(45); 0; -20*sind(45)];
                 
                 mag(i,:) = data';
             end
