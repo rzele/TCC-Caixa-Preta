@@ -176,7 +176,7 @@ classdef DataFactory < handle
             % Transforma a string do dado em números, retornando na mesma ordem em um array
             data=strsplit(line, ' ');
             if ~strcmp(cell2mat(data(1)), '')
-                data = str2int16(data);
+                data = cellfun(@str2num, data);
             else
                 data = [];
             end
@@ -278,9 +278,9 @@ classdef DataFactory < handle
             % Valores arbitrários (só não exagerar, este bias simula o bias após correção)
             % seria o resto que não deu para ser corrigido com a calibração
             if obj.add_noise_bias
-                acel(:,1) = acel(:,1) + 0.0027;
-                acel(:,2) = acel(:,2) - 0.013;
-                acel(:,3) = acel(:,3) + 0.015;
+                acel(:,1) = acel(:,1) + 0.0037;
+                acel(:,2) = acel(:,2) - 0.023;
+                acel(:,3) = acel(:,3) + 0.025;
                 acel = awgn(acel, 10, 'measured');
             end
 
@@ -330,9 +330,9 @@ classdef DataFactory < handle
             % adiciona ruído branco gaussiano e bias
             % Valores arbitrários (só não exagerar)
             if obj.add_noise_bias
-                gyro(:,1) = gyro(:,1) + 0.027;
-                gyro(:,2) = gyro(:,2) - 0.072;
-                gyro(:,3) = gyro(:,3) + 0.055;
+                gyro(:,1) = gyro(:,1) + 0.037;
+                gyro(:,2) = gyro(:,2) - 0.082;
+                gyro(:,3) = gyro(:,3) + 0.065;
                 gyro = awgn(gyro, 10, 'measured');
             end
 
@@ -370,9 +370,9 @@ classdef DataFactory < handle
             % adiciona ruído branco gaussiano e bias
             % Valores arbitrários (só não exagerar)
             if obj.add_noise_bias
-                mag(:,1) = (mag(:,1) + 2.5) * 1.00208;
-                mag(:,2) = (mag(:,2) - 1.11) * 0.98213;
-                mag(:,3) = (mag(:,3) + 3.45) * 1.00423;
+                mag(:,1) = (mag(:,1) + 2.6) * 1.00208;
+                mag(:,2) = (mag(:,2) - 1.21) * 0.98213;
+                mag(:,3) = (mag(:,3) + 3.55) * 1.00423;
                 mag = awgn(mag, 10, 'measured');
             end
             
