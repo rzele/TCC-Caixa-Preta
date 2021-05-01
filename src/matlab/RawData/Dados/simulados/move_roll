@@ -1,0 +1,51 @@
+# Simula um capotamento lateral.
+# Move o veículo em x por 150 metros até atingir 100km/h em 10s,
+# depois vira aos poucos em yaw 90, simulando uma derrapagem em 3s. 
+# Por fim desacelerando enquanto capota fazendo roll + 900 (2.5 capotamentos) em 7s.
+
+# OBS: durante a derrapagem o o eixo x se desloca um pouco, simulando o equipamento preso
+# na parte de trás do veículo.
+# OBS2: Não simula o impacto.
+
+# Neste dado simulado, foi colocado espaçado cada aceleração para remover um pouco da linearidade
+# simulando um carro a uma média de 100km/h.
+# Partindo do repouso (isso é necessário para o modelo de gerador de dados simulados utilizado)
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+
+#----------- INCOMPLETO ------------
+# faltando:
+# - girar o veículo na derrapagem
+# - a parte do capotamento
+# - chegar se esta mais ou menos coêrente, a velocidade cai muito na derrapagem
+
+
+# Ganha velocidade e x até atingir 100km/h
+0 0 0 0 0 0 0
+1000 100 0 0 0 0 0
+2000 300 0 0 0 0 0
+3000 700 0 0 0 0 0
+4000 1500 0 0 0 0 0
+5000 3100 0 0 0 0 0
+6000 5100 0 0 0 0 0
+7000 7500 0 0 0 0 0
+8000 10100 0 0 0 0 0
+9000 12800 0 0 0 0 0
+10000 15600 0 0 0 0 0
+
+# Derrapa 
+10255 16200 32 0 0 0 5
+10510 16780 56 0 0 0 -5
+10765 17330 28 0 0 0 -6
+11020 17830 -41 0 0 0 -1
+11275 18250 -100 0 0 0 2
+11530 18680 -128 0 0 0 5
+11785 19100 -109 0 0 0 10
+
+# Segue capotando
+

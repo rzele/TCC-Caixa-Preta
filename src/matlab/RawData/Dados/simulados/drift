@@ -1,0 +1,14 @@
+# Mantém parado por um longo tempo, para demonstrar o drift
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# t=35000 permanece
+35000 0 0 0 0 0 0
+

@@ -1,0 +1,33 @@
+# pitch de +95 e -95 graus
+
+# Isso mostra o gymbal lock da ordem ZYX.
+# O problema já surge na geração de dados simulados,
+# pois fazem uso de matriz de rotação.
+# Mas somente ocorre em exatos +90 e -90
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# ---------- INICIO PITCH +90 --------------
+# t=10 inicia pitch
+10 0 0 0 0 1 0
+
+# t=4000 termina pitch = 90 graus
+4000 0 0 0 0 89 0
+
+# t=4100 permanece inclinado
+4100 0 0 0 0 0 0
+
+# ---------- AUMENTA PITCH P/ +95 --------------
+# t=4500 inclina +5
+4500 0 0 0 0 5 0
+
+# t=4600 permanece inclinado
+4600 0 0 0 0 0 0
+

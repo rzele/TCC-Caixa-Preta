@@ -1,0 +1,48 @@
+# roll, pitch, yaw, individual de 360
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# ---------- INICIO ROLL 360 --------------
+# t=10 inicia roll
+10 0 0 0  1 0 0
+
+# t=4000 termina roll = 360 graus
+4000 0 0 0 359 0 0
+
+# t=4010 permanece inclinado
+4010 0 0 0 0 0 0
+
+# t=4020 inicia retorno
+4020 0 0 0 -1 0 0 
+
+# t=8000 termina roll = 0 graus
+8000 0 0 0 -359 0 0 
+
+# t=8010 permanece parado
+8010 0 0 0 0 0 0
+# ---------- FIM ROLL 360 --------------
+
+# ---------- INICIO PITCH 360 --------------
+8020 0 0 0 0 1 0
+12010 0 0 0 0 359 0
+12020 0 0 0 0 0 0
+12030 0 0 0 0 -1 0 
+16010 0 0 0 0 -359 0 
+16020 0 0 0 0 0 0
+# ---------- FIM PITCH 360 --------------
+
+# ---------- INICIO YAW 360 --------------
+16030 0 0 0 0 0 1
+20020 0 0 0 0 0 359
+20030 0 0 0 0 0 0
+20040 0 0 0 0 0 -1
+24020 0 0 0 0 0 -359
+24030 0 0 0 0 0 0
+# ---------- FIM YAW 360 --------------

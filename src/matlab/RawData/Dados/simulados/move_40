@@ -1,0 +1,47 @@
+# Apenas move em x para mostrar o erro de estimativa quando o corpo move
+# É bom movimentos lineares terem variações, para variar a aceleração.
+# Um movimento linear causa uma aceleração abrupta e depois zera.
+# Caso seja muito alta será cortada pelos limites escala,
+# caso seja muito baixa será encobrida pelo ruído.
+
+# A aceleração abrupta irá gerar erro naquele ponto, mas depois estabiliza pois irá restar
+# somente a aceleração da gravidade, o que não é o objetivo. O objetivo é visualizar o erro
+# que pode ser causado pela presença da aceleração ao longo de todo o movimento.
+
+# Em todo caso, não corresponde nem um pouco a realidade pois aceleração real nunca é linear
+
+# Neste dado simulado, foi colocado espaçado cada aceleração para remover um pouco da linearidade
+# simulando um carro a uma média de 40km/h = 88m em 8s.
+# Partindo do repouso (isso é necessário para o modelo de gerador de dados simulados utilizado)
+
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# t=10 inicia movimento linear
+10 1 0 0 0 0 0
+
+0500 35 0 0 0 0 0
+1000 135 0 0 0 0 0
+1500 300 0 0 0 0 0
+2000 550 0 0 0 0 0
+2500 860 0 0 0 0 0
+3000 1250 0 0 0 0 0
+3500 1690 0 0 0 0 0
+4000 2200 0 0 0 0 0
+4500 2800 0 0 0 0 0
+5000 3500 0 0 0 0 0
+5500 4200 0 0 0 0 0
+6000 4900 0 0 0 0 0
+6500 5800 0 0 0 0 0
+7000 6700 0 0 0 0 0
+7500 7750 0 0 0 0 0
+
+# t=8000 chega em x=8800cm
+8000 8800 0 0 0 0 0
