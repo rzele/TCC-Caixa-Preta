@@ -10,7 +10,7 @@ classdef KalmanTilt < CommonsLine
     end
 
     methods
-        function obj = KalmanTilt(w_size, A,B,C,Q,R, gyro_chart, some_tilt_chart)
+        function obj = KalmanTilt(w_size, sample_freq, gyro_chart, some_tilt_chart)
             p_title = sprintf('Filtro de Kalman (Gyro + %s)', class(some_tilt_chart));
             obj = obj@CommonsLine(...
                 p_title, ...             % p_title
@@ -22,6 +22,28 @@ classdef KalmanTilt < CommonsLine
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 3);
+
+            %% Variável de ajuste do filtro de kalman, os valores iniciais de X e P são por padrão 0s
+            % Nosso modelo countem:
+            % - 2 entrada (uk = delta Giro/s e yk = Tilt do acelerometro)
+            % - 1 estados (x = Tilt usando Giro)
+            % portanto nosso modelo fica:
+            %
+            % x[k] = A*x[k-1] + B*u[k]
+            % x[k] = x[k-1] + 1/freq * u[k]
+            %
+            % y[k] = C*x[k]
+            % y[k] = x[k]
+            % 
+            % OBS: O filtro de kalman utilizado foi modificado para manter os intervalos
+            % entre -180,180. Para entender melhor veja o arquivo 'ModifiedKalmanFilter.m'
+            % Portanto, não recomendamos a modificação das
+            % matrizes A,B e C, que representam a construção do modelo
+            A = 1;
+            B = 1/sample_freq;
+            C = 1;
+            Q = 0.002^2;
+            R = 0.03;
 
             %% Inicializa os filtros de kalman, um para cada eixo,
             % podemos fazer tudo com um filtro só, entretanto os parâmetros ficariam

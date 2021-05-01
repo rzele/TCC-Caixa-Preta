@@ -82,7 +82,7 @@ classdef ModifiedKalmanFilter < handle
             % atualiza p a posteriori
             obj.pk_minus = obj.pk_minus - obj.K * obj.C * obj.pk_minus;
 
-            % Atualiza x e k anteriori, para calcular a proxima predição
+            % Atualiza x e k anterior, para calcular a proxima predição
             obj.xk_1_minus = obj.xk_minus;
             obj.pk_1_minus = obj.pk_minus;
         end

@@ -41,8 +41,6 @@ classdef Configs < handle
 
         %% Configurações dinamicas
         % Qualquer coisa que precise de dados do mpu
-        A, B, C, Q, R
-
         cxp % metadados da caixa preta
 
         layout
@@ -54,32 +52,6 @@ classdef Configs < handle
 
         function setDynamicConfigs(obj, caixaPretaMetadata)
             obj.cxp = caixaPretaMetadata;
-
-            %% Variável de ajuste do filtro de kalman, os valores iniciais de X e P são por padrão 0s
-            % Nosso modelo countem:
-            % - 1 entrada (uk = delta Giro/s)
-            % - 2 estados (x1 = Tilt usando Giro e  x2 = Drift)
-            % - 1 saida (yk = Tilt do acelerometro)
-            % portanto nosso modelo fica:
-            %
-            % x[k] = A*x[k-1] + B*u[k] + w[k]
-            % X1 = (x1 + x2 * deltaT) + (deltaT * uk) + ruido
-            % X2 = (x2) + ruido
-            %
-            % y[k] = C*x[k] + v[k]
-            % Y = X1 + ruido
-            % 
-            % OBS: O filtro de kalman utilizado foi modificado para manter os intervalos
-            % entre -180,180. Para entender melhor veja o arquivo 'ModifiedKalmanFilter.m'
-            % Portanto, não recomendamos a modificação das
-            % matrizes A,B e C, que representam a construção do modelo
-
-            deltaT = 1/obj.cxp.fammost;
-            obj.A = [1 deltaT; 0 1];
-            obj.B = [deltaT; 0];
-            obj.C = [1 0];
-            obj.Q = [0.002^2 0; 0 0];
-            obj.R = 0.03;
         end
 
         function setLayout(obj, c)

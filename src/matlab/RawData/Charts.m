@@ -51,7 +51,7 @@ classdef Charts < handle
             obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, obj.aceleration);
             obj.velocity = Velocity(cnf.max_size, cnf.cxp.fammost, cnf.const_g, obj.acel_without_g);
             obj.position = Position(cnf.max_size, cnf.cxp.fammost, obj.velocity);
-            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.A, cnf.B, cnf.C, cnf.Q, cnf.R, obj.gyroscope, obj.acel_mag_tilt);
+            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.cxp.fammost, obj.gyroscope, obj.acel_mag_tilt);
             obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
             obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
             
