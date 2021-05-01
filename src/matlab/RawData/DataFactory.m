@@ -44,7 +44,7 @@ classdef DataFactory < handle
             obj.esc_giro = esc_giro;
             obj.esc_mag = 4912;
             obj.debug_on = debug_on;
-            obj.add_noise_bias = false;
+            obj.add_noise_bias = true;
         end
 
         function out_file_name = generate(obj)
