@@ -47,7 +47,7 @@ classdef Charts < handle
             obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.cxp.fammost, obj.gyroscope);
             obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
             obj.acel_mag_tilt = AcelMagTilt(cnf.max_size, obj.aceleration, obj.magnetometer);
-            obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_relative_tilt, obj.acel_mag_tilt);
+            obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_absolute_tilt, obj.acel_mag_tilt);
             obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, obj.aceleration);
             obj.velocity = Velocity(cnf.max_size, cnf.cxp.fammost, cnf.const_g, obj.acel_without_g);
             obj.position = Position(cnf.max_size, cnf.cxp.fammost, obj.velocity);
