@@ -12,6 +12,16 @@ classdef ModifiedKalmanFilter < handle
     %   y[k] = C*x[k] + v[k]
     %   E[wwt] = Q
     %   E[vvt] = R
+    %
+    % OBS: As operações sumAngle e subAngle, não são da implementação normal do filtro de kalman.
+    % Ela é utilizada pois precisamos que os angulos estejam entre -180,180
+    % para não dar problema na subtração no momento de atualização. 
+    % E.g.:
+    %   Se nossa ultima estimativa foi -180 e a nova medida for 180, a diferença fica
+    %   -180 - (-180) = 360
+    %   Atualizar a estimativa atual de k*360 e diferente de k*0
+    % Ao utilizar ao realiar soma e subtração de angulos utilizado a função, garantimos o intervalo desejado.
+    % Por isso essa implementação é específica para o modelo utilizado do filtro de kalman.
 
     properties
         xk_minus                % x estimado p/ o instante k
@@ -44,7 +54,7 @@ classdef ModifiedKalmanFilter < handle
         % Realiza a etapa de predição do algoritmo, salvando no objeto os valores preditos, não retorna nada e recebe como parâmetro a amostra de entrada
         function predict(obj, uk)
             % Calcula x a priori
-            obj.xk_minus = obj.A * obj.xk_1_minus + obj.B * uk;
+            obj.xk_minus = sumAngle(obj.A * obj.xk_1_minus, obj.B * uk);
 
             % Calcula p a priori
             obj.pk_minus = obj.A * obj.pk_1_minus * obj.A' + obj.Q;
@@ -60,23 +70,9 @@ classdef ModifiedKalmanFilter < handle
             obj.K = obj.pk_minus * obj.C' / (obj.C * obj.pk_minus * obj.C' + obj.R);
 
             % atualiza x a posteriori
-            diff = yk - obj.C * obj.xk_minus;
+            diff = subAngle(yk, obj.C * obj.xk_minus);
 
-            % OBS: Esse conjunto de if/else não faz parte do kalman padrão.
-            % Ela é utilizada pois precisamos que os angulos estejam entre -180,180
-            % para não dar problema na subtração no momento de atualização. 
-            % E.g.:
-            %   Se nossa ultima estimativa foi -180 e a nova medida for 180, a diferença fica
-            %   -180 - (-180) = 360
-            %   Atualizar a estimativa atual de k*360 e diferente de k*180 ou k*(-1)*180 
-            %   Neste caso estariamos dobrando o valor a ser corrigido
-            if diff > 180
-                diff = diff - 360;
-            elseif diff < -180
-                diff = diff + 360;
-            end
-
-            obj.xk_minus = obj.xk_minus + obj.K * diff;
+            obj.xk_minus = sumAngle(obj.xk_minus, obj.K * diff);
             xk = obj.xk_minus;
 
             % atualiza p a posteriori
