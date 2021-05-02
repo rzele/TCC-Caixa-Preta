@@ -17,6 +17,7 @@ classdef DataFactory < handle
 
         add_noise_bias
         interpolated_data
+        absolute_gyro
         read_ptr
 
         % Parametros para simular o MPU
@@ -56,7 +57,7 @@ classdef DataFactory < handle
             
             % Os angulos interpolados são relativos, precisamos deles em absoluto,
             % sendo descritos em zyx com relação a posição inicial, que deve ser 0.
-            obj.interpolated_data(:, 5:7) = obj.convert_ang(obj.interpolated_data(:, 5:7));
+            obj.absolute_gyro = obj.convert_ang(obj.interpolated_data(:, 5:7));
 
             generated_f_ptr = obj.open_file(obj.generated_path, 'w');
             fprintf(generated_f_ptr, '#[m\n');
@@ -96,6 +97,7 @@ classdef DataFactory < handle
         function sample = read(obj)
             % Lê o baseline (dado interpolado)
             % retorna um array contendo posição x,y,z em metros e inclinação zyx em graus
+            % OBS: a inclinação retornada é a absoluta (em ângulos de Euler)
             if length(obj.read_ptr) < 1
                 obj.read_ptr = 1;
             elseif obj.read_ptr > size(obj.interpolated_data,1)
@@ -103,7 +105,7 @@ classdef DataFactory < handle
                 return
             end
 
-            d = obj.interpolated_data(obj.read_ptr, :);
+            d = [obj.interpolated_data(obj.read_ptr, 1:4), obj.absolute_gyro(obj.read_ptr, :)];
             obj.read_ptr = obj.read_ptr + 1;
 
             % converte posição em cm p/ metros
@@ -218,6 +220,7 @@ classdef DataFactory < handle
             for i = 2:size(ang_data,1)
                 old_d = ang_data(i-1, :);
                 d = ang_data(i, :);
+
                 delta = d - old_d;
                 rel_rot = ang2rotZYX(delta(1), delta(2), delta(3));
 
@@ -266,8 +269,8 @@ classdef DataFactory < handle
             % Rotaciona a aceleração que era global, para fingir que foram lidas pelo sensor
             % Por mais estranho que pareçaa, a rotação deve ser na inversa 
             for i = 1:size(obj.interpolated_data,1)
-                d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(5), d(6), d(7));
+                d = obj.absolute_gyro(i, :);
+                rot = ang2rotZYX(d(1), d(2), d(3));
                 rot_inv = rot'; % transpor matriz de rotação é igual a inverter
             
                 data = rot_inv * acel(i, :)';
@@ -297,24 +300,10 @@ classdef DataFactory < handle
         end
         
         function ret = generate_gyro(obj)
-            % Usando amostras de dados de entrada (posição em cm e inclinação absoluta em graus),
+            % Usando amostras de dados de entrada (posição em cm e inclinação relativa em graus),
             % gera uma linha de dado do giroscópio
             
-            % OBS: giro relativo inicia em 0, logo o valor relative_gyro(1) não será mudado
-            relative_gyro = zeros(size(obj.interpolated_data,1), 3);
-            
-            old_d = obj.interpolated_data(1, :);
-            old_rot = ang2rotZYX(old_d(5), old_d(6), old_d(7));
-            
-            for i = 2:size(obj.interpolated_data,1)
-                d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(5), d(6), d(7));
-
-                relative_rot = old_rot' * rot;
-                relative_gyro(i, :) = relative_gyro(i-1, :) + rot2angZYX(relative_rot);
-
-                old_rot = rot;
-            end
+            relative_gyro = obj.interpolated_data(:, 5:7);
 
             % Deriva as posições relativas para obter a velociade angular
             % Devido a derivada numerica, gyro não tem valor p/ a ultima amostra
@@ -338,7 +327,7 @@ classdef DataFactory < handle
 
             % Para debug
             if obj.debug_on
-                obj.ang = obj.interpolated_data(:, 5:7);
+                obj.ang = obj.absolute_gyro;
                 obj.gyro = gyro;
             end
 
@@ -352,8 +341,8 @@ classdef DataFactory < handle
             mag = zeros(size(obj.interpolated_data,1), 3);
 
             for i = 1:size(obj.interpolated_data,1)
-                d = obj.interpolated_data(i, :);
-                rot = ang2rotZYX(d(5), d(6), d(7));
+                d = obj.absolute_gyro(i, :);
+                rot = ang2rotZYX(d(1), d(2), d(3));
                 rot_inv = rot'; % transpor matriz de rotação é igual a inverter
             
                 % Cria um dado falso de magnetômetro, o array abaixo segue o modelo:
