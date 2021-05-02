@@ -4,9 +4,7 @@ classdef KalmanTilt < CommonsLine
     % e https://www.researchgate.net/publication/261038357_Embedded_Kalman_Filter_for_Inertial_Measurement_Unit_IMU_on_the_ATMega8535
 
     properties
-        kalmanFilterRoll
-        kalmanFilterPitch
-        kalmanFilterYaw
+        kalmanFilter
     end
 
     methods
@@ -39,18 +37,15 @@ classdef KalmanTilt < CommonsLine
             % entre -180,180. Para entender melhor veja o arquivo 'ModifiedKalmanFilter.m'
             % Portanto, não recomendamos a modificação das
             % matrizes A,B e C, que representam a construção do modelo
-            A = 1;
-            B = 1/sample_freq;
-            C = 1;
-            Q = 0.002^2;
-            R = 0.03;
+            delta = 1/sample_freq;
+            A = eye(3);
+            B = eye(3) * delta;
+            C = eye(3);
+            Q = eye(3) * 0.002^2;
+            R = eye(3) * 0.03;
 
-            %% Inicializa os filtros de kalman, um para cada eixo,
-            % podemos fazer tudo com um filtro só, entretanto os parâmetros ficariam
-            % bem grandes e de dificil visualização
-            obj.kalmanFilterRoll = ModifiedKalmanFilter(A,B,C,Q,R);
-            obj.kalmanFilterPitch = ModifiedKalmanFilter(A,B,C,Q,R);
-            obj.kalmanFilterYaw = ModifiedKalmanFilter(A,B,C,Q,R);
+            %% Inicializa o filtro de kalman
+            obj.kalmanFilter = ModifiedKalmanFilter(A,B,C,Q,R);
 
             % Chart dependences
             obj.dependencies.gyro = gyro_chart;
@@ -74,20 +69,13 @@ classdef KalmanTilt < CommonsLine
             t = tic();
 
             % Calcula a predição p/ cada eixo individualmente
-            obj.kalmanFilterRoll.predict(G(1));
-            obj.kalmanFilterPitch.predict(G(2));
-            obj.kalmanFilterYaw.predict(G(3));
+            obj.kalmanFilter.predict(G');
 
             % Atualiza a predição p/ cada eixo individualmente
-            roll_and_bias = obj.kalmanFilterRoll.update(tilt(1));
-            pitch_and_bias = obj.kalmanFilterPitch.update(tilt(2));
-            yaw_and_bias = obj.kalmanFilterYaw.update(tilt(3));
+            new_data = obj.kalmanFilter.update(tilt');
 
-            % Insere o valor filtrado no eixo a ser plotado
-            new_data = [roll_and_bias(1) pitch_and_bias(1) yaw_and_bias(1)];
-            
             obj.time = obj.time + toc(t);
-            obj.data = [obj.data(2:obj.w_size, :); new_data];
+            obj.data = [obj.data(2:obj.w_size, :); new_data'];
         end
     end
 end

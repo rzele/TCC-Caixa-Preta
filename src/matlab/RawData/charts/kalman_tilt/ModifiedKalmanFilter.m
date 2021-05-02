@@ -48,13 +48,15 @@ classdef ModifiedKalmanFilter < handle
            obj.R = R;
 
            obj.xk_1_minus = zeros(length(A), 1);
+           obj.xk_minus = zeros(length(A), 1);
            obj.pk_1_minus = zeros(length(A));
+           obj.pk_minus = zeros(length(A));
         end
 
         % Realiza a etapa de predição do algoritmo, salvando no objeto os valores preditos, não retorna nada e recebe como parâmetro a amostra de entrada
         function predict(obj, uk)
             % Calcula x a priori
-            obj.xk_minus = sumAngle(obj.A * obj.xk_1_minus, obj.B * uk);
+            obj.xk_minus = obj.A * obj.xk_1_minus + obj.B * uk;
 
             % Calcula p a priori
             obj.pk_minus = obj.A * obj.pk_1_minus * obj.A' + obj.Q;
@@ -70,9 +72,9 @@ classdef ModifiedKalmanFilter < handle
             obj.K = obj.pk_minus * obj.C' / (obj.C * obj.pk_minus * obj.C' + obj.R);
 
             % atualiza x a posteriori
-            diff = subAngle(yk, obj.C * obj.xk_minus);
+            diff = yk - obj.C * obj.xk_minus;
 
-            obj.xk_minus = sumAngle(obj.xk_minus, obj.K * diff);
+            obj.xk_minus = obj.xk_minus + obj.K * diff;
             xk = obj.xk_minus;
 
             % atualiza p a posteriori
