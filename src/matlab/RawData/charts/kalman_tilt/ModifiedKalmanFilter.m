@@ -13,15 +13,16 @@ classdef ModifiedKalmanFilter < handle
     %   E[wwt] = Q
     %   E[vvt] = R
     %
-    % OBS: As operações sumAngle e subAngle, não são da implementação normal do filtro de kalman.
-    % Ela é utilizada pois precisamos que os angulos estejam entre -180,180
-    % para não dar problema na subtração no momento de atualização. 
+    % OBS: A implementação do predic e as operações sumAngle e subAngle,
+    % não são da implementação normal do filtro de kalman.
+    % Ela é utilizada pois precisamos dos os ângulos de Euler (detalhes na função predict).
+    % E que estejam entre -180,180 para não dar problema na subtração no momento de atualização. 
     % E.g.:
     %   Se nossa ultima estimativa foi -180 e a nova medida for 180, a diferença fica
     %   -180 - (-180) = 360
     %   Atualizar a estimativa atual de k*360 e diferente de k*0
-    % Ao utilizar ao realiar soma e subtração de angulos utilizado a função, garantimos o intervalo desejado.
-    % Por isso essa implementação é específica para o modelo utilizado do filtro de kalman.
+    % Ao utilizar soma e subtração de angulos utilizado a função, garantimos o intervalo desejado.
+    % Por esses motivos essa implementação é específica para o modelo utilizado do filtro de kalman.
 
     properties
         xk_minus                % x estimado p/ o instante k
@@ -55,8 +56,21 @@ classdef ModifiedKalmanFilter < handle
 
         % Realiza a etapa de predição do algoritmo, salvando no objeto os valores preditos, não retorna nada e recebe como parâmetro a amostra de entrada
         function predict(obj, uk)
+            % OBS: essa não é a implementação normal do predict do filtro de kalman o normal seria:
+            % obj.xk_minus = obj.A * obj.xk_1_minus + obj.B * uk;
+            % Entreanto isso entregar a inclinação relativa (resultado somente da integral)
+            % e não os ângulos de Euler.
+            % A modificação aqui é para obter os ângulos de Euler, necessário pois será comparado
+            % com a estimativa usando acel+mag que também estão em ângulos de Euler
+
             % Calcula x a priori
-            obj.xk_minus = obj.A * obj.xk_1_minus + obj.B * uk;
+            old_ang = obj.xk_1_minus;
+            delta_ang = obj.B * uk;
+            old_rot = ang2rotZYX(old_ang(1), old_ang(2), old_ang(3));
+            delta_rot = ang2rotZYX(delta_ang(1), delta_ang(2), delta_ang(3));
+            new_rot = old_rot * delta_rot;
+            obj.xk_minus = rot2angZYX(new_rot);
+            obj.xk_minus = obj.xk_minus'; % Precisamos dele no formato de vetor para as demais operações
 
             % Calcula p a priori
             obj.pk_minus = obj.A * obj.pk_1_minus * obj.A' + obj.Q;
@@ -72,9 +86,9 @@ classdef ModifiedKalmanFilter < handle
             obj.K = obj.pk_minus * obj.C' / (obj.C * obj.pk_minus * obj.C' + obj.R);
 
             % atualiza x a posteriori
-            diff = yk - obj.C * obj.xk_minus;
+            diff = subAngle(yk, obj.C * obj.xk_minus);
 
-            obj.xk_minus = obj.xk_minus + obj.K * diff;
+            obj.xk_minus = sumAngle(obj.xk_minus, obj.K * diff);
             xk = obj.xk_minus;
 
             % atualiza p a posteriori
