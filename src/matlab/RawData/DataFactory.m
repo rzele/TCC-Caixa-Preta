@@ -28,6 +28,8 @@ classdef DataFactory < handle
         sample_freq
         sample_period % em ms
 
+        noise_radio
+
         % Por motivos de debug
         debug_on
         pos, vel, acel, ang, gyro, mag
