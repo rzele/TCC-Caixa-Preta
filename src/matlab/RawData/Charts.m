@@ -31,6 +31,7 @@ classdef Charts < handle
         compare_rolls
         compare_pitchs
         compare_yaws
+        compare_errors
 
         baseline_tilt
         baseline_position
@@ -78,11 +79,12 @@ classdef Charts < handle
             % ou pode utilizar os apelidos abaixo: c.compare_rolls, c.compare_pitchs, c.compare_yaws
             % Você pode alterar os métodos que serão comparados no array abaixo
             obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt,...
-                [obj.gyro_relative_tilt, obj.acel_mag_tilt]);
+                [obj.comp_tilt, obj.kalman_tilt]);
             % Apelidos
             obj.compare_rolls = obj.compare_tilts.roll;
             obj.compare_pitchs = obj.compare_tilts.pitch;
             obj.compare_yaws = obj.compare_tilts.yaw;
+            obj.compare_errors = obj.compare_tilts.errors;
         end
     end
 end

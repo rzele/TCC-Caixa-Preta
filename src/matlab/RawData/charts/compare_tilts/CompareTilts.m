@@ -7,8 +7,7 @@ classdef CompareTilts < CommonsLine
         data_order      % Ordem no array do gráfico de tilt passado que se encontra o dado
                         % dependendo do tipo definido. E.g.: roll é o primeiro no array retornando pelo .last()
 
-        mse_arr
-        variance_arr
+        error_arr
 
         % Chart dependences obj
         base_line_chart
@@ -18,19 +17,26 @@ classdef CompareTilts < CommonsLine
     methods (Static)
         % Use esta função para terceirizar a criação individual de cada comparação de tilt.
         % Ela recebe os mesmo parâmetros da classe normal, com exceção do 'data_type'
-        % e retorna uma struct com os gráficos de comparação de roll, pitch e yaw
+        % e retorna uma struct com os gráficos de comparação de roll, pitch, yaw e um de erro
         function ret = factory_row_pitch_yaw(w_size, base_line_chart, others_charts_arr)
             compare_rolls = CompareTilts('roll', w_size, base_line_chart, others_charts_arr);
             compare_pitchs = CompareTilts('pitch', w_size, base_line_chart, others_charts_arr);
             compare_yaws = CompareTilts('yaw', w_size, base_line_chart, others_charts_arr);
+            errors = CompareTilts('error', w_size, base_line_chart, others_charts_arr);
 
-            ret = struct('roll', compare_rolls, 'pitch', compare_pitchs, 'yaw', compare_yaws);
+            ret = struct('roll', compare_rolls, 'pitch', compare_pitchs, 'yaw', compare_yaws, 'errors', errors);
         end
     end
 
     methods
         function obj = CompareTilts(data_type, w_size, base_line_chart, others_charts_arr)
-            p_title = sprintf('Compara %s', data_type);
+            if strcmp(data_type, 'error')
+                p_title = sprintf('Erro da estimativa');
+                p_label = 'erro';
+            else
+                p_title = sprintf('Compara %s', data_type);
+                p_label = 'graus';
+            end
 
             s_legend  = {'baseline'};
             for i=1:length(others_charts_arr)
@@ -43,7 +49,7 @@ classdef CompareTilts < CommonsLine
             obj = obj@CommonsLine(...
                 p_title, ...                        % p_title
                 'Amostra', ...                      % p_xlabel
-                'graus', ...                        % p_ylabel
+                p_label, ...                        % p_ylabel
                 s_legend, ...                       % s_legend
                 sources_color, ...                  % sources_color
                 w_size);
@@ -51,8 +57,7 @@ classdef CompareTilts < CommonsLine
             obj.w_size = w_size;
             obj.data_type = data_type;
             obj.data = zeros(w_size, 1 + length(others_charts_arr));
-            obj.mse_arr = zeros(1, length(others_charts_arr));
-            obj.variance_arr = zeros(1, length(others_charts_arr));
+            obj.error_arr = zeros(1, length(others_charts_arr));
 
             % Chart dependences
             obj.base_line_chart = base_line_chart;
@@ -65,6 +70,8 @@ classdef CompareTilts < CommonsLine
                 obj.data_order = 2;
             elseif strcmp(data_type, 'yaw')
                 obj.data_order = 3;
+            elseif strcmp(data_type, 'error')
+                obj.data_order = -1;
             else
                 error('Invalid data_type, must be roll, pitch or yaw');
             end
@@ -80,57 +87,63 @@ classdef CompareTilts < CommonsLine
             % Obtem data do baseline
             obj.base_line_chart.calculate(mpu_new_data, baselines_new_data, n_sample);
             base_line_data = obj.base_line_chart.last();
-            new_data = [base_line_data(obj.data_order)];
+            new_data = base_line_data';
 
             % Obtem data dos outros gráficos
             for i=1:length(obj.others_charts_arr)
                 obj.others_charts_arr(i).calculate(mpu_new_data, baselines_new_data, n_sample);
                 chart_data = obj.others_charts_arr(i).last();
-                new_data = [new_data, chart_data(obj.data_order)];
+                new_data = horzcat(new_data, chart_data');
             end
 
             %% Calcula o valor p/ a próxima amostra
-            % note que data(:, 1) é sempre o baseline
-            obj.data = [obj.data(2:obj.w_size, :); new_data];
+            % Plota um dos angulos selecionado, se não foi selecionado para plotar o erro
+            % Note que data(:, 1) é sempre o baseline
+            if obj.data_order ~= -1
+                obj.data = vertcat(obj.data(2:obj.w_size, :), new_data(obj.data_order,:));
+            end
 
             %% Calcula dados de estatistica
-            obj.calculate_mse(new_data(1), new_data(2:length(new_data)));
-            obj.caculate_variance(new_data(1), new_data(2:length(new_data)));
+            obj.calculate_error(new_data(:,1), new_data(:, 2:size(new_data, 2)));
         end
 
-        function calculate_mse(obj, baseline, datas_arr)
-            % Calcula o erro médio quadrático das entradas, dado um baseline.
-            % Como este cálculo é dado interação a interação, sem salvar todos valores lidos,
-            % será realizado aqui somente até a etapa de soma, a divisão pelo nº de amostras
-            % será executado somente no momento de exibição
+        function calculate_error(obj, baseline, datas_arr)
+            % Calcula a diferença da matriz gerada pela estimativa
+            % com a matriz esperada pelo baseline,
+            % para assim verificar quão próximo uma estimativa ficou do baseline.
             % 
-            % O cálculo MSE indica quão próximo (em média) do baseline esta um dado método de estimativa
-            for i=1:length(datas_arr)
-                cur_mse = obj.mse_arr(i);
-                cur_data = datas_arr(i);
-                diff = pow2(baseline - cur_data);
-                obj.mse_arr(i) = cur_mse + diff;
+            % OBS: Compara ângulos diretamente não é eficaz, uma vez que (0, 89, -69) e (70, 89, 0)
+            % são duas rotações que são mais próximas do que (0, 89, -69) e (0, 89, -65)
+            new_data_err = [0];
+            baseline_rot = ang2rotZYX(baseline(1), baseline(2), baseline(3));
+
+            for i=1:size(datas_arr, 2)
+                cur_estimative = datas_arr(:, i);
+                estimated_rot = ang2rotZYX(cur_estimative(1), cur_estimative(2), cur_estimative(3));
+                diff = sum(sum(abs(baseline_rot - estimated_rot)));
+                new_data_err = [new_data_err, diff];
+                obj.error_arr(i) = obj.error_arr(i) + diff;
             end
-        end
 
-        function caculate_variance(obj, baseline, datas_arr)
-            % Calcula a variância das entradas, dado um baseline.
-            % Seu funcionamento é semelhante ao calculate_mse
-            % 
-            % O cálculo da Variância indica quão disperso está o método de estimativa
-            % comparado ao baseline
+            % Se foi selecionado para plotar o erro, adiciona o erro de cada amostra estimativa
+            % isso ao obj.data para ser plotado o erro ao longo do tempo
+            if obj.data_order == -1
+                obj.data = [obj.data(2:obj.w_size, :); new_data_err];
+            end
         end
 
         function on_delete(obj)
             % Este método sobrescreve o método das classes plot
             % É chamado quando o render vai finalizar
             % Aqui será utilizado para exibir as estatísticas calculadas
-            fprintf('[Compara %s]\n', obj.data_type);
-            for i=1:length(obj.others_charts_arr)
-                mse = obj.mse_arr(i) / obj.last_sample;
-                fprintf('mse - %s: %.5f\n', class(obj.others_charts_arr(i)), mse);
+            if obj.data_order == -1
+                fprintf('[Compara %s]\n', obj.data_type);
+                for i=1:length(obj.others_charts_arr)
+                    err = obj.error_arr(i) / obj.last_sample;
+                    fprintf('error - %s: %.5f\n', class(obj.others_charts_arr(i)), err);
+                end
+                fprintf('\n');
             end
-            fprintf('\n');
         end
     end
 end
