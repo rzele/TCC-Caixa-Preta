@@ -45,6 +45,7 @@ classdef DataFactory < handle
             obj.esc_giro = esc_giro;
             obj.esc_mag = 4912;
             obj.debug_on = debug_on;
+            obj.noise_radio = 10; % quanto maior menor o ruído
             obj.add_noise_bias = true;
         end
 
@@ -284,7 +285,7 @@ classdef DataFactory < handle
                 acel(:,1) = acel(:,1) + 0.0037;
                 acel(:,2) = acel(:,2) - 0.023;
                 acel(:,3) = acel(:,3) + 0.025;
-                acel = awgn(acel, 10, 'measured');
+                acel = awgn(acel, obj.noise_radio, 'measured');
             end
 
             % Para debug
@@ -322,7 +323,7 @@ classdef DataFactory < handle
                 gyro(:,1) = gyro(:,1) + 0.037;
                 gyro(:,2) = gyro(:,2) - 0.082;
                 gyro(:,3) = gyro(:,3) + 0.065;
-                gyro = awgn(gyro, 10, 'measured');
+                gyro = awgn(gyro, obj.noise_radio, 'measured');
             end
 
             % Para debug
@@ -362,7 +363,7 @@ classdef DataFactory < handle
                 mag(:,1) = (mag(:,1) + 2.6) * 1.00208;
                 mag(:,2) = (mag(:,2) - 1.21) * 0.98213;
                 mag(:,3) = (mag(:,3) + 3.55) * 1.00423;
-                mag = awgn(mag, 10, 'measured');
+                mag = awgn(mag, obj.noise_radio, 'measured');
             end
             
             % Para debug. Usa versão com os eixos ainda não rotacionados
