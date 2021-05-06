@@ -47,7 +47,7 @@ classdef DataFactory < handle
             obj.esc_giro = esc_giro;
             obj.esc_mag = 4912;
             obj.debug_on = debug_on;
-            obj.noise_radio = 10; % quanto maior menor o ruído
+            obj.noise_radio = 25; % quanto maior menor o ruído
             obj.add_noise_bias = true;
         end
 
@@ -354,7 +354,7 @@ classdef DataFactory < handle
                 % Com a diferença que Z aponta para cima, Y para a esquerda e X para frente
                 % (que representa a incidência do campo magnético nesta região do planeta)
                 % É arbitrário porque para estimar a inclinação esse dado acaba sendo anulado 
-                data = rot_inv * [20*cosd(45); 0; -20*sind(45)];
+                data = rot_inv * [25*cosd(2); 0; -25*sind(2)];
                 
                 mag(i,:) = data';
             end
