@@ -1,11 +1,13 @@
-function ret = calculate_acel_mag_tilt(A, H)
-    normA = A / norm(A);
+function ret = calculate_acel_mag_tilt(a, h)
+    % Normaliza acelerômetor e megnetômetro
+    A = a / norm(a);
+    H = h / norm(h);
 
     %% Calcula pich e roll usado aceleração
     % O uso da função real() aqui é para obter a parte real do número
-    % por algum motivo o matlab estava retornando um número complexo para o caso onde normA(1) = 1.000...
-    newPitch = real(asin(-normA(1))) * 180/pi;
-    newRoll = atan2(normA(2), normA(3)) * 180/pi;
+    % por algum motivo o matlab estava retornando um número complexo para o caso onde A(1) = 1.000...
+    newPitch = real(asin(-A(1))) * 180/pi;
+    newRoll = atan2(A(2), A(3)) * 180/pi;
 
     %% Calcula yaw usando magnetômetro (compass com compensação)
     % Ref do calculo: https://www.mikrocontroller.net/attachment/292888/AN4248.pdf
