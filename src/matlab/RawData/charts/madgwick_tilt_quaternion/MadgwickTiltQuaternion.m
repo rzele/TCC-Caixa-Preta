@@ -5,6 +5,7 @@ classdef MadgwickTiltQuaternion < CommonsLine
     
     properties
         madgwickFilter
+        beta
     end
 
     methods
@@ -19,6 +20,7 @@ classdef MadgwickTiltQuaternion < CommonsLine
 
             obj.w_size = w_size;
             obj.data = zeros(w_size, 4);
+            obj.beta = beta;
 
             % Inicializa o filtro de madgwick
             obj.madgwickFilter = MadgwickAHRS('SamplePeriod', 1/freq_sample, 'Beta', beta);
@@ -46,8 +48,12 @@ classdef MadgwickTiltQuaternion < CommonsLine
             H = obj.dependencies.mag.last();
             
             %% Calcula o valor p/ a próxima amostra
+            t = tic();
+           
             obj.madgwickFilter.Update(G*pi/180, A, H);
             q = obj.madgwickFilter.Quaternion;
+           
+            obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); q];
         end
     end
