@@ -323,8 +323,8 @@ classdef DataFactory < handle
             % Valores arbitrários (só não exagerar)
             if obj.add_noise_bias
                 gyro(:,1) = gyro(:,1) + 0.037;
-                gyro(:,2) = gyro(:,2) - 0.082;
-                gyro(:,3) = gyro(:,3) + 0.065;
+                gyro(:,2) = gyro(:,2) + 0.2;
+                gyro(:,3) = gyro(:,3) - 0.24;
                 gyro = awgn(gyro, obj.noise_radio, 'measured');
             end
 
