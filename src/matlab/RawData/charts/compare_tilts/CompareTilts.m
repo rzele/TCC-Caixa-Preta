@@ -136,14 +136,14 @@ classdef CompareTilts < CommonsLine
             % Este método sobrescreve o método das classes plot
             % É chamado quando o render vai finalizar
             % Aqui será utilizado para exibir as estatísticas calculadas
-            if obj.data_order == -1
-                fprintf('[Compara %s]\n', obj.data_type);
-                for i=1:length(obj.others_charts_arr)
-                    err = obj.error_arr(i) / obj.last_sample;
-                    fprintf('error - %s: %.5f\n', class(obj.others_charts_arr(i)), err);
-                end
-                fprintf('\n');
-            end
+            % if obj.data_order == -1
+            %     fprintf('[Compara %s]\n', obj.data_type);
+            %     for i=1:length(obj.others_charts_arr)
+            %         err = obj.error_arr(i) / obj.last_sample;
+            %         fprintf('error - %s: %.5f\n', class(obj.others_charts_arr(i)), err);
+            %     end
+            %     fprintf('\n');
+            % end
         end
     end
 end

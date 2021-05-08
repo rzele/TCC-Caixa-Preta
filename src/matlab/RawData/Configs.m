@@ -20,7 +20,7 @@ classdef Configs < handle
         debug_on = false;                % Exibe um gráfico com os dados gerados, antes de converter p/ as escalas
 
         % Amostragem
-        max_size=261;              % Quantidade maxima de amostras exibidas na tela
+        max_size=3500;              % Quantidade maxima de amostras exibidas na tela
 
         % Plotagem
         plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
@@ -62,10 +62,7 @@ classdef Configs < handle
             % E.x.: layout = {aceleration, aceleration; gyroscope, magnetometer};
             obj.layout = {...
 
-                c.aceleration, c.gyroscope, c.magnetometer;...
-                c.compare_rolls, c.compare_pitchs, c.compare_yaws;...
-                c.gyro_relative_tilt, c.acel_without_g, c.position;...
-                c.baseline_tilt, c.car_3d_gdeg, c.baseline_position;...
+                % c.compare_tilts.errors;...
 
             };
         end

@@ -36,6 +36,10 @@ classdef Charts < handle
         baseline_tilt
         baseline_position
         car_3d_baseline
+
+        % Variaveis para teste de melhor parâmetro do filtro complementar
+        cmp_tst = CustomPlot.empty()
+        mdg_tst = CustomPlot.empty()
     end
     
     methods
@@ -79,12 +83,39 @@ classdef Charts < handle
             % ou pode utilizar os apelidos abaixo: c.compare_rolls, c.compare_pitchs, c.compare_yaws
             % Você pode alterar os métodos que serão comparados no array abaixo
             obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt,...
-                [obj.comp_tilt, obj.kalman_tilt]);
+                [obj.gyro_absolute_tilt, obj.acel_mag_tilt, obj.comp_tilt]);
             % Apelidos
             obj.compare_rolls = obj.compare_tilts.roll;
             obj.compare_pitchs = obj.compare_tilts.pitch;
             obj.compare_yaws = obj.compare_tilts.yaw;
             obj.compare_errors = obj.compare_tilts.errors;
+
+            % Cria gráficos para comparar parâmetros dos filtros
+            % Irá sobrescrever o compare_tilts criado acima
+            % obj.set_comp_tilt_test(cnf);
+            obj.set_madgwick_tilt_test(cnf);
+        end
+
+        function set_comp_tilt_test(obj, cnf)
+            count = 1;
+            for mu=[0:0.0001:0.005]
+                obj.cmp_tst(count) = CompTilt(cnf.max_size, mu, obj.gyro_absolute_tilt, obj.acel_mag_tilt);
+                count = count+1;
+            end
+
+            obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt, obj.cmp_tst);
+        end
+
+        function set_madgwick_tilt_test(obj, cnf)
+            count = 1;
+            
+            for beta=[0:0.001:0.05]
+                madg_quat = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
+                obj.mdg_tst(count) = MadgwickTiltEuler(cnf.max_size, madg_quat);
+                count = count+1;
+            end
+
+            obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt, obj.mdg_tst);
         end
     end
 end

@@ -52,30 +52,30 @@ classdef Render < handle
                 end
             end
 
-            obj.fig = figure('name', 'Dashboard', 'units','normalized','outerposition',[0 0 1 1]);
+            % obj.fig = figure('name', 'Dashboard', 'units','normalized','outerposition',[0 0 1 1]);
             
-            % Cria cada plot na tela
-            for i = 1:length(obj.plots)
-                plot_id = obj.plots(i).id;
-                obj.plots(i).createPlot(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(plot_id).grid);
-            end
+            % % Cria cada plot na tela
+            % for i = 1:length(obj.plots)
+            %     plot_id = obj.plots(i).id;
+            %     obj.plots(i).createPlot(obj.grid_n_rows, obj.grid_n_columns, obj.layout.(plot_id).grid);
+            % end
         end
 
         % Tenta redesenhar o plot, se deu o tempo da frequencia
         function try_render(obj)
-            % Re plota
-            if (now-obj.time)*100000 > 1/obj.freq_render
-                obj.count_render_times = obj.count_render_times + 1;
-                t1 = tic;
+            % % Re plota
+            % if (now-obj.time)*100000 > 1/obj.freq_render
+            %     obj.count_render_times = obj.count_render_times + 1;
+            %     t1 = tic;
 
-                obj.update_all();
+            %     obj.update_all();
 
-                refreshdata
-                drawnow
-                obj.time = now;
+            %     refreshdata
+            %     drawnow
+            %     obj.time = now;
                 
-                obj.time_rendering = obj.time_rendering + toc(t1);
-            end
+            %     obj.time_rendering = obj.time_rendering + toc(t1);
+            % end
         end
 
         function update_all(obj)
@@ -86,11 +86,11 @@ classdef Render < handle
 
         % Rendereza mesmo se que não tenha dado o tempo da frequencia
         function force_render(obj)
-            figure(obj.fig)
-            obj.update_all();
-            refreshdata
-            drawnow
-            obj.time = now;
+            % figure(obj.fig)
+            % obj.update_all();
+            % refreshdata
+            % drawnow
+            % obj.time = now;
         end
 
         function delete(obj)
@@ -98,7 +98,7 @@ classdef Render < handle
             for i=1:length(obj.plots)
                 obj.plots(i).on_delete();
             end
-            fprintf('Tempo médio da função de renderização: %fs\n', obj.time_rendering / obj.count_render_times);
+            % fprintf('Tempo médio da função de renderização: %fs\n', obj.time_rendering / obj.count_render_times);
         end
     end
 end
