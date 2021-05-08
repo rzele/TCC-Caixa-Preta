@@ -41,8 +41,17 @@ classdef KalmanTilt < CommonsLine
             A = eye(3);
             B = eye(3) * delta;
             C = eye(3);
-            Q = eye(3) * 0.002^2;
-            R = eye(3) * 0.03;
+
+            Q = 1.0e-03 * [
+                0.1070   -0.0014   -0.0038
+                -0.0014    0.1072    0.0041
+                -0.0038    0.0041    0.1110
+            ];
+            R = [
+                3.4441   -0.0968    0.3581
+                -0.0968    3.5426   -0.0649
+                0.3581   -0.0649    3.4761
+            ];
 
             %% Inicializa o filtro de kalman
             obj.kalmanFilter = ModifiedKalmanFilter(A,B,C,Q,R);

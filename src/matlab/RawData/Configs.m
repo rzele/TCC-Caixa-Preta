@@ -6,7 +6,7 @@ classdef Configs < handle
         read_from = 'mockup';     % difina como, 'serial', 'bluetooth', 'arquivo' ou 'mockup'
 
         % Se a fonte for 'arquivo' ou 'mockup': Coloque o path completo 
-        file_full_path='Dados/fake/exemplo'; 
+        file_full_path='Dados/simulados/drift'; 
 
         % Se a fonte for 'serial' ou 'bluetooth': Coloque a porta COM e a taxa de comunicação
         serial_COM='COM4';
@@ -31,10 +31,10 @@ classdef Configs < handle
         filter_type = 'media';            % pode ser 'media' ou 'mediana'
 
         % Variável de ajuste do filtro complementar
-        mu=0.02;
+        mu=0.0006;
 
         % Variável de ajuste do filtro madgwick
-        beta=0.1;
+        beta=0.004;
 
         % Constante gravitacional
         const_g=9.8;                
