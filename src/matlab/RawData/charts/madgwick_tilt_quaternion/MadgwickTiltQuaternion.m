@@ -5,11 +5,12 @@ classdef MadgwickTiltQuaternion < CommonsLine
     
     properties
         madgwickFilter
+        acel_mag_tilt
         beta
     end
 
     methods
-        function obj = MadgwickTiltQuaternion(w_size, freq_sample, beta, acel_chart, gyro_chart, mag_chart)
+        function obj = MadgwickTiltQuaternion(w_size, freq_sample, beta, acel_chart, gyro_chart, mag_chart, acel_mag_tilt_chart)
             obj = obj@CommonsLine(...
                 'Quaterions do filtro de Madgwick', ...       % p_title
                 'Amostra', ...                                % p_xlabel
@@ -29,6 +30,10 @@ classdef MadgwickTiltQuaternion < CommonsLine
             obj.dependencies.acel = acel_chart;
             obj.dependencies.gyro = gyro_chart;
             obj.dependencies.mag = mag_chart;
+
+            % Não é exatamente uma dependência
+            % Essa estimativa é utilizada somente para definir a inclinação inicial do corpo
+            obj.acel_mag_tilt = acel_mag_tilt_chart;
         end
 
         function calculate(obj, mpu_new_data, baselines_new_data, n_sample)
@@ -49,10 +54,23 @@ classdef MadgwickTiltQuaternion < CommonsLine
             
             %% Calcula o valor p/ a próxima amostra
             t = tic();
-           
+
+            % Para a amostra inicial define como estimativa aquela gerada pelo
+            % Acelerômetro + magnetômetro
+            if (n_sample < 10)
+                obj.acel_mag_tilt.calculate(mpu_new_data, baselines_new_data, n_sample);
+
+                initial_tilt = obj.acel_mag_tilt.last();
+                initial_rot = ang2rotZYX(initial_tilt(1),initial_tilt(2),initial_tilt(3));
+                q_conj = rotMat2quatern(initial_rot);
+                initial_q = quaternConj(q_conj);
+
+                obj.madgwickFilter.Quaternion = initial_q;
+            end
+
             obj.madgwickFilter.Update(G*pi/180, A, H);
             q = obj.madgwickFilter.Quaternion;
-           
+
             obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); q];
         end

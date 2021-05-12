@@ -77,6 +77,12 @@ classdef KalmanTilt < CommonsLine
             %% Calcula o valor p/ a próxima amostra
             t = tic();
 
+            % Para a amostra inicial define como estimativa aquela gerada pelo
+            % Acelerômetro + magnetômetro
+            if (n_sample < 10)
+                obj.kalmanFilter.xk_1_minus = tilt';
+            end
+
             % Calcula a predição p/ cada eixo individualmente
             obj.kalmanFilter.predict(G');
 

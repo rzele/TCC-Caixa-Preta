@@ -41,8 +41,16 @@ classdef CompTilt < CommonsLine
 
             %% Calcula o valor p/ a próxima amostra
             t = tic();
-            
-            new_data = calculate_comp_filter(obj.last(), gyro_tilt, old_gyro_tilt, tilt, obj.mu);
+
+            % Para a amostra inicial define como estimativa aquela gerada pelo
+            % Acelerômetro + magnetômetro
+            if (n_sample < 10)
+                last_data = tilt;
+            else
+                last_data = obj.last();
+            end
+
+            new_data = calculate_comp_filter(last_data, gyro_tilt, old_gyro_tilt, tilt, obj.mu);
             
             obj.time = obj.time + toc(t);
             obj.data = [obj.data(2:obj.w_size, :); new_data];

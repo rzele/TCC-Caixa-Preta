@@ -35,7 +35,7 @@ classdef PlotLine < CustomPlot
             grid;
             hold on
             for i = 1:length(obj.sources_color)
-                obj.series{i} = plot(0, 'Color', obj.sources_color{i});
+                obj.series{i} = plot(0, 'Color', obj.sources_color{i}, 'lineWidth', 1.5);
             end
             hold off
 
