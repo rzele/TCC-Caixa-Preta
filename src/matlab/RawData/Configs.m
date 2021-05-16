@@ -20,14 +20,14 @@ classdef Configs < handle
         debug_on = false;                % Exibe um gráfico com os dados gerados, antes de converter p/ as escalas
 
         % Amostragem
-        max_size=261;              % Quantidade maxima de amostras exibidas na tela
+        max_size=3500;              % Quantidade maxima de amostras exibidas na tela
 
         % Plotagem
         plot_in_real_time=false;     % Define se o plot será so no final, ou em tempo real
         freq_render=20;               % Frequencia de atualização do plot
 
-        % Filtros das entradas (aplicado ao acel, gyro e mag)
-        window_k = 1;                    % Janela do filtro (minimo = 1, 1 equivale a não usar)
+        % Filtros das entradas (aplicado ao acel, gyro, mag e AcelMagTilt)
+        window_k = 10;                    % Janela do filtro (minimo = 1, 1 equivale a não usar)
         filter_type = 'media';            % pode ser 'media' ou 'mediana'
 
         % Variável de ajuste do filtro complementar
@@ -63,9 +63,12 @@ classdef Configs < handle
             obj.layout = {...
 
                 c.aceleration, c.gyroscope, c.magnetometer;...
-                c.compare_rolls, c.compare_pitchs, c.compare_yaws;...
-                c.gyro_relative_tilt, c.acel_without_g, c.position;...
-                c.baseline_tilt, c.car_3d_gdeg, c.baseline_position;...
+                c.acel_mag_tilt, c.gyro_absolute_tilt, c.comp_tilt;...
+                c.kalman_tilt, c.madgwick_tilt_euler, c.baseline_tilt;...
+                % c.compare_errors, c.compare_errors, c.compare_errors;...
+
+                % c.compare_errors, c.compare_errors, c.vazio;...
+                % c.vazio, c.vazio, c.vazio;...
 
             };
         end

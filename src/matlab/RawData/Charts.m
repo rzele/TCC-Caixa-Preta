@@ -3,12 +3,13 @@ classdef Charts < handle
         % Gráficos possíveis
         vazio
 
+        % Dado filtrado
         aceleration
         gyroscope
         magnetometer
+        acel_mag_tilt
         gyro_relative_tilt
         gyro_absolute_tilt
-        acel_mag_tilt
         comp_tilt
         acel_without_g
         velocity
@@ -42,18 +43,28 @@ classdef Charts < handle
         function obj = Charts(cnf)
             %% Cria gráficos de linha
             obj.vazio = '';                         % Deixa a celula vazia
+
+            % Dado filtrado
             obj.aceleration = Aceleration(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.ax_offset, cnf.cxp.ay_offset, cnf.cxp.az_offset], cnf.cxp.aesc_op);
             obj.gyroscope = Gyroscope(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.gx_offset, cnf.cxp.gy_offset, cnf.cxp.gz_offset], cnf.cxp.gesc_op);
             obj.magnetometer = Magnetometer(cnf.filter_type, cnf.max_size, cnf.window_k, [cnf.cxp.hx_offset, cnf.cxp.hy_offset, cnf.cxp.hz_offset], [cnf.cxp.hx_escala, cnf.cxp.hy_escala, cnf.cxp.hz_escala]);
-            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.cxp.fammost, obj.gyroscope);
-            obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
             obj.acel_mag_tilt = AcelMagTilt(cnf.max_size, obj.aceleration, obj.magnetometer);
-            obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_absolute_tilt, obj.acel_mag_tilt);
-            obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, obj.aceleration);
+            
+            % Dado não filtrado utilizado somente como input de outros métodos
+            % para melhor acurácia, e não para plotar
+            aceleration_w_k = Aceleration(cnf.filter_type, cnf.max_size, 1, [cnf.cxp.ax_offset, cnf.cxp.ay_offset, cnf.cxp.az_offset], cnf.cxp.aesc_op);
+            gyroscope_w_k = Gyroscope(cnf.filter_type, cnf.max_size, 1, [cnf.cxp.gx_offset, cnf.cxp.gy_offset, cnf.cxp.gz_offset], cnf.cxp.gesc_op);
+            magnetometer_w_k = Magnetometer(cnf.filter_type, cnf.max_size, 1, [cnf.cxp.hx_offset, cnf.cxp.hy_offset, cnf.cxp.hz_offset], [cnf.cxp.hx_escala, cnf.cxp.hy_escala, cnf.cxp.hz_escala]);
+            acel_mag_tilt_w_k = AcelMagTilt(cnf.max_size, aceleration_w_k, magnetometer_w_k);
+            
+            obj.gyro_relative_tilt = GyroRelativeTilt(cnf.max_size, cnf.cxp.fammost, gyroscope_w_k);
+            obj.gyro_absolute_tilt = GyroAbsoluteTilt(cnf.max_size, obj.gyro_relative_tilt);
+            obj.comp_tilt = CompTilt(cnf.max_size, cnf.mu, obj.gyro_absolute_tilt, acel_mag_tilt_w_k);
+            obj.acel_without_g = AcelWithoutG(cnf.max_size, obj.gyro_relative_tilt, aceleration_w_k);
             obj.velocity = Velocity(cnf.max_size, cnf.cxp.fammost, cnf.const_g, obj.acel_without_g);
             obj.position = Position(cnf.max_size, cnf.cxp.fammost, obj.velocity);
-            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.cxp.fammost, obj.gyroscope, obj.acel_mag_tilt);
-            obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, cnf.beta, obj.aceleration, obj.gyroscope, obj.magnetometer);
+            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.cxp.fammost, gyroscope_w_k, acel_mag_tilt_w_k);
+            obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, cnf.beta, aceleration_w_k, obj.gyroscope, magnetometer_w_k, acel_mag_tilt_w_k);
             obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
             
             %% Cria gráficos de bússola
@@ -79,7 +90,7 @@ classdef Charts < handle
             % ou pode utilizar os apelidos abaixo: c.compare_rolls, c.compare_pitchs, c.compare_yaws
             % Você pode alterar os métodos que serão comparados no array abaixo
             obj.compare_tilts = CompareTilts.factory_row_pitch_yaw(cnf.max_size, obj.baseline_tilt,...
-                [obj.comp_tilt, obj.kalman_tilt]);
+                [obj.acel_mag_tilt, obj.gyro_absolute_tilt, obj.comp_tilt, obj.kalman_tilt, obj.madgwick_tilt_euler]);
             % Apelidos
             obj.compare_rolls = obj.compare_tilts.roll;
             obj.compare_pitchs = obj.compare_tilts.pitch;
