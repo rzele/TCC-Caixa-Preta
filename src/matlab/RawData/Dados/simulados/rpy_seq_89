@@ -1,0 +1,32 @@
+# roll, pitch, yaw, em sequência de 89 graus
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# ---------- INICIO ROLL 89 --------------
+# t=10 inicia roll
+10 0 0 0 1 0 0
+
+# t=8000 termina roll = 89 graus
+8000 0 0 0 88 0 0
+
+# t=8010 permanece inclinado
+8010 0 0 0 0 0 0
+
+# ---------- INICIO PITCH + 89 --------------
+8020 0 0 0 0 1 0
+16010 0 0 0 0 88 0
+16020 0 0 0 0 0 0
+
+# ---------- INICIO YAW + 89 --------------
+16030 0 0 0 0 0 1
+24020 0 0 0 0 0 88
+
+# permanece parado um tempo
+24100 0 0 0 0 0 0

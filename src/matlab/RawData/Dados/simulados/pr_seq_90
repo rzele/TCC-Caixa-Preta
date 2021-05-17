@@ -1,0 +1,23 @@
+# roll, pitch, em sequência de 90 graus
+# A ideia aqui é mostrar como a estimativa usando acel e mag
+# se comportam nessa combinação de ângulos
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# ---------- INICIO PITCH + 90 --------------
+10 0 0 0 0 1 0
+8000 0 0 0 0 89 0
+8100 0 0 0 0 0 0
+
+# ---------- INICIO ROLL 90 --------------
+8110 0 0 0 1 0 0
+16010 0 0 0 89 0 0
+16100 0 0 0 0 0 0
+

@@ -1,0 +1,42 @@
+# pitch, yaw em sequência de 89 graus
+
+# Isso mostra que na ordem ZYX, isso vira yaw e roll de 89.
+# Se tentarmos interpolar normalmente indo de pitch=0 até pitch=90 e o mesmo para o yaw
+# isso daria problema, pois não iria surgir o yaw e roll esperado na ordem ZYX.
+# Isto é, não tem como parar na posição descrita por pitch e yaw de 89 relativo,
+# com pitch e yaw na ordem ZYX usando ângulos de Euler.
+# Imagine como a impossibilidade de realizar o yaw depois do pitch, deve sempre ser antes (ZYX).
+
+# É possível chegar na mesma posição com roll de 90 e pitch de 90 relativos.
+# O problema na interpolação seria o mesmo, pois pitch (Y) deve tem de vir antes de roll (X) (ZYX).
+
+# O movimento ainda ocorre normalmente, a extração dos ângulos de Euler dessa rotação ocorre
+# corretamente, o problema é somente de interpolar. O pessoal apresenta isso como gymbal lock
+# em ambientes de modelagem 3D:
+# - https://www.youtube.com/watch?v=z3dDsz4f20A
+# - https://www.youtube.com/watch?v=mP7BzA8IdWw
+
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# t=0 parado
+0 0 0 0 0 0 0
+
+# ---------- INICIO PITCH +89 --------------
+# t=10 inicia pitch
+10 0 0 0 0 1 0
+
+# t=8000 termina pitch = 89 graus
+8000 0 0 0 0 88 0
+
+# t=8010 permanece inclinado
+8010 0 0 0 0 0 0
+
+# ---------- INICIO YAW + 89 --------------
+8020 0 0 0 0 0 1
+16010 0 0 0 0 0 88
+16100 0 0 0 0 0 0

@@ -1,0 +1,95 @@
+# Faz um quadrado, virando o veículo, como se estivesse dando a volta na quadra.
+# O objetivo e ver a influência da aceleração linear na estimativa de inclinação,
+# em uma situação simples, onde o vetor da gravidade não deve influênciar no yaw
+# que será o movimento que o veículo irá realizar para contornar a quadra.
+
+# Neste dado simulado, foi colocado espaçado cada aceleração para remover um pouco da linearidade
+# simulando um carro a uma média de mais ou menos 40km/h onde cada lado do quadrado tem 22m.
+# Partindo do repouso (isso é necessário para o modelo de gerador de dados simulados utilizado)
+
+
+# t = tempo(em ms)
+# p(x,y,z) = posição absoluta em centímetros
+# t(x,y,z) = tilt relativo em graus
+# ------------------------------
+# t px py pz tx ty tz
+
+# Reto x=+20m em 5.5s
+0 0 0 0 0 0 0
+500 38 0 0 0 0 0
+1000 96 0 0 0 0 0
+1500 200 0 0 0 0 0
+2000 275 0 0 0 0 0
+2500 400 0 0 0 0 0
+3000 655 0 0 0 0 0
+3500 896 0 0 0 0 0
+4000 1233 0 0 0 0 0
+4500 1549 0 0 0 0 0
+5000 1775 0 0 0 0 0
+5500 1919 0 0 0 0 0
+
+# 2m para virar a esquerda em 1.5s
+5750 2000 0 0 0 0 1
+6000 2056 13 0 0 0 9
+6250 2100 30 0 0 0 15
+6500 2150 50 0 0 0 30
+6750 2170 100 0 0 0 15
+7000 2188 142 0 0 0 10
+7250 2200 200 0 0 0 10
+
+# Reto y=+20m em 3.5s
+7750 2200 300 0 0 0 0 
+8250 2200 500 0 0 0 0 
+8750 2200 717 0 0 0 0 
+9250 2200 945 0 0 0 0 
+9750 2200 1267 0 0 0 0 
+10250 2200 1600 0 0 0 0 
+10750 2200 1800 0 0 0 0 
+11250 2200 1920 0 0 0 0 
+
+# 2m para virar a esquerda em 1.5s
+11500 2200 2000 0 0 0 1
+11750 2187 2065 0 0 0 9
+12000 2170 2100 0 0 0 15
+12250 2150 2150 0 0 0 30
+12500 2100 2170 0 0 0 15
+12750 2060 2189 0 0 0 10
+13000 2000 2200 0 0 0 10
+
+# Reto x=-20m em 3.5s
+13500 1919 2200 0 0 0 0
+14000 1775 2200 0 0 0 0
+14500 1549 2200 0 0 0 0
+15000 1233 2200 0 0 0 0
+15500 896 2200 0 0 0 0
+16000 655 2200 0 0 0 0
+16500 400 2200 0 0 0 0
+17000 275 2200 0 0 0 0
+
+# 2m para virar a esquerda em 1.5s
+17250 200 2200 0 0 0 1
+17500 137 2188 0 0 0 9
+17750 100 2170 0 0 0 15
+18000 50 2150 0 0 0 30
+18250 30 2100 0 0 0 15
+18500 11 2062 0 0 0 10
+18750 0 2000 0 0 0 10
+
+# Reto y=-20m em 4s
+19250 0 1920 0 0 0 0 
+19750 0 1800 0 0 0 0 
+20250 0 1600 0 0 0 0 
+20750 0 1267 0 0 0 0 
+21250 0 945 0 0 0 0 
+21750 0 717 0 0 0 0 
+22250 0 500 0 0 0 0 
+22750 0 300 0 0 0 0 
+
+# 2m para virar a esquerda em 1.5s
+23000 0 200 0 0 0 1
+23250 13 140 0 0 0 9
+23500 30 100 0 0 0 15
+23750 50 50 0 0 0 30
+24000 100 30 0 0 0 15
+24250 135 15 0 0 0 10
+24500 200 0 0 0 0 10
