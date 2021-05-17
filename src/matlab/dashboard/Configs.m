@@ -6,7 +6,7 @@ classdef Configs < handle
         read_from = 'mockup';     % difina como, 'serial', 'bluetooth', 'arquivo' ou 'mockup'
 
         % Se a fonte for 'arquivo' ou 'mockup': Coloque o path completo 
-        file_full_path='Dados/simulados/drift'; 
+        file_full_path='Dados/simulados/rpr_seq_89'; 
 
         % Se a fonte for 'serial' ou 'bluetooth': Coloque a porta COM e a taxa de comunicação
         serial_COM='COM4';
@@ -31,10 +31,10 @@ classdef Configs < handle
         filter_type = 'media';            % pode ser 'media' ou 'mediana'
 
         % Variável de ajuste do filtro complementar
-        mu=0.0006;
+        mu=0.0015;
 
         % Variável de ajuste do filtro madgwick
-        beta=0.004;
+        beta=0.0180;
 
         % Constante gravitacional
         const_g=9.8;                
@@ -62,12 +62,12 @@ classdef Configs < handle
             % E.x.: layout = {aceleration, aceleration; gyroscope, magnetometer};
             obj.layout = {...
 
-                c.aceleration, c.gyroscope, c.magnetometer;...
+                % c.aceleration, c.gyroscope, c.magnetometer;...
                 c.acel_mag_tilt, c.gyro_absolute_tilt, c.comp_tilt;...
                 c.kalman_tilt, c.madgwick_tilt_euler, c.baseline_tilt;...
-                % c.compare_errors, c.compare_errors, c.compare_errors;...
+                c.compare_errors, c.compare_errors, c.compare_errors;...
 
-                % c.compare_errors, c.compare_errors, c.vazio;...
+                c.compare_errors, c.compare_errors, c.vazio;...
                 % c.vazio, c.vazio, c.vazio;...
 
             };
