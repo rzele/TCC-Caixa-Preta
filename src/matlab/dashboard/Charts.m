@@ -74,7 +74,7 @@ classdef Charts < handle
             obj.position = Position(cnf.max_size, cnf.cxp.fammost, obj.velocity);
 
             % ângulos gerados finais
-            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.cxp.fammost, gyroscope_w_k, acel_mag_tilt_w_k);
+            obj.kalman_tilt = KalmanTilt(cnf.max_size, cnf.cxp.fammost, gyroscope_w_k, acel_mag_tilt_w_k); % Euler
             obj.madgwick_tilt_quaternion = MadgwickTiltQuaternion(cnf.max_size, cnf.cxp.fammost, cnf.beta, aceleration_w_k, obj.gyroscope, magnetometer_w_k, acel_mag_tilt_w_k);
             obj.madgwick_tilt_euler = MadgwickTiltEuler(cnf.max_size, obj.madgwick_tilt_quaternion);
 
